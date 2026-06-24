@@ -1,7 +1,12 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export function Sidebar() {
+  const pathname = usePathname();
+
   return (
     <aside className="fixed left-0 top-0 flex h-screen w-[260px] flex-col justify-between border-r border-slate-200 bg-slate-100">
       <div>
@@ -18,23 +23,23 @@ export function Sidebar() {
 
         <nav className="mt-12 px-4">
           <div className="space-y-2">
-            <NavItem href="/dashboard" active>
+            <NavItem href="/dashboard" active={pathname.startsWith("/dashboard")}>
               Dashboard
             </NavItem>
 
-            <NavItem href="/projects">
+            <NavItem href="/projects" active={pathname.startsWith("/projects")}>
               Projects
             </NavItem>
 
-            <NavItem href="/templates">
+            <NavItem href="/templates" active={pathname.startsWith("/templates")}>
               Templates
             </NavItem>
 
-            <NavItem href="/reports">
+            <NavItem href="/reports" active={pathname.startsWith("/reports")}>
               Reports
             </NavItem>
 
-            <NavItem href="/settings">
+            <NavItem href="/settings" active={pathname.startsWith("/settings")}>
               Settings
             </NavItem>
           </div>
@@ -43,32 +48,23 @@ export function Sidebar() {
 
       <div>
         <div className="mx-4 mb-6 rounded-2xl bg-violet-100 p-5">
-          <h3 className="font-semibold text-violet-700">
-            Upgrade to Pro
-          </h3>
-
+          <h3 className="font-semibold text-violet-700">Upgrade to Pro</h3>
           <p className="mt-2 text-sm leading-relaxed text-slate-600">
             Unlock unlimited audits, custom branding, and more.
           </p>
-
-          <button className="mt-4 w-full rounded-xl bg-violet-600 py-3 font-medium text-white transition hover:bg-violet-700">
+          <button className="mt-4 w-full rounded-xl bg-violet-600 py-3 text-sm font-medium text-white hover:bg-violet-700">
             Upgrade Now
           </button>
         </div>
 
         <div className="flex items-center gap-3 border-t border-slate-200 px-6 py-5">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-violet-200 font-semibold text-violet-700">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-200 text-sm font-semibold text-violet-700">
             JD
           </div>
 
           <div>
-            <p className="font-medium text-slate-900">
-              Jane Doe
-            </p>
-
-            <p className="text-sm text-slate-500">
-              jane@example.com
-            </p>
+            <p className="text-sm font-medium text-slate-900">Jane Doe</p>
+            <p className="text-xs text-slate-500">jane@example.com</p>
           </div>
         </div>
       </div>
@@ -79,11 +75,11 @@ export function Sidebar() {
 function NavItem({
   href,
   children,
-  active = false,
+  active,
 }: {
   href: string;
   children: React.ReactNode;
-  active?: boolean;
+  active: boolean;
 }) {
   return (
     <Link
