@@ -8,4 +8,5 @@ export type Project = {
   audit_type: string | null;
   status: ProjectStatus;
   created_at: string;
+  updated_at: string | null;
 };

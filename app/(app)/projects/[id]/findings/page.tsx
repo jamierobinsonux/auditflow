@@ -18,25 +18,25 @@ export default async function FindingsPage({
   const findings = (data ?? []) as Finding[];
 
   return (
-    <main className="min-h-screen bg-slate-50 p-8 space-y-6">
+    <main className="min-h-screen bg-[#F1F5F9] p-10 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <Link href={`/projects/${id}`} className="text-sm text-violet-600">
             ← Back to Project
           </Link>
-          <h1 className="mt-4 text-2xl font-bold">Findings</h1>
+          <h1 className="mt-4 text-[24px] font-semibold">Findings</h1>
         </div>
 
         <Link
           href={`/projects/${id}/findings/new`}
-          className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white"
+          className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-medium text-white"
         >
           + Add Finding
         </Link>
       </div>
 
-      <div className="rounded-xl border bg-white shadow-sm">
-        <div className="grid grid-cols-4 border-b p-4 text-sm font-medium text-slate-500">
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="grid grid-cols-4 bg-slate-100 p-4 text-xs font-semibold uppercase tracking-wide text-slate-600">
           <span>Finding</span>
           <span>Severity</span>
           <span>Status</span>
@@ -44,19 +44,20 @@ export default async function FindingsPage({
         </div>
 
         {findings.map((finding) => (
-          <div
+          <Link
             key={finding.id}
-            className="grid grid-cols-4 border-b p-4 text-sm"
+            href={`/projects/${id}/findings/${finding.id}/edit`}
+            className="grid grid-cols-4 border-t border-slate-100 p-4 text-sm transition hover:bg-slate-50"
           >
             <span className="font-medium">{finding.title}</span>
             <span>{finding.severity}</span>
             <span>{finding.status}</span>
             <span className="truncate">{finding.recommendation}</span>
-          </div>
+          </Link>
         ))}
 
         {findings.length === 0 && (
-          <p className="p-4 text-sm text-slate-500">No findings yet.</p>
+          <p className="p-6 text-sm text-slate-500">No findings yet.</p>
         )}
       </div>
     </main>

@@ -13,3 +13,11 @@ export type Finding = {
   evidence_url: string | null;
   created_at: string;
 };
+
+export type FindingImage = {
+  id: string;
+  finding_id: string;
+  image_url: string;
+  caption: string | null;
+  created_at: string;
+};

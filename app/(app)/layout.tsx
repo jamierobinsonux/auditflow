@@ -1,0 +1,17 @@
+import { Sidebar } from "@/components/sidebar";
+
+export default function AppLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="min-h-screen bg-[#F1F5F9]">
+      <Sidebar />
+
+      <main className="ml-[260px] min-h-screen">
+        {children}
+      </main>
+    </div>
+  );
+}
