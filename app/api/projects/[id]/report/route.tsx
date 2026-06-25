@@ -7,7 +7,6 @@ import {
   Image,
   renderToStream,
 } from "@react-pdf/renderer";
-import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET(
@@ -22,7 +21,7 @@ export async function GET(
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { data: project } = await supabase
@@ -33,7 +32,7 @@ export async function GET(
     .maybeSingle();
 
   if (!project) {
-    return NextResponse.json({ error: "Project not found" }, { status: 404 });
+    return Response.json({ error: "Project not found" }, { status: 404 });
   }
 
   const { data: findings } = await supabase
@@ -41,7 +40,7 @@ export async function GET(
     .select("*")
     .eq("project_id", id)
     .eq("user_id", user.id)
-    .order("created_at", { ascending: false });
+    .order("severity", { ascending: true });
 
   const findingIds = (findings ?? []).map((finding) => finding.id);
 
@@ -81,6 +80,11 @@ function AuditReportPDF({
   findings: any[];
   images: any[];
 }) {
+  const groupedFindings = ["P0", "P1", "P2", "P3"].map((severity) => ({
+    severity,
+    findings: findings.filter((finding) => finding.severity === severity),
+  }));
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -91,9 +95,7 @@ function AuditReportPDF({
 
           <View style={styles.metaBox}>
             <Text style={styles.meta}>Client: {project.client_name || "—"}</Text>
-            <Text style={styles.meta}>
-              Audit Type: {project.audit_type || "—"}
-            </Text>
+            <Text style={styles.meta}>Audit Type: {project.audit_type || "—"}</Text>
             <Text style={styles.meta}>Status: {project.status || "—"}</Text>
             <Text style={styles.meta}>
               Generated: {new Date().toLocaleDateString()}
@@ -105,74 +107,134 @@ function AuditReportPDF({
           <Text style={styles.sectionTitle}>Executive Summary</Text>
           <Text style={styles.body}>
             This audit reviews the user experience of {project.name}, focusing
-            on usability friction, conversion opportunities, and actionable UX
-            improvements.
+            on usability friction, conversion opportunities, accessibility
+            concerns, and actionable product improvements.
           </Text>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Findings Summary</Text>
-          <Text style={styles.body}>Total findings: {findings.length}</Text>
-          <Text style={styles.body}>
-            P0: {findings.filter((f) => f.severity === "P0").length} | P1:{" "}
-            {findings.filter((f) => f.severity === "P1").length} | P2:{" "}
-            {findings.filter((f) => f.severity === "P2").length} | P3:{" "}
-            {findings.filter((f) => f.severity === "P3").length}
-          </Text>
+
+          <View style={styles.summaryGrid}>
+            <SummaryItem label="Total" value={findings.length} />
+            <SummaryItem
+              label="P0 Critical"
+              value={findings.filter((f) => f.severity === "P0").length}
+            />
+            <SummaryItem
+              label="P1 High"
+              value={findings.filter((f) => f.severity === "P1").length}
+            />
+            <SummaryItem
+              label="P2 Medium"
+              value={findings.filter((f) => f.severity === "P2").length}
+            />
+            <SummaryItem
+              label="P3 Low"
+              value={findings.filter((f) => f.severity === "P3").length}
+            />
+          </View>
         </View>
 
-        {findings.map((finding, index) => {
-          const findingImages = images.filter(
-            (image) => image.finding_id === finding.id
-          );
+        {groupedFindings.map((group) => {
+          if (group.findings.length === 0) return null;
 
           return (
-            <View key={finding.id} style={styles.finding} wrap={false}>
-              <View style={styles.findingHeader}>
-                <Text style={styles.findingTitle}>
-                  {index + 1}. {finding.title}
-                </Text>
-                <Text style={styles.badge}>{finding.severity}</Text>
-              </View>
+            <View key={group.severity} style={styles.section}>
+              <Text style={styles.sectionTitle}>{group.severity} Findings</Text>
 
-              <Text style={styles.label}>Status</Text>
-              <Text style={styles.body}>{finding.status}</Text>
+              {group.findings.map((finding, index) => {
+                const findingImages = images.filter(
+                  (image) => image.finding_id === finding.id
+                );
 
-              <Text style={styles.label}>Description</Text>
-              <Text style={styles.body}>
-                {finding.description || "No description added."}
-              </Text>
+                return (
+                  <View key={finding.id} style={styles.finding} wrap={false}>
+                    <View style={styles.findingHeader}>
+                      <Text style={styles.findingTitle}>
+                        {index + 1}. {finding.title}
+                      </Text>
 
-              <Text style={styles.label}>Recommendation</Text>
-              <Text style={styles.body}>
-                {finding.recommendation || "No recommendation added."}
-              </Text>
-
-              {findingImages.length > 0 && (
-                <View style={styles.evidenceSection}>
-                  <Text style={styles.label}>Evidence</Text>
-
-                  {findingImages.map((image) => (
-                    <View key={image.id} style={styles.imageBlock}>
-                      <Image src={image.image_url} style={styles.image} />
-
-                      {image.caption && (
-                        <Text style={styles.caption}>{image.caption}</Text>
-                      )}
+                      <Text style={styles.badge}>{finding.severity}</Text>
                     </View>
-                  ))}
-                </View>
-              )}
+
+                    <Text style={styles.label}>Status</Text>
+                    <Text style={styles.body}>{finding.status || "Open"}</Text>
+
+                    <Text style={styles.label}>Description</Text>
+                    <Text style={styles.body}>
+                      {finding.description || "No description added."}
+                    </Text>
+
+                    <Text style={styles.label}>Recommendation</Text>
+                    <Text style={styles.body}>
+                      {finding.recommendation || "No recommendation added."}
+                    </Text>
+
+                    {finding.impact && (
+                      <>
+                        <Text style={styles.label}>Impact</Text>
+                        <Text style={styles.body}>{finding.impact}</Text>
+                      </>
+                    )}
+
+                    {finding.effort && (
+                      <>
+                        <Text style={styles.label}>Effort</Text>
+                        <Text style={styles.body}>{finding.effort}</Text>
+                      </>
+                    )}
+
+                    {findingImages.length > 0 && (
+                      <View style={styles.evidenceSection}>
+                        <Text style={styles.label}>Evidence</Text>
+
+                        {findingImages.map((image) => (
+                          <View key={image.id} style={styles.imageBlock}>
+                            <Image src={image.image_url} style={styles.image} />
+
+                            {image.caption && (
+                              <Text style={styles.caption}>{image.caption}</Text>
+                            )}
+                          </View>
+                        ))}
+                      </View>
+                    )}
+                  </View>
+                );
+              })}
             </View>
           );
         })}
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Recommendations</Text>
+          <Text style={styles.body}>
+            Prioritize P0 and P1 issues first, especially findings that block
+            task completion, reduce trust, or create significant friction in the
+            primary user journey. P2 and P3 issues should be addressed in later
+            design iterations or bundled into upcoming product improvements.
+          </Text>
+        </View>
       </Page>
     </Document>
   );
 }
 
+function SummaryItem({ label, value }: { label: string; value: number }) {
+  return (
+    <View style={styles.summaryItem}>
+      <Text style={styles.summaryValue}>{value}</Text>
+      <Text style={styles.summaryLabel}>{label}</Text>
+    </View>
+  );
+}
+
 function safeFileName(name: string) {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
 }
 
 const styles = StyleSheet.create({
@@ -219,7 +281,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: "bold",
-    marginBottom: 8,
+    marginBottom: 10,
   },
   body: {
     fontSize: 10,
@@ -227,8 +289,30 @@ const styles = StyleSheet.create({
     color: "#475569",
     marginBottom: 8,
   },
+  summaryGrid: {
+    flexDirection: "row",
+    gap: 8,
+    flexWrap: "wrap",
+  },
+  summaryItem: {
+    width: "18%",
+    padding: 10,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    borderRadius: 8,
+  },
+  summaryValue: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#0F172A",
+  },
+  summaryLabel: {
+    marginTop: 4,
+    fontSize: 8,
+    color: "#64748B",
+  },
   finding: {
-    marginBottom: 24,
+    marginBottom: 18,
     padding: 16,
     borderWidth: 1,
     borderColor: "#E2E8F0",

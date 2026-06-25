@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -14,6 +14,17 @@ type ExistingImage = {
 type NewImage = {
   file: File | null;
   caption: string;
+};
+
+type Journey = {
+  id: string;
+  name: string;
+};
+
+type JourneyStep = {
+  id: string;
+  journey_id: string;
+  title: string;
 };
 
 export default function EditFindingPage() {
@@ -29,17 +40,39 @@ export default function EditFindingPage() {
   const [severity, setSeverity] = useState("P2");
   const [status, setStatus] = useState("Open");
   const [recommendation, setRecommendation] = useState("");
+  const [impact, setImpact] = useState("");
+  const [effort, setEffort] = useState("");
+  const [journeyId, setJourneyId] = useState("");
+  const [journeyStepId, setJourneyStepId] = useState("");
+
+  const [journeys, setJourneys] = useState<Journey[]>([]);
+  const [steps, setSteps] = useState<JourneyStep[]>([]);
+
   const [existingImages, setExistingImages] = useState<ExistingImage[]>([]);
   const [newImages, setNewImages] = useState<NewImage[]>([
     { file: null, caption: "" },
   ]);
 
+  const availableSteps = useMemo(() => {
+    return steps.filter((step) => step.journey_id === journeyId);
+  }, [steps, journeyId]);
+
   useEffect(() => {
     async function loadData() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        router.push("/login");
+        return;
+      }
+
       const { data: finding, error: findingError } = await supabase
         .from("findings")
         .select("*")
         .eq("id", findingId)
+        .eq("user_id", user.id)
         .maybeSingle();
 
       if (findingError) {
@@ -58,11 +91,29 @@ export default function EditFindingPage() {
       setSeverity(finding.severity ?? "P2");
       setStatus(finding.status ?? "Open");
       setRecommendation(finding.recommendation ?? "");
+      setImpact(finding.impact ?? "");
+      setEffort(finding.effort ?? "");
+      setJourneyId(finding.journey_id ?? "");
+      setJourneyStepId(finding.journey_step_id ?? "");
+
+      const { data: journeyData } = await supabase
+        .from("journeys")
+        .select("id, name")
+        .eq("project_id", projectId)
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: true });
+
+      const { data: stepData } = await supabase
+        .from("journey_steps")
+        .select("id, journey_id, title")
+        .eq("user_id", user.id)
+        .order("sort_order", { ascending: true });
 
       const { data: images, error: imageError } = await supabase
         .from("finding_images")
         .select("*")
         .eq("finding_id", findingId)
+        .eq("user_id", user.id)
         .order("created_at", { ascending: true });
 
       if (imageError) {
@@ -70,6 +121,8 @@ export default function EditFindingPage() {
         return;
       }
 
+      setJourneys((journeyData ?? []) as Journey[]);
+      setSteps((stepData ?? []) as JourneyStep[]);
       setExistingImages((images ?? []) as ExistingImage[]);
     }
 
@@ -130,8 +183,13 @@ export default function EditFindingPage() {
         severity,
         status,
         recommendation,
+        impact,
+        effort,
+        journey_id: journeyId || null,
+        journey_step_id: journeyStepId || null,
       })
-      .eq("id", findingId);
+      .eq("id", findingId)
+      .eq("user_id", user.id);
 
     if (error) {
       alert(error.message);
@@ -142,7 +200,8 @@ export default function EditFindingPage() {
       const { error: captionError } = await supabase
         .from("finding_images")
         .update({ caption: image.caption })
-        .eq("id", image.id);
+        .eq("id", image.id)
+        .eq("user_id", user.id);
 
       if (captionError) {
         alert(captionError.message);
@@ -186,7 +245,8 @@ export default function EditFindingPage() {
     await supabase
       .from("projects")
       .update({ updated_at: new Date().toISOString() })
-      .eq("id", projectId);
+      .eq("id", projectId)
+      .eq("user_id", user.id);
 
     router.push(`/projects/${projectId}/findings/${findingId}`);
     router.refresh();
@@ -199,10 +259,6 @@ export default function EditFindingPage() {
           Edit Finding
         </h1>
 
-        <p className="mt-2 text-sm text-slate-500">
-          Update the finding details and supporting evidence.
-        </p>
-
         <form onSubmit={handleSubmit} className="mt-6 space-y-5">
           <input
             className="w-full rounded-xl border border-slate-200 p-3 text-sm"
@@ -212,6 +268,38 @@ export default function EditFindingPage() {
             required
           />
 
+          <div className="grid gap-4 md:grid-cols-2">
+            <select
+              className="w-full rounded-xl border border-slate-200 p-3 text-sm"
+              value={journeyId}
+              onChange={(e) => {
+                setJourneyId(e.target.value);
+                setJourneyStepId("");
+              }}
+            >
+              <option value="">No journey</option>
+              {journeys.map((journey) => (
+                <option key={journey.id} value={journey.id}>
+                  {journey.name}
+                </option>
+              ))}
+            </select>
+
+            <select
+              className="w-full rounded-xl border border-slate-200 p-3 text-sm"
+              value={journeyStepId}
+              onChange={(e) => setJourneyStepId(e.target.value)}
+              disabled={!journeyId}
+            >
+              <option value="">No step</option>
+              {availableSteps.map((step) => (
+                <option key={step.id} value={step.id}>
+                  {step.title}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <textarea
             className="min-h-28 w-full rounded-xl border border-slate-200 p-3 text-sm"
             value={description}
@@ -219,27 +307,53 @@ export default function EditFindingPage() {
             placeholder="Description"
           />
 
-          <select
-            className="w-full rounded-xl border border-slate-200 p-3 text-sm"
-            value={severity}
-            onChange={(e) => setSeverity(e.target.value)}
-          >
-            <option value="P0">P0 - Critical</option>
-            <option value="P1">P1 - High</option>
-            <option value="P2">P2 - Medium</option>
-            <option value="P3">P3 - Low</option>
-          </select>
+          <div className="grid gap-4 md:grid-cols-2">
+            <select
+              className="w-full rounded-xl border border-slate-200 p-3 text-sm"
+              value={severity}
+              onChange={(e) => setSeverity(e.target.value)}
+            >
+              <option value="P0">P0 - Critical</option>
+              <option value="P1">P1 - High</option>
+              <option value="P2">P2 - Medium</option>
+              <option value="P3">P3 - Low</option>
+            </select>
 
-          <select
-            className="w-full rounded-xl border border-slate-200 p-3 text-sm"
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-          >
-            <option>Open</option>
-            <option>In Progress</option>
-            <option>In Review</option>
-            <option>Resolved</option>
-          </select>
+            <select
+              className="w-full rounded-xl border border-slate-200 p-3 text-sm"
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+            >
+              <option>Open</option>
+              <option>In Progress</option>
+              <option>In Review</option>
+              <option>Resolved</option>
+            </select>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <select
+              className="w-full rounded-xl border border-slate-200 p-3 text-sm"
+              value={impact}
+              onChange={(e) => setImpact(e.target.value)}
+            >
+              <option value="">Impact</option>
+              <option>High</option>
+              <option>Medium</option>
+              <option>Low</option>
+            </select>
+
+            <select
+              className="w-full rounded-xl border border-slate-200 p-3 text-sm"
+              value={effort}
+              onChange={(e) => setEffort(e.target.value)}
+            >
+              <option value="">Effort</option>
+              <option>High</option>
+              <option>Medium</option>
+              <option>Low</option>
+            </select>
+          </div>
 
           <textarea
             className="min-h-28 w-full rounded-xl border border-slate-200 p-3 text-sm"

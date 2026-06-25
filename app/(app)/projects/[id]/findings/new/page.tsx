@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 type EvidenceImage = {
@@ -10,20 +10,78 @@ type EvidenceImage = {
   caption: string;
 };
 
+type Journey = {
+  id: string;
+  name: string;
+};
+
+type JourneyStep = {
+  id: string;
+  journey_id: string;
+  title: string;
+};
+
 export default function NewFindingPage() {
   const router = useRouter();
   const params = useParams();
-  const projectId = params.id as string;
+  const searchParams = useSearchParams();
   const supabase = createClient();
+
+  const projectId = params.id as string;
+  const preselectedJourneyId = searchParams.get("journeyId") ?? "";
+  const preselectedStepId = searchParams.get("stepId") ?? "";
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [severity, setSeverity] = useState("P2");
   const [status, setStatus] = useState("Open");
   const [recommendation, setRecommendation] = useState("");
+  const [impact, setImpact] = useState("");
+  const [effort, setEffort] = useState("");
+  const [journeyId, setJourneyId] = useState(preselectedJourneyId);
+  const [journeyStepId, setJourneyStepId] = useState(preselectedStepId);
+
+  const [journeys, setJourneys] = useState<Journey[]>([]);
+  const [steps, setSteps] = useState<JourneyStep[]>([]);
+
   const [images, setImages] = useState<EvidenceImage[]>([
     { file: null, caption: "" },
   ]);
+
+  const availableSteps = useMemo(() => {
+    return steps.filter((step) => step.journey_id === journeyId);
+  }, [steps, journeyId]);
+
+  useEffect(() => {
+    async function loadJourneys() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        router.push("/login");
+        return;
+      }
+
+      const { data: journeyData } = await supabase
+        .from("journeys")
+        .select("id, name")
+        .eq("project_id", projectId)
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: true });
+
+      const { data: stepData } = await supabase
+        .from("journey_steps")
+        .select("id, journey_id, title")
+        .eq("user_id", user.id)
+        .order("sort_order", { ascending: true });
+
+      setJourneys((journeyData ?? []) as Journey[]);
+      setSteps((stepData ?? []) as JourneyStep[]);
+    }
+
+    loadJourneys();
+  }, [projectId, router, supabase]);
 
   function updateImage(index: number, update: Partial<EvidenceImage>) {
     setImages((current) =>
@@ -56,11 +114,15 @@ export default function NewFindingPage() {
       .insert({
         project_id: projectId,
         user_id: user.id,
+        journey_id: journeyId || null,
+        journey_step_id: journeyStepId || null,
         title,
         description,
         severity,
         status,
         recommendation,
+        impact,
+        effort,
       })
       .select()
       .single();
@@ -128,6 +190,38 @@ export default function NewFindingPage() {
             required
           />
 
+          <div className="grid gap-4 md:grid-cols-2">
+            <select
+              className="w-full rounded-xl border border-slate-200 p-3 text-sm"
+              value={journeyId}
+              onChange={(e) => {
+                setJourneyId(e.target.value);
+                setJourneyStepId("");
+              }}
+            >
+              <option value="">No journey</option>
+              {journeys.map((journey) => (
+                <option key={journey.id} value={journey.id}>
+                  {journey.name}
+                </option>
+              ))}
+            </select>
+
+            <select
+              className="w-full rounded-xl border border-slate-200 p-3 text-sm"
+              value={journeyStepId}
+              onChange={(e) => setJourneyStepId(e.target.value)}
+              disabled={!journeyId}
+            >
+              <option value="">No step</option>
+              {availableSteps.map((step) => (
+                <option key={step.id} value={step.id}>
+                  {step.title}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <textarea
             className="min-h-28 w-full rounded-xl border border-slate-200 p-3 text-sm"
             placeholder="Describe the issue"
@@ -135,27 +229,53 @@ export default function NewFindingPage() {
             onChange={(e) => setDescription(e.target.value)}
           />
 
-          <select
-            className="w-full rounded-xl border border-slate-200 p-3 text-sm"
-            value={severity}
-            onChange={(e) => setSeverity(e.target.value)}
-          >
-            <option value="P0">P0 - Critical</option>
-            <option value="P1">P1 - High</option>
-            <option value="P2">P2 - Medium</option>
-            <option value="P3">P3 - Low</option>
-          </select>
+          <div className="grid gap-4 md:grid-cols-2">
+            <select
+              className="w-full rounded-xl border border-slate-200 p-3 text-sm"
+              value={severity}
+              onChange={(e) => setSeverity(e.target.value)}
+            >
+              <option value="P0">P0 - Critical</option>
+              <option value="P1">P1 - High</option>
+              <option value="P2">P2 - Medium</option>
+              <option value="P3">P3 - Low</option>
+            </select>
 
-          <select
-            className="w-full rounded-xl border border-slate-200 p-3 text-sm"
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-          >
-            <option>Open</option>
-            <option>In Progress</option>
-            <option>In Review</option>
-            <option>Resolved</option>
-          </select>
+            <select
+              className="w-full rounded-xl border border-slate-200 p-3 text-sm"
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+            >
+              <option>Open</option>
+              <option>In Progress</option>
+              <option>In Review</option>
+              <option>Resolved</option>
+            </select>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <select
+              className="w-full rounded-xl border border-slate-200 p-3 text-sm"
+              value={impact}
+              onChange={(e) => setImpact(e.target.value)}
+            >
+              <option value="">Impact</option>
+              <option>High</option>
+              <option>Medium</option>
+              <option>Low</option>
+            </select>
+
+            <select
+              className="w-full rounded-xl border border-slate-200 p-3 text-sm"
+              value={effort}
+              onChange={(e) => setEffort(e.target.value)}
+            >
+              <option value="">Effort</option>
+              <option>High</option>
+              <option>Medium</option>
+              <option>Low</option>
+            </select>
+          </div>
 
           <textarea
             className="min-h-28 w-full rounded-xl border border-slate-200 p-3 text-sm"

@@ -1,0 +1,168 @@
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
+import { ProjectTabs } from "@/components/project-tabs";
+import { CreateStepForm } from "@/components/create-step-form";
+import { DeleteJourneyButton } from "@/components/delete-journey-button";
+
+export default async function JourneyDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string; journeyId: string }>;
+}) {
+  const { id, journeyId } = await params;
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { data: project } = await supabase
+    .from("projects")
+    .select("*")
+    .eq("id", id)
+    .eq("user_id", user?.id)
+    .maybeSingle();
+
+  const { data: journey } = await supabase
+    .from("journeys")
+    .select("*")
+    .eq("id", journeyId)
+    .eq("project_id", id)
+    .eq("user_id", user?.id)
+    .maybeSingle();
+
+  const { data: steps } = await supabase
+    .from("journey_steps")
+    .select("*")
+    .eq("journey_id", journeyId)
+    .eq("user_id", user?.id)
+    .order("sort_order", { ascending: true });
+
+  const { data: findings } = await supabase
+    .from("findings")
+    .select("*")
+    .eq("journey_id", journeyId)
+    .eq("user_id", user?.id)
+    .order("created_at", { ascending: false });
+
+  if (!project || !journey) {
+    return <main className="p-10">Journey not found.</main>;
+  }
+
+  return (
+    <main className="p-10">
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-[24px] font-semibold text-slate-950">
+            {journey.name}
+          </h1>
+          <p className="mt-1 text-sm text-slate-500">
+            {journey.description || "No description added."}
+          </p>
+        </div>
+
+        <div className="flex gap-3">
+          <Link
+            href={`/projects/${id}/findings/new?journeyId=${journeyId}`}
+            className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-700"
+          >
+            + Add Finding
+          </Link>
+
+          <DeleteJourneyButton projectId={id} journeyId={journeyId} />
+        </div>
+      </div>
+
+      <ProjectTabs projectId={id} />
+
+      <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-6">
+        <h2 className="text-[18px] font-semibold text-slate-950">Steps</h2>
+
+        <div className="mt-4 space-y-3">
+          {(steps ?? []).map((step, index) => {
+            const stepFindings = (findings ?? []).filter(
+              (finding) => finding.journey_step_id === step.id
+            );
+
+            return (
+              <div
+                key={step.id}
+                className="rounded-xl border border-slate-200 p-4"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-950">
+                      {index + 1}. {step.title}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {stepFindings.length} findings
+                    </p>
+                  </div>
+
+                  <Link
+                    href={`/projects/${id}/findings/new?journeyId=${journeyId}&stepId=${step.id}`}
+                    className="text-sm font-medium text-violet-600"
+                  >
+                    Add finding
+                  </Link>
+                </div>
+
+                {stepFindings.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    {stepFindings.map((finding) => (
+                      <Link
+                        key={finding.id}
+                        href={`/projects/${id}/findings/${finding.id}`}
+                        className="block rounded-lg bg-slate-50 p-3 text-sm hover:bg-slate-100"
+                      >
+                        <span className="font-medium">{finding.title}</span>
+                        <span className="ml-2 text-xs text-slate-500">
+                          {finding.severity}
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          {(steps ?? []).length === 0 && (
+            <p className="text-sm text-slate-500">
+              No steps yet. Add the first step in this journey.
+            </p>
+          )}
+        </div>
+
+        <CreateStepForm
+          journeyId={journeyId}
+          userId={user!.id}
+          nextSortOrder={(steps ?? []).length + 1}
+        />
+      </section>
+
+      <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-6">
+        <h2 className="text-[18px] font-semibold text-slate-950">
+          Unassigned to Step
+        </h2>
+
+        <div className="mt-4 space-y-2">
+          {(findings ?? [])
+            .filter((finding) => !finding.journey_step_id)
+            .map((finding) => (
+              <Link
+                key={finding.id}
+                href={`/projects/${id}/findings/${finding.id}`}
+                className="block rounded-lg border border-slate-200 p-3 text-sm hover:bg-slate-50"
+              >
+                <span className="font-medium">{finding.title}</span>
+                <span className="ml-2 text-xs text-slate-500">
+                  {finding.severity}
+                </span>
+              </Link>
+            ))}
+        </div>
+      </section>
+    </main>
+  );
+}

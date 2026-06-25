@@ -10,7 +10,12 @@ export function ProjectTabs({ projectId }: { projectId: string }) {
     {
       label: "Overview",
       href: `/projects/${projectId}`,
-      active: pathname === `/projects/${projectId}` || pathname.includes(`/projects/${projectId}/findings`),
+      active: pathname === `/projects/${projectId}`,
+    },
+    {
+      label: "Journeys",
+      href: `/projects/${projectId}/journeys`,
+      active: pathname.includes(`/projects/${projectId}/journeys`),
     },
     {
       label: "Report",
