@@ -1,25 +1,25 @@
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import type { Project } from "@/types/project";
 import type { Finding } from "@/types/finding";
 
 export default async function DashboardPage() {
-  const { data: projectData, error: projectError } = await supabase
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { data: projectData } = await supabase
     .from("projects")
     .select("*")
+    .eq("user_id", user?.id)
     .order("created_at", { ascending: false });
 
-  const { data: findingData, error: findingError } = await supabase
+  const { data: findingData } = await supabase
     .from("findings")
-    .select("*");
-
-  if (projectError || findingError) {
-    return (
-      <main className="p-8">
-        Error: {projectError?.message || findingError?.message}
-      </main>
-    );
-  }
+    .select("*")
+    .eq("user_id", user?.id);
 
   const projects = (projectData ?? []) as Project[];
   const findings = (findingData ?? []) as Finding[];
@@ -31,120 +31,105 @@ export default async function DashboardPage() {
 
   return (
     <main className="px-12 py-10">
-        <header className="flex items-start justify-between">
-          <div>
-            <h1 className="text-[28px] font-semibold leading-[36px] tracking-[-0.02em] text-slate-950">
-              Welcome back, Jane! 👋
-              </h1>
-              
-              <p className="mt-3 text-[14px] leading-6 text-slate-700">
-                Here’s what’s happening with your audits.
-                </p>
+      <header className="flex items-start justify-between">
+        <div>
+          <h1 className="text-[28px] font-semibold leading-[36px] tracking-[-0.02em] text-slate-950">
+            Welcome back 👋
+          </h1>
+
+          <p className="mt-3 text-sm leading-6 text-slate-700">
+            Here’s what’s happening with your audits.
+          </p>
+        </div>
+
+        <Link
+          href="/projects/new"
+          className="rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-700"
+        >
+          + New Project
+        </Link>
+      </header>
+
+      <section className="mt-8 grid grid-cols-4 gap-5">
+        <StatCard value={totalProjects.toString()} label="Projects" />
+        <StatCard value={totalFindings.toString()} label="Findings" />
+        <StatCard value={totalRecommendations.toString()} label="Recommendations" />
+        <StatCard value={totalReports.toString()} label="Reports generated" />
+      </section>
+
+      <section className="mt-8">
+        <h2 className="text-[18px] font-semibold tracking-[-0.01em] text-slate-950">
+          Recent Projects
+        </h2>
+
+        <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="grid grid-cols-[2fr_1.2fr_1.2fr_0.9fr_1fr] bg-slate-100 px-10 py-4 text-xs font-semibold uppercase tracking-wide text-slate-600">
+            <span>Project</span>
+            <span>Type</span>
+            <span>Last Updated</span>
+            <span>Findings</span>
+            <span>Status</span>
           </div>
 
-          <Link
-            href="/projects/new"
-            className="mt-2 rounded-xl bg-violet-600 px-8 py-3 text-base font-semibold text-white shadow-sm transition hover:bg-violet-700"
-          >
-            + New Project
-          </Link>
-        </header>
+          {projects.map((project) => {
+            const projectFindings = findings.filter(
+              (finding) => finding.project_id === project.id
+            );
 
-        <section className="mt-8 grid grid-cols-4 gap-5">
-          <StatCard value={totalProjects.toString()} label="Projects" />
-          <StatCard value={totalFindings.toString()} label="Findings" />
-          <StatCard
-            value={totalRecommendations.toString()}
-            label="Recommendations"
-          />
-          <StatCard value={totalReports.toString()} label="Reports generated" />
-        </section>
+            return (
+              <Link
+                key={project.id}
+                href={`/projects/${project.id}`}
+                className="grid grid-cols-[2fr_1.2fr_1.2fr_0.9fr_1fr] items-center border-t border-slate-100 px-10 py-4 text-sm transition hover:bg-slate-50"
+              >
+                <div>
+                  <p className="font-semibold text-slate-950">{project.name}</p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {project.website_url || "No website"}
+                  </p>
+                </div>
 
-        <section className="mt-8">
-          <h2 className="text-[18px] font-semibold tracking-[-0.01em] text-slate-950">
-            Recent Projects
-            </h2>
+                <TypeBadge label={project.audit_type || "Audit"} />
 
-          <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div className="grid grid-cols-[2fr_1.2fr_1.2fr_0.9fr_1fr] bg-slate-100 px-10 py-5 text-sm font-semibold uppercase tracking-wide text-slate-600">
-              <span>Project</span>
-              <span>Type</span>
-              <span>Last Updated</span>
-              <span>Findings</span>
-              <span>Status</span>
+                <span className="font-medium text-slate-600">
+                  {formatDate(project.updated_at || project.created_at)}
+                </span>
+
+                <span className="font-medium text-slate-600">
+                  {projectFindings.length}
+                </span>
+
+                <StatusBadge label={project.status || "In Progress"} />
+              </Link>
+            );
+          })}
+
+          {projects.length === 0 && (
+            <div className="border-t border-slate-100 px-10 py-10 text-sm text-slate-500">
+              No projects yet. Create your first audit project.
             </div>
-
-            {projects.map((project) => {
-              const projectFindings = findings.filter(
-                (finding) => finding.project_id === project.id
-              );
-
-              return (
-                <Link
-                  key={project.id}
-                  href={`/projects/${project.id}`}
-                  className="grid grid-cols-[2fr_1.2fr_1.2fr_0.9fr_1fr] items-center border-t border-slate-100 px-10 py-5 text-sm transition hover:bg-slate-50"
-                >
-                  <div className="flex items-center gap-4">
-                    <ProjectIcon name={project.name} />
-
-                    <div>
-                      <p className="font-semibold text-slate-950">
-                        {project.name}
-                      </p>
-                      <p className="mt-1 text-xs text-slate-500">
-                        {project.website_url || "No website"}
-                      </p>
-                    </div>
-                  </div>
-
-                  <TypeBadge label={project.audit_type || "Audit"} />
-
-                  <span className="font-medium text-slate-600">
-                    {formatDate(project.updated_at || project.created_at)}
-                  </span>
-
-                  <span className="font-medium text-slate-600">
-                    {projectFindings.length}
-                  </span>
-
-                  <StatusBadge label={project.status || "In Progress"} />
-                </Link>
-              );
-            })}
-
-            {projects.length === 0 && (
-              <div className="border-t border-slate-100 px-10 py-10 text-slate-500">
-                No projects yet. Create your first audit project.
-              </div>
-            )}
-          </div>
-        </section>
-      </main>
+          )}
+        </div>
+      </section>
+    </main>
   );
 }
 
 function StatCard({ value, label }: { value: string; label: string }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white px-8 py-6 shadow-sm">
+    <div className="rounded-2xl border border-slate-200 bg-white px-6 py-5 shadow-sm">
       <p className="text-[24px] font-semibold leading-none tracking-[-0.03em] text-slate-950">
         {value}
-        </p>
-
-      <p className="mt-2 text-[14px] text-slate-900">{label}</p>
-
-      <p className="mt-4 text-sm text-slate-500">Based on current audit data</p>
+      </p>
+      <p className="mt-2 text-sm text-slate-900">{label}</p>
+      <p className="mt-3 text-xs text-slate-500">Based on your audit data</p>
     </div>
   );
 }
 
 function TypeBadge({ label }: { label: string }) {
   return (
-    <span
-      className={`w-fit rounded-lg px-3 py-1 text-sm font-semibold ${getTypeStyles(
-        label
-      )}`}
-    >
+    <span className={`w-fit rounded-lg px-3 py-1 text-xs font-semibold ${getTypeStyles(label)}`}>
       {label}
     </span>
   );
@@ -160,19 +145,9 @@ function StatusBadge({ label }: { label: string }) {
     : "bg-blue-100 text-blue-600";
 
   return (
-    <span className={`w-fit rounded-lg px-3 py-1 text-sm font-semibold ${styles}`}>
+    <span className={`w-fit rounded-lg px-3 py-1 text-xs font-semibold ${styles}`}>
       {label}
     </span>
-  );
-}
-
-function ProjectIcon({ name }: { name: string }) {
-  const firstLetter = name.charAt(0).toUpperCase();
-
-  return (
-    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-100 text-sm font-semibold text-violet-700">
-      {firstLetter}
-    </div>
   );
 }
 

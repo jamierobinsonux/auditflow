@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 
 type EvidenceImage = {
   file: File | null;
@@ -14,6 +14,7 @@ export default function NewFindingPage() {
   const router = useRouter();
   const params = useParams();
   const projectId = params.id as string;
+  const supabase = createClient();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -41,10 +42,20 @@ export default function NewFindingPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+
     const { data: finding, error } = await supabase
       .from("findings")
       .insert({
         project_id: projectId,
+        user_id: user.id,
         title,
         description,
         severity,
@@ -81,6 +92,7 @@ export default function NewFindingPage() {
         .from("finding_images")
         .insert({
           finding_id: finding.id,
+          user_id: user.id,
           image_url: publicUrlData.publicUrl,
           caption: imageItem.caption,
         });
@@ -208,7 +220,7 @@ export default function NewFindingPage() {
 
           <div className="flex gap-3">
             <Link
-              href={`/projects/${projectId}/findings`}
+              href={`/projects/${projectId}`}
               className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50"
             >
               Cancel

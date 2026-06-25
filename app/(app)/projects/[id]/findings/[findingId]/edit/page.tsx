@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 
 type ExistingImage = {
   id: string;
@@ -19,6 +19,7 @@ type NewImage = {
 export default function EditFindingPage() {
   const router = useRouter();
   const params = useParams();
+  const supabase = createClient();
 
   const projectId = params.id as string;
   const findingId = params.findingId as string;
@@ -39,20 +40,24 @@ export default function EditFindingPage() {
         .from("findings")
         .select("*")
         .eq("id", findingId)
-        .single();
+        .maybeSingle();
 
       if (findingError) {
         alert(findingError.message);
         return;
       }
 
-      if (finding) {
-        setTitle(finding.title ?? "");
-        setDescription(finding.description ?? "");
-        setSeverity(finding.severity ?? "P2");
-        setStatus(finding.status ?? "Open");
-        setRecommendation(finding.recommendation ?? "");
+      if (!finding) {
+        alert("Finding not found.");
+        router.push(`/projects/${projectId}`);
+        return;
       }
+
+      setTitle(finding.title ?? "");
+      setDescription(finding.description ?? "");
+      setSeverity(finding.severity ?? "P2");
+      setStatus(finding.status ?? "Open");
+      setRecommendation(finding.recommendation ?? "");
 
       const { data: images, error: imageError } = await supabase
         .from("finding_images")
@@ -69,7 +74,7 @@ export default function EditFindingPage() {
     }
 
     loadData();
-  }, [findingId]);
+  }, [findingId, projectId, router, supabase]);
 
   function updateExistingCaption(id: string, caption: string) {
     setExistingImages((current) =>
@@ -107,6 +112,15 @@ export default function EditFindingPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      router.push("/login");
+      return;
+    }
 
     const { error } = await supabase
       .from("findings")
@@ -158,6 +172,7 @@ export default function EditFindingPage() {
         .from("finding_images")
         .insert({
           finding_id: findingId,
+          user_id: user.id,
           image_url: publicUrlData.publicUrl,
           caption: image.caption,
         });

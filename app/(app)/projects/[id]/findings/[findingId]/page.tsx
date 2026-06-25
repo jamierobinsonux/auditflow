@@ -1,6 +1,8 @@
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import { ProjectTabs } from "@/components/project-tabs";
+import { EvidenceGallery } from "@/components/evidence-gallery";
+import { DeleteFindingButton } from "@/components/delete-finding-button";
 
 export default async function FindingViewPage({
   params,
@@ -8,17 +10,25 @@ export default async function FindingViewPage({
   params: Promise<{ id: string; findingId: string }>;
 }) {
   const { id, findingId } = await params;
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const { data: finding } = await supabase
     .from("findings")
     .select("*")
     .eq("id", findingId)
+    .eq("project_id", id)
+    .eq("user_id", user?.id)
     .single();
 
   const { data: images } = await supabase
     .from("finding_images")
     .select("*")
     .eq("finding_id", findingId)
+    .eq("user_id", user?.id)
     .order("created_at", { ascending: true });
 
   if (!finding) return <main className="p-10">Finding not found.</main>;
@@ -39,12 +49,16 @@ export default async function FindingViewPage({
           </div>
         </div>
 
-        <Link
-          href={`/projects/${id}/findings/${findingId}/edit`}
-          className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium hover:bg-slate-50"
-        >
-          Edit Finding
-        </Link>
+        <div className="flex gap-3">
+          <Link
+            href={`/projects/${id}/findings/${findingId}/edit`}
+            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium hover:bg-slate-50"
+          >
+            Edit Finding
+          </Link>
+
+          <DeleteFindingButton projectId={id} findingId={findingId} />
+        </div>
       </div>
 
       <ProjectTabs projectId={id} />
@@ -66,29 +80,7 @@ export default async function FindingViewPage({
 
         <section className="rounded-2xl border border-slate-200 bg-white p-6">
           <h2 className="text-[16px] font-semibold">Evidence</h2>
-
-          {(images ?? []).length === 0 && (
-            <p className="mt-3 text-sm text-slate-500">
-              No evidence images added.
-            </p>
-          )}
-
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
-            {(images ?? []).map((image) => (
-              <div
-                key={image.id}
-                className="overflow-hidden rounded-xl border border-slate-200"
-              >
-                <img src={image.image_url} alt="" className="w-full" />
-
-                {image.caption && (
-                  <div className="p-3 text-sm text-slate-600">
-                    {image.caption}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+          <EvidenceGallery images={images ?? []} />
         </section>
       </div>
     </main>

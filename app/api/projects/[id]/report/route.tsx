@@ -5,52 +5,69 @@ import {
   View,
   StyleSheet,
   Image,
-  pdf,
+  renderToStream,
 } from "@react-pdf/renderer";
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   const { data: project } = await supabase
     .from("projects")
     .select("*")
     .eq("id", id)
-    .single();
-
-  const { data: findings } = await supabase
-    .from("findings")
-    .select("*")
-    .eq("project_id", id)
-    .order("created_at", { ascending: false });
-
-  const findingIds = (findings ?? []).map((finding) => finding.id);
-
-  const { data: images } = await supabase
-    .from("finding_images")
-    .select("*")
-    .in("finding_id", findingIds.length ? findingIds : ["00000000-0000-0000-0000-000000000000"]);
+    .eq("user_id", user.id)
+    .maybeSingle();
 
   if (!project) {
     return NextResponse.json({ error: "Project not found" }, { status: 404 });
   }
 
-  const blob = await pdf(
+  const { data: findings } = await supabase
+    .from("findings")
+    .select("*")
+    .eq("project_id", id)
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+
+  const findingIds = (findings ?? []).map((finding) => finding.id);
+
+  const { data: images } = findingIds.length
+    ? await supabase
+        .from("finding_images")
+        .select("*")
+        .in("finding_id", findingIds)
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: true })
+    : { data: [] };
+
+  const stream = await renderToStream(
     <AuditReportPDF
       project={project}
       findings={findings ?? []}
       images={images ?? []}
     />
-  ).toBlob();
+  );
 
-  return new NextResponse(blob, {
+  return new Response(stream as unknown as ReadableStream, {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="${project.name}-audit-report.pdf"`,
+      "Content-Disposition": `attachment; filename="${safeFileName(
+        project.name
+      )}-audit-report.pdf"`,
     },
   });
 }
@@ -72,9 +89,11 @@ function AuditReportPDF({
           <Text style={styles.title}>{project.name}</Text>
           <Text style={styles.subtitle}>UX Audit Report</Text>
 
-          <View style={styles.metaGrid}>
+          <View style={styles.metaBox}>
             <Text style={styles.meta}>Client: {project.client_name || "—"}</Text>
-            <Text style={styles.meta}>Audit Type: {project.audit_type || "—"}</Text>
+            <Text style={styles.meta}>
+              Audit Type: {project.audit_type || "—"}
+            </Text>
             <Text style={styles.meta}>Status: {project.status || "—"}</Text>
             <Text style={styles.meta}>
               Generated: {new Date().toLocaleDateString()}
@@ -152,6 +171,10 @@ function AuditReportPDF({
   );
 }
 
+function safeFileName(name: string) {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+}
+
 const styles = StyleSheet.create({
   page: {
     padding: 40,
@@ -182,12 +205,13 @@ const styles = StyleSheet.create({
     color: "#64748B",
     marginBottom: 20,
   },
-  metaGrid: {
+  metaBox: {
     gap: 4,
   },
   meta: {
     fontSize: 10,
     color: "#475569",
+    marginBottom: 4,
   },
   section: {
     marginBottom: 24,
@@ -213,7 +237,6 @@ const styles = StyleSheet.create({
   findingHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
     marginBottom: 12,
   },
   findingTitle: {
@@ -245,7 +268,6 @@ const styles = StyleSheet.create({
     width: "100%",
     maxHeight: 260,
     objectFit: "contain",
-    borderRadius: 6,
   },
   caption: {
     marginTop: 6,

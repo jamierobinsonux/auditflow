@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { SignOutButton } from "@/components/sign-out-button";
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -63,8 +64,8 @@ export function Sidebar() {
           </div>
 
           <div>
-            <p className="text-sm font-medium text-slate-900">Jane Doe</p>
-            <p className="text-xs text-slate-500">jane@example.com</p>
+            <p className="text-sm font-medium text-slate-900">Account</p>
+            <SignOutButton />
           </div>
         </div>
       </div>

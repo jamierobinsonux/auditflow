@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 
 export default function EditProjectPage() {
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
+  const supabase = createClient();
 
   const [name, setName] = useState("");
   const [clientName, setClientName] = useState("");
@@ -39,7 +40,7 @@ export default function EditProjectPage() {
     }
 
     loadProject();
-  }, [id]);
+  }, [id, supabase]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

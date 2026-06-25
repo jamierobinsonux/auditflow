@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import { ProjectTabs } from "@/components/project-tabs";
+import { DeleteProjectButton } from "@/components/delete-project-button";
 import type { Finding } from "@/types/finding";
 
 export default async function ProjectDetailPage({
@@ -9,17 +10,24 @@ export default async function ProjectDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const { data: project } = await supabase
     .from("projects")
     .select("*")
     .eq("id", id)
+    .eq("user_id", user?.id)
     .single();
 
   const { data: findingData } = await supabase
     .from("findings")
     .select("*")
     .eq("project_id", id)
+    .eq("user_id", user?.id)
     .order("created_at", { ascending: false });
 
   const findings = (findingData ?? []) as Finding[];
@@ -38,12 +46,16 @@ export default async function ProjectDetailPage({
           </p>
         </div>
 
-        <Link
-          href={`/projects/${id}/edit`}
-          className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium hover:bg-slate-50"
-        >
-          Edit Project
-        </Link>
+        <div className="flex gap-3">
+          <Link
+            href={`/projects/${id}/edit`}
+            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium hover:bg-slate-50"
+          >
+            Edit Project
+          </Link>
+
+          <DeleteProjectButton projectId={id} />
+        </div>
       </div>
 
       <ProjectTabs projectId={id} />
@@ -85,9 +97,7 @@ export default async function ProjectDetailPage({
               <span className="font-medium">{finding.title}</span>
               <span>{finding.severity}</span>
               <span>{finding.status}</span>
-              <span className="truncate">
-                {finding.recommendation || "—"}
-              </span>
+              <span className="truncate">{finding.recommendation || "—"}</span>
             </Link>
           ))}
 

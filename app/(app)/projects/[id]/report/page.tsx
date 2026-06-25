@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import { ProjectTabs } from "@/components/project-tabs";
 import { ExportReportButton } from "@/components/export-report-button";
 import type { Finding } from "@/types/finding";
@@ -9,17 +9,24 @@ export default async function ReportPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const { data: project } = await supabase
     .from("projects")
     .select("*")
     .eq("id", id)
+    .eq("user_id", user?.id)
     .single();
 
   const { data: findings } = await supabase
     .from("findings")
     .select("*")
     .eq("project_id", id)
+    .eq("user_id", user?.id)
     .order("created_at", { ascending: false });
 
   const findingList = (findings ?? []) as Finding[];
@@ -28,7 +35,7 @@ export default async function ReportPage({
 
   return (
     <main className="p-10">
-      <div className="flex items-start justify-between print:hidden">
+      <div className="flex items-start justify-between">
         <div>
           <h1 className="text-[24px] font-semibold text-slate-950">
             {project.name} Report
@@ -41,16 +48,10 @@ export default async function ReportPage({
         <ExportReportButton projectId={id} />
       </div>
 
-      <div className="print:hidden">
-        <ProjectTabs projectId={id} />
-      </div>
+      <ProjectTabs projectId={id} />
 
-      <section className="mt-8 space-y-6 rounded-2xl border border-slate-200 bg-white p-8 print:border-0 print:p-0">
+      <section className="mt-8 space-y-6 rounded-2xl border border-slate-200 bg-white p-8">
         <div>
-          <h1 className="hidden text-[28px] font-semibold print:block">
-            {project.name} UX Audit Report
-          </h1>
-
           <h2 className="text-[18px] font-semibold">Executive Summary</h2>
           <p className="mt-3 text-sm leading-6 text-slate-600">
             This audit reviews the user experience of {project.name}, focusing
@@ -82,7 +83,7 @@ export default async function ReportPage({
             {findingList.map((finding) => (
               <div
                 key={finding.id}
-                className="rounded-xl border border-slate-200 p-4 print:break-inside-avoid"
+                className="rounded-xl border border-slate-200 p-4"
               >
                 <div className="flex items-center gap-2">
                   <span className="rounded-lg bg-violet-100 px-2 py-1 text-xs font-medium text-violet-700">
