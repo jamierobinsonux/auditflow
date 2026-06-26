@@ -1,70 +1,122 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import {
+  LayoutDashboard,
+  BarChart3,
+  FolderKanban,
+  Shapes,
+  Settings,
+  LogOut,
+} from "lucide-react";
 import { SignOutButton } from "@/components/sign-out-button";
 
-export function Sidebar() {
+type SidebarProps = {
+  user: {
+    email?: string | null;
+    user_metadata?: {
+      full_name?: string;
+      name?: string;
+    };
+  } | null;
+};
+
+const navigation = [
+  {
+    name: "Dashboard",
+    href: "/dashboard",
+    icon: LayoutDashboard,
+    exact: true,
+  },
+  {
+    name: "Analytics",
+    href: "/dashboard/analytics",
+    icon: BarChart3,
+    exact: false,
+  },
+  {
+    name: "Projects",
+    href: "/projects",
+    icon: FolderKanban,
+    exact: false,
+  },
+  {
+    name: "Frameworks",
+    href: "/templates",
+    icon: Shapes,
+    exact: false,
+  },
+];
+
+export function Sidebar({ user }: SidebarProps) {
   const pathname = usePathname();
 
+  const displayName =
+    user?.user_metadata?.full_name ||
+    user?.user_metadata?.name ||
+    user?.email?.split("@")[0] ||
+    "Account";
+
+  const initials = getInitials(displayName);
+
   return (
-    <aside className="fixed left-0 top-0 flex h-screen w-[260px] flex-col justify-between border-r border-slate-200 bg-slate-100">
-      <div>
-        <div className="px-6 pt-8">
-          <Image
-            src="/AFLogo.png"
-            alt="AuditFlow"
-            width={190}
-            height={50}
-            priority
-            className="h-auto w-[190px]"
-          />
-        </div>
-
-        <nav className="mt-12 px-4">
-          <div className="space-y-2">
-            <NavItem href="/dashboard" active={pathname.startsWith("/dashboard")}>
-              Dashboard
-            </NavItem>
-
-            <NavItem href="/projects" active={pathname.startsWith("/projects")}>
-              Projects
-            </NavItem>
-
-            <NavItem href="/templates" active={pathname.startsWith("/templates")}>
-              Templates
-            </NavItem>
-
-            <NavItem href="/reports" active={pathname.startsWith("/reports")}>
-              Reports
-            </NavItem>
-
-            <NavItem href="/settings" active={pathname.startsWith("/settings")}>
-              Settings
-            </NavItem>
-          </div>
-        </nav>
+    <aside className="fixed left-0 top-0 flex h-screen w-64 flex-col border-r border-slate-200 bg-white">
+      <div className="border-b border-slate-200 px-6 py-6">
+        <h1 className="text-xl font-bold text-violet-600">AuditFlow</h1>
       </div>
 
-      <div>
-        <div className="mx-4 mb-6 rounded-2xl bg-violet-100 p-5">
-          <h3 className="font-semibold text-violet-700">Upgrade to Pro</h3>
-          <p className="mt-2 text-sm leading-relaxed text-slate-600">
-            Unlock unlimited audits, custom branding, and more.
-          </p>
-          <button className="mt-4 w-full rounded-xl bg-violet-600 py-3 text-sm font-medium text-white hover:bg-violet-700">
-            Upgrade Now
-          </button>
+      <nav className="flex-1 px-4 py-6">
+        <p className="mb-3 px-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
+          Workspace
+        </p>
+
+        <div className="space-y-1">
+          {navigation.slice(0, 2).map((item) => (
+            <NavItem key={item.name} item={item} pathname={pathname} />
+          ))}
         </div>
 
-        <div className="flex items-center gap-3 border-t border-slate-200 px-6 py-5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-200 text-sm font-semibold text-violet-700">
-            JD
+        <p className="mb-3 mt-8 px-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
+          Audits
+        </p>
+
+        <div className="space-y-1">
+          {navigation.slice(2).map((item) => (
+            <NavItem key={item.name} item={item} pathname={pathname} />
+          ))}
+        </div>
+      </nav>
+
+      <div className="border-t border-slate-200 p-4">
+        <NavItem
+          item={{
+            name: "Settings",
+            href: "/settings",
+            icon: Settings,
+            exact: false,
+          }}
+          pathname={pathname}
+        />
+
+        <div className="mt-4 rounded-2xl bg-slate-50 p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-violet-100 text-sm font-semibold text-violet-700">
+              {initials}
+            </div>
+
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-slate-900">
+                {displayName}
+              </p>
+              <p className="truncate text-xs text-slate-500">
+                {user?.email ?? "Signed in"}
+              </p>
+            </div>
           </div>
 
-          <div>
-            <p className="text-sm font-medium text-slate-900">Account</p>
+          <div className="mt-4 flex items-center gap-2 text-slate-500">
+            <LogOut size={14} />
             <SignOutButton />
           </div>
         </div>
@@ -74,24 +126,43 @@ export function Sidebar() {
 }
 
 function NavItem({
-  href,
-  children,
-  active,
+  item,
+  pathname,
 }: {
-  href: string;
-  children: React.ReactNode;
-  active: boolean;
+  item: {
+    name: string;
+    href: string;
+    icon: React.ElementType;
+    exact: boolean;
+  };
+  pathname: string;
 }) {
+  const Icon = item.icon;
+
+  const active = item.exact
+    ? pathname === item.href
+    : pathname === item.href || pathname.startsWith(item.href + "/");
+
   return (
     <Link
-      href={href}
-      className={`flex items-center rounded-xl px-4 py-3 text-sm font-medium transition ${
+      href={item.href}
+      className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
         active
-          ? "bg-violet-200 text-violet-700"
-          : "text-slate-600 hover:bg-white"
+          ? "bg-violet-50 text-violet-700"
+          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
       }`}
     >
-      {children}
+      <Icon size={18} strokeWidth={2} />
+      {item.name}
     </Link>
   );
+}
+
+function getInitials(name: string) {
+  return name
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 }

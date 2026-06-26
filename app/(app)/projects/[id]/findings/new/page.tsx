@@ -4,11 +4,11 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-
-type EvidenceImage = {
-  file: File | null;
-  caption: string;
-};
+import {
+  EvidenceUploader,
+  type EvidenceUpload,
+} from "@/components/evidence-uploader";
+import { createSafeStoragePath } from "@/lib/storage";
 
 type Journey = {
   id: string;
@@ -44,7 +44,7 @@ export default function NewFindingPage() {
   const [journeys, setJourneys] = useState<Journey[]>([]);
   const [steps, setSteps] = useState<JourneyStep[]>([]);
 
-  const [images, setImages] = useState<EvidenceImage[]>([
+  const [images, setImages] = useState<EvidenceUpload[]>([
     { file: null, caption: "" },
   ]);
 
@@ -82,20 +82,6 @@ export default function NewFindingPage() {
 
     loadJourneys();
   }, [projectId, router, supabase]);
-
-  function updateImage(index: number, update: Partial<EvidenceImage>) {
-    setImages((current) =>
-      current.map((item, i) => (i === index ? { ...item, ...update } : item))
-    );
-  }
-
-  function addImageField() {
-    setImages((current) => [...current, { file: null, caption: "" }]);
-  }
-
-  function removeImageField(index: number) {
-    setImages((current) => current.filter((_, i) => i !== index));
-  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -135,7 +121,7 @@ export default function NewFindingPage() {
     for (const imageItem of images) {
       if (!imageItem.file) continue;
 
-      const filePath = `${finding.id}/${Date.now()}-${imageItem.file.name}`;
+      const filePath = createSafeStoragePath(finding.id, imageItem.file);
 
       const { error: uploadError } = await supabase.storage
         .from("finding-images")
@@ -168,7 +154,8 @@ export default function NewFindingPage() {
     await supabase
       .from("projects")
       .update({ updated_at: new Date().toISOString() })
-      .eq("id", projectId);
+      .eq("id", projectId)
+      .eq("user_id", user.id);
 
     router.push(`/projects/${projectId}/findings/${finding.id}`);
     router.refresh();
@@ -284,59 +271,7 @@ export default function NewFindingPage() {
             onChange={(e) => setRecommendation(e.target.value)}
           />
 
-          <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-5">
-            <p className="text-sm font-semibold text-slate-700">
-              Evidence images
-            </p>
-
-            {images.map((imageItem, index) => (
-              <div key={index} className="space-y-3 rounded-xl bg-white p-4">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium text-slate-700">
-                    Image {index + 1}
-                  </p>
-
-                  {images.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeImageField(index)}
-                      className="text-sm font-medium text-red-600"
-                    >
-                      Remove
-                    </button>
-                  )}
-                </div>
-
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="text-sm"
-                  onChange={(e) =>
-                    updateImage(index, {
-                      file: e.target.files?.[0] ?? null,
-                    })
-                  }
-                />
-
-                <textarea
-                  className="min-h-20 w-full rounded-xl border border-slate-200 p-3 text-sm"
-                  placeholder="Image caption"
-                  value={imageItem.caption}
-                  onChange={(e) =>
-                    updateImage(index, { caption: e.target.value })
-                  }
-                />
-              </div>
-            ))}
-
-            <button
-              type="button"
-              onClick={addImageField}
-              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium"
-            >
-              + Add another image
-            </button>
-          </div>
+          <EvidenceUploader images={images} setImages={setImages} />
 
           <div className="flex gap-3">
             <Link

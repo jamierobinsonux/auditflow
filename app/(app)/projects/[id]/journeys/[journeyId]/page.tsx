@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { ProjectTabs } from "@/components/project-tabs";
 import { CreateStepForm } from "@/components/create-step-form";
 import { DeleteJourneyButton } from "@/components/delete-journey-button";
+import { EditStepInline } from "@/components/edit-step-inline";
+import { DeleteStepButton } from "@/components/delete-step-button";
 
 export default async function JourneyDetailPage({
   params,
@@ -45,7 +47,7 @@ export default async function JourneyDetailPage({
     .eq("user_id", user?.id)
     .order("created_at", { ascending: false });
 
-  if (!project || !journey) {
+  if (!project || !journey || !user) {
     return <main className="p-10">Journey not found.</main>;
   }
 
@@ -56,6 +58,7 @@ export default async function JourneyDetailPage({
           <h1 className="text-[24px] font-semibold text-slate-950">
             {journey.name}
           </h1>
+
           <p className="mt-1 text-sm text-slate-500">
             {journey.description || "No description added."}
           </p>
@@ -89,23 +92,33 @@ export default async function JourneyDetailPage({
                 key={step.id}
                 className="rounded-xl border border-slate-200 p-4"
               >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-950">
-                      {index + 1}. {step.title}
-                    </p>
-                    <p className="mt-1 text-xs text-slate-500">
-                      {stepFindings.length} findings
-                    </p>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex flex-1 items-center gap-3">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600">
+                      {index + 1}
+                    </span>
+
+                    <EditStepInline
+                      stepId={step.id}
+                      initialTitle={step.title}
+                    />
                   </div>
 
-                  <Link
-                    href={`/projects/${id}/findings/new?journeyId=${journeyId}&stepId=${step.id}`}
-                    className="text-sm font-medium text-violet-600"
-                  >
-                    Add finding
-                  </Link>
+                  <div className="flex items-center gap-3">
+                    <Link
+                      href={`/projects/${id}/findings/new?journeyId=${journeyId}&stepId=${step.id}`}
+                      className="text-sm font-medium text-violet-600"
+                    >
+                      Add finding
+                    </Link>
+
+                    <DeleteStepButton stepId={step.id} />
+                  </div>
                 </div>
+
+                <p className="mt-2 text-xs text-slate-500">
+                  {stepFindings.length} findings
+                </p>
 
                 {stepFindings.length > 0 && (
                   <div className="mt-3 space-y-2">
@@ -136,7 +149,7 @@ export default async function JourneyDetailPage({
 
         <CreateStepForm
           journeyId={journeyId}
-          userId={user!.id}
+          userId={user.id}
           nextSortOrder={(steps ?? []).length + 1}
         />
       </section>

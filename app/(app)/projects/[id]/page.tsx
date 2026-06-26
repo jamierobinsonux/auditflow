@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { ProjectTabs } from "@/components/project-tabs";
 import { DeleteProjectButton } from "@/components/delete-project-button";
+import { EditProjectMetaCard } from "@/components/edit-project-meta-card";
 import type { Finding } from "@/types/finding";
 
 export default async function ProjectDetailPage({
@@ -21,7 +22,7 @@ export default async function ProjectDetailPage({
     .select("*")
     .eq("id", id)
     .eq("user_id", user?.id)
-    .single();
+    .maybeSingle();
 
   const { data: findingData } = await supabase
     .from("findings")
@@ -41,6 +42,7 @@ export default async function ProjectDetailPage({
           <h1 className="text-[24px] font-semibold text-slate-950">
             {project.name}
           </h1>
+
           <p className="mt-1 text-sm text-slate-500">
             {project.website_url || "No website provided"}
           </p>
@@ -61,16 +63,49 @@ export default async function ProjectDetailPage({
       <ProjectTabs projectId={id} />
 
       <div className="mt-8 grid gap-4 md:grid-cols-3">
-        <InfoCard title="Audit Type" value={project.audit_type} />
-        <InfoCard title="Status" value={project.status} />
-        <InfoCard title="Client" value={project.client_name} />
+        <EditProjectMetaCard
+          projectId={id}
+          label="Audit Type"
+          value={project.audit_type}
+          field="audit_type"
+          type="select"
+          options={[
+            "Onboarding",
+            "SaaS",
+            "Mobile App",
+            "Ecommerce",
+            "Accessibility",
+            "Dashboard",
+          ]}
+        />
+
+        <EditProjectMetaCard
+          projectId={id}
+          label="Status"
+          value={project.status}
+          field="status"
+          type="select"
+          options={["In Progress", "In Review", "Completed"]}
+        />
+
+        <EditProjectMetaCard
+          projectId={id}
+          label="Client"
+          value={project.client_name}
+          field="client_name"
+        />
       </div>
 
       <section className="mt-8">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-[18px] font-semibold text-slate-950">
-            Findings
-          </h2>
+          <div>
+            <h2 className="text-[18px] font-semibold text-slate-950">
+              Findings
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Review, prioritize, and annotate issues found during the audit.
+            </p>
+          </div>
 
           <Link
             href={`/projects/${id}/findings/new`}
@@ -94,10 +129,14 @@ export default async function ProjectDetailPage({
               href={`/projects/${id}/findings/${finding.id}`}
               className="grid grid-cols-4 border-t border-slate-100 p-4 text-sm hover:bg-slate-50"
             >
-              <span className="font-medium">{finding.title}</span>
+              <span className="font-medium text-slate-950">
+                {finding.title}
+              </span>
               <span>{finding.severity}</span>
               <span>{finding.status}</span>
-              <span className="truncate">{finding.recommendation || "—"}</span>
+              <span className="truncate">
+                {finding.recommendation || "—"}
+              </span>
             </Link>
           ))}
 
@@ -109,16 +148,5 @@ export default async function ProjectDetailPage({
         </div>
       </section>
     </main>
-  );
-}
-
-function InfoCard({ title, value }: { title: string; value: string | null }) {
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5">
-      <p className="text-xs text-slate-500">{title}</p>
-      <p className="mt-2 text-[16px] font-semibold text-slate-950">
-        {value || "—"}
-      </p>
-    </div>
   );
 }

@@ -4,16 +4,16 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import {
+  EvidenceUploader,
+  type EvidenceUpload,
+} from "@/components/evidence-uploader";
+import { createSafeStoragePath } from "@/lib/storage";
 
 type ExistingImage = {
   id: string;
   image_url: string;
   caption: string | null;
-};
-
-type NewImage = {
-  file: File | null;
-  caption: string;
 };
 
 type Journey = {
@@ -49,7 +49,7 @@ export default function EditFindingPage() {
   const [steps, setSteps] = useState<JourneyStep[]>([]);
 
   const [existingImages, setExistingImages] = useState<ExistingImage[]>([]);
-  const [newImages, setNewImages] = useState<NewImage[]>([
+  const [images, setImages] = useState<EvidenceUpload[]>([
     { file: null, caption: "" },
   ]);
 
@@ -109,7 +109,7 @@ export default function EditFindingPage() {
         .eq("user_id", user.id)
         .order("sort_order", { ascending: true });
 
-      const { data: images, error: imageError } = await supabase
+      const { data: imageData, error: imageError } = await supabase
         .from("finding_images")
         .select("*")
         .eq("finding_id", findingId)
@@ -123,7 +123,7 @@ export default function EditFindingPage() {
 
       setJourneys((journeyData ?? []) as Journey[]);
       setSteps((stepData ?? []) as JourneyStep[]);
-      setExistingImages((images ?? []) as ExistingImage[]);
+      setExistingImages((imageData ?? []) as ExistingImage[]);
     }
 
     loadData();
@@ -135,21 +135,10 @@ export default function EditFindingPage() {
     );
   }
 
-  function updateNewImage(index: number, update: Partial<NewImage>) {
-    setNewImages((current) =>
-      current.map((img, i) => (i === index ? { ...img, ...update } : img))
-    );
-  }
-
-  function addNewImageField() {
-    setNewImages((current) => [...current, { file: null, caption: "" }]);
-  }
-
-  function removeNewImageField(index: number) {
-    setNewImages((current) => current.filter((_, i) => i !== index));
-  }
-
   async function deleteExistingImage(imageId: string) {
+    const confirmed = window.confirm("Delete this evidence image?");
+    if (!confirmed) return;
+
     const { error } = await supabase
       .from("finding_images")
       .delete()
@@ -196,11 +185,11 @@ export default function EditFindingPage() {
       return;
     }
 
-    for (const image of existingImages) {
+    for (const existingImage of existingImages) {
       const { error: captionError } = await supabase
         .from("finding_images")
-        .update({ caption: image.caption })
-        .eq("id", image.id)
+        .update({ caption: existingImage.caption })
+        .eq("id", existingImage.id)
         .eq("user_id", user.id);
 
       if (captionError) {
@@ -209,10 +198,10 @@ export default function EditFindingPage() {
       }
     }
 
-    for (const image of newImages) {
+    for (const image of images) {
       if (!image.file) continue;
 
-      const filePath = `${findingId}/${Date.now()}-${image.file.name}`;
+      const filePath = createSafeStoragePath(findingId, image.file);
 
       const { error: uploadError } = await supabase.storage
         .from("finding-images")
@@ -364,7 +353,7 @@ export default function EditFindingPage() {
 
           <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-5">
             <p className="text-sm font-semibold text-slate-700">
-              Existing images
+              Existing evidence
             </p>
 
             {existingImages.length === 0 && (
@@ -399,66 +388,9 @@ export default function EditFindingPage() {
                 </button>
               </div>
             ))}
-
-            <div className="border-t border-slate-200 pt-4">
-              <p className="text-sm font-semibold text-slate-700">
-                Add more images
-              </p>
-
-              <div className="mt-3 space-y-3">
-                {newImages.map((image, index) => (
-                  <div
-                    key={index}
-                    className="space-y-3 rounded-xl bg-white p-4"
-                  >
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium text-slate-700">
-                        New image {index + 1}
-                      </p>
-
-                      {newImages.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeNewImageField(index)}
-                          className="text-sm font-medium text-red-600"
-                        >
-                          Remove
-                        </button>
-                      )}
-                    </div>
-
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="text-sm"
-                      onChange={(e) =>
-                        updateNewImage(index, {
-                          file: e.target.files?.[0] ?? null,
-                        })
-                      }
-                    />
-
-                    <textarea
-                      className="min-h-20 w-full rounded-xl border border-slate-200 p-3 text-sm"
-                      placeholder="Image caption"
-                      value={image.caption}
-                      onChange={(e) =>
-                        updateNewImage(index, { caption: e.target.value })
-                      }
-                    />
-                  </div>
-                ))}
-              </div>
-
-              <button
-                type="button"
-                onClick={addNewImageField}
-                className="mt-3 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium"
-              >
-                + Add another image
-              </button>
-            </div>
           </div>
+
+          <EvidenceUploader images={images} setImages={setImages} />
 
           <div className="flex gap-3">
             <Link

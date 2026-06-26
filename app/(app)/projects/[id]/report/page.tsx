@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { ProjectTabs } from "@/components/project-tabs";
 import { ExportReportButton } from "@/components/export-report-button";
 import type { Finding } from "@/types/finding";
+import { ShareReportButton } from "@/components/share-report-button";
 
 export default async function ReportPage({
   params,
@@ -45,7 +46,10 @@ export default async function ReportPage({
           </p>
         </div>
 
+              <div className="flex gap-3">
+        <ShareReportButton projectId={id} />
         <ExportReportButton projectId={id} />
+        </div>
       </div>
 
       <ProjectTabs projectId={id} />
