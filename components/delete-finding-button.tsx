@@ -1,7 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 
 export function DeleteFindingButton({
   projectId,
@@ -13,49 +15,34 @@ export function DeleteFindingButton({
   const router = useRouter();
   const supabase = createClient();
 
-  async function handleDelete() {
-    const confirmed = window.confirm(
-      "Delete this finding? This will also remove its evidence images."
-    );
-
-    if (!confirmed) return;
-
-    const { error: imageError } = await supabase
-      .from("finding_images")
-      .delete()
-      .eq("finding_id", findingId);
-
-    if (imageError) {
-      alert(imageError.message);
-      return;
-    }
-
+  async function deleteFinding() {
     const { error } = await supabase
       .from("findings")
       .delete()
       .eq("id", findingId);
 
     if (error) {
-      alert(error.message);
+      toast.error(error.message);
       return;
     }
 
-    await supabase
-      .from("projects")
-      .update({ updated_at: new Date().toISOString() })
-      .eq("id", projectId);
-
+    toast.success("Finding deleted.");
     router.push(`/projects/${projectId}`);
     router.refresh();
   }
 
   return (
-    <button
-      type="button"
-      onClick={handleDelete}
-      className="rounded-xl border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
-    >
-      Delete Finding
-    </button>
+    <ConfirmDialog
+      title="Delete finding?"
+      description="This will permanently delete this finding and its related evidence. This action cannot be undone."
+      confirmLabel="Delete finding"
+      destructive
+      onConfirm={deleteFinding}
+      trigger={
+        <button className="rounded-xl bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">
+          Delete Finding
+        </button>
+      }
+    />
   );
 }

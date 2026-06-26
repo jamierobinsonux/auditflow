@@ -1,39 +1,42 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 
 export function DeleteProjectButton({ projectId }: { projectId: string }) {
   const router = useRouter();
   const supabase = createClient();
 
-  async function handleDelete() {
-    const confirmed = window.confirm(
-      "Delete this project? This will also delete its findings."
-    );
-
-    if (!confirmed) return;
-
+  async function deleteProject() {
     const { error } = await supabase
       .from("projects")
       .delete()
       .eq("id", projectId);
 
     if (error) {
-      alert(error.message);
+      toast.error(error.message);
       return;
     }
 
+    toast.success("Project deleted.");
     router.push("/projects");
     router.refresh();
   }
 
   return (
-    <button
-      onClick={handleDelete}
-      className="rounded-xl border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
-    >
-      Delete Project
-    </button>
+    <ConfirmDialog
+      title="Delete project?"
+      description="This will permanently delete the project and its related findings. This action cannot be undone."
+      confirmLabel="Delete project"
+      destructive
+      onConfirm={deleteProject}
+      trigger={
+        <button className="rounded-xl bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">
+          Delete Project
+        </button>
+      }
+    />
   );
 }

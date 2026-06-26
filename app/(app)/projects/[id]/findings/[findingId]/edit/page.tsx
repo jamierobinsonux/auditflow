@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { DeleteEvidenceButton } from "@/components/delete-evidence-button";
 import {
   EvidenceUploader,
   type EvidenceUpload,
@@ -133,23 +134,6 @@ export default function EditFindingPage() {
     setExistingImages((current) =>
       current.map((img) => (img.id === id ? { ...img, caption } : img))
     );
-  }
-
-  async function deleteExistingImage(imageId: string) {
-    const confirmed = window.confirm("Delete this evidence image?");
-    if (!confirmed) return;
-
-    const { error } = await supabase
-      .from("finding_images")
-      .delete()
-      .eq("id", imageId);
-
-    if (error) {
-      alert(error.message);
-      return;
-    }
-
-    setExistingImages((current) => current.filter((img) => img.id !== imageId));
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -379,13 +363,7 @@ export default function EditFindingPage() {
                   }
                 />
 
-                <button
-                  type="button"
-                  onClick={() => deleteExistingImage(image.id)}
-                  className="text-sm font-medium text-red-600"
-                >
-                  Delete image
-                </button>
+                <DeleteEvidenceButton imageId={image.id} />
               </div>
             ))}
           </div>

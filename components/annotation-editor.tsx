@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 
 type Annotation = {
   id: string;
@@ -324,16 +325,22 @@ export function AnnotationEditor({
                               Edit
                             </button>
 
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                deleteAnnotation(annotation.id);
-                              }}
-                              className="text-xs font-medium text-red-600"
-                            >
-                              Delete
-                            </button>
+                            <ConfirmDialog
+                              title="Delete annotation?"
+                              description="This will permanently delete this annotation. This action cannot be undone."
+                              confirmLabel="Delete"
+                              destructive
+                              onConfirm={() => deleteAnnotation(annotation.id)}
+                              trigger={
+                                <button
+                                  type="button"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="text-xs font-medium text-red-600"
+                                >
+                                  Delete
+                                </button>
+                              }
+                            />
                           </div>
                         </>
                       )}
