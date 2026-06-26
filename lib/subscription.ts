@@ -52,7 +52,7 @@ export function canCreateProject({
   const plan = subscriptionPlans.find((item) => item.id === planId);
   const limit = plan?.limits.projects;
 
-  if (limit === null) return true;
+  if (limit === null || limit === undefined) return true;
 
   return projectsUsed < limit;
 }
@@ -67,7 +67,7 @@ export function canCreateFinding({
   const plan = subscriptionPlans.find((item) => item.id === planId);
   const limit = plan?.limits.findings;
 
-  if (limit === null) return true;
+  if (limit === null || limit === undefined) return true;
 
   return findingsUsed < limit;
 }

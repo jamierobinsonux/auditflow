@@ -34,7 +34,9 @@ export async function POST(request: Request) {
         const userId = session.metadata?.user_id;
         const plan = session.metadata?.plan;
 
-        if (!userId || !plan) break;
+        if (!userId || !plan || !session.subscription || !session.customer) {
+          break;
+        }
 
         const subscriptionId = session.subscription as string;
         const customerId = session.customer as string;
@@ -43,21 +45,12 @@ export async function POST(request: Request) {
           subscriptionId
         );
 
-        await supabaseAdmin.from("subscriptions").upsert(
-          {
-            user_id: userId,
-            plan,
-            status: subscription.status,
-            stripe_customer_id: customerId,
-            stripe_subscription_id: subscriptionId,
-            current_period_end: new Date(
-              subscription.current_period_end * 1000
-            ).toISOString(),
-            cancel_at_period_end: subscription.cancel_at_period_end,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "user_id" }
-        );
+        await syncSubscription({
+          userId,
+          plan,
+          customerId,
+          subscription,
+        });
 
         break;
       }
@@ -71,21 +64,12 @@ export async function POST(request: Request) {
 
         if (!userId) break;
 
-        await supabaseAdmin.from("subscriptions").upsert(
-          {
-            user_id: userId,
-            plan: subscription.status === "active" ? plan : "Free",
-            status: subscription.status,
-            stripe_customer_id: subscription.customer as string,
-            stripe_subscription_id: subscription.id,
-            current_period_end: new Date(
-              subscription.current_period_end * 1000
-            ).toISOString(),
-            cancel_at_period_end: subscription.cancel_at_period_end,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "user_id" }
-        );
+        await syncSubscription({
+          userId,
+          plan: subscription.status === "active" ? plan : "Free",
+          customerId: subscription.customer as string,
+          subscription,
+        });
 
         break;
       }
@@ -98,4 +82,46 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
+}
+
+async function syncSubscription({
+  userId,
+  plan,
+  customerId,
+  subscription,
+}: {
+  userId: string;
+  plan: string;
+  customerId: string;
+  subscription: Stripe.Subscription;
+}) {
+  const periodEnd = getCurrentPeriodEnd(subscription);
+
+  await supabaseAdmin.from("subscriptions").upsert(
+    {
+      user_id: userId,
+      plan,
+      status: subscription.status,
+      stripe_customer_id: customerId,
+      stripe_subscription_id: subscription.id,
+      current_period_end: periodEnd
+        ? new Date(periodEnd * 1000).toISOString()
+        : null,
+      cancel_at_period_end: subscription.cancel_at_period_end ?? false,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id" }
+  );
+}
+
+function getCurrentPeriodEnd(subscription: Stripe.Subscription) {
+  const subscriptionWithPeriod = subscription as Stripe.Subscription & {
+    current_period_end?: number;
+  };
+
+  return (
+    subscriptionWithPeriod.current_period_end ??
+    subscription.items?.data?.[0]?.current_period_end ??
+    null
+  );
 }
