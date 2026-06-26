@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { createClient } from "@/lib/supabase/client";
 
 type Annotation = {
   id: string;
@@ -55,7 +56,10 @@ export function AnnotationEditor({
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (!user) return;
+    if (!user) {
+      toast.error("You need to be signed in.");
+      return;
+    }
 
     const nextLabel = String(annotations.length + 1);
 
@@ -70,10 +74,11 @@ export function AnnotationEditor({
     });
 
     if (error) {
-      alert(error.message);
+      toast.error(error.message);
       return;
     }
 
+    toast.success("Annotation added.");
     setDraftPoint(null);
     setNote("");
     router.refresh();
@@ -93,28 +98,28 @@ export function AnnotationEditor({
       .eq("id", annotationId);
 
     if (error) {
-      alert(error.message);
+      toast.error(error.message);
       return;
     }
 
+    toast.success("Annotation updated.");
     setEditingId(null);
     setEditNote("");
     router.refresh();
   }
 
   async function deleteAnnotation(annotationId: string) {
-    const confirmed = window.confirm("Delete this annotation?");
-    if (!confirmed) return;
-
     const { error } = await supabase
       .from("image_annotations")
       .delete()
       .eq("id", annotationId);
 
     if (error) {
-      alert(error.message);
+      toast.error(error.message);
       return;
     }
+
+    toast.success("Annotation deleted.");
 
     if (activeId === annotationId) setActiveId(null);
     if (editingId === annotationId) setEditingId(null);

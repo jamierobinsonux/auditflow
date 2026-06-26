@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 
 export function UpgradeButton({
   plan,
@@ -15,7 +16,7 @@ export function UpgradeButton({
 
   async function handleUpgrade() {
     if (!priceId) {
-      alert("Missing Stripe price ID.");
+      toast.error("Missing Stripe price ID.");
       return;
     }
 
@@ -32,7 +33,7 @@ export function UpgradeButton({
     const data = await res.json();
 
     if (!res.ok) {
-      alert(data.error || "Could not start checkout.");
+      toast.error(data.error || "Could not start checkout.");
       setLoading(false);
       return;
     }
@@ -50,7 +51,11 @@ export function UpgradeButton({
           : "bg-violet-600 text-white hover:bg-violet-700"
       }`}
     >
-      {disabled ? "Current Plan" : loading ? "Redirecting..." : `Upgrade to ${plan}`}
+      {disabled
+        ? "Current Plan"
+        : loading
+        ? "Redirecting..."
+        : `Upgrade to ${plan}`}
     </button>
   );
 }

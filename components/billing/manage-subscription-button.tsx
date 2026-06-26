@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 
 export function ManageSubscriptionButton({
   disabled,
@@ -19,7 +20,7 @@ export function ManageSubscriptionButton({
     const data = await res.json();
 
     if (!res.ok) {
-      alert(data.error || "Could not open billing portal.");
+      toast.error(data.error || "Could not open billing portal.");
       setLoading(false);
       return;
     }

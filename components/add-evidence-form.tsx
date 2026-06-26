@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, UploadCloud } from "lucide-react";
+import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { createSafeStoragePath } from "@/lib/storage";
 
@@ -20,7 +21,7 @@ export function AddEvidenceForm({ findingId }: { findingId: string }) {
     e.preventDefault();
 
     if (!file) {
-      alert("Please choose an image.");
+      toast.error("Please choose an image.");
       return;
     }
 
@@ -31,6 +32,7 @@ export function AddEvidenceForm({ findingId }: { findingId: string }) {
     } = await supabase.auth.getUser();
 
     if (!user) {
+      toast.error("You need to be signed in.");
       setIsUploading(false);
       return;
     }
@@ -42,7 +44,7 @@ export function AddEvidenceForm({ findingId }: { findingId: string }) {
       .upload(filePath, file);
 
     if (uploadError) {
-      alert(uploadError.message);
+      toast.error(uploadError.message);
       setIsUploading(false);
       return;
     }
@@ -60,11 +62,12 @@ export function AddEvidenceForm({ findingId }: { findingId: string }) {
     });
 
     if (insertError) {
-      alert(insertError.message);
+      toast.error(insertError.message);
       setIsUploading(false);
       return;
     }
 
+    toast.success("Evidence added.");
     setFile(null);
     setEvidenceName("");
     setCaption("");
