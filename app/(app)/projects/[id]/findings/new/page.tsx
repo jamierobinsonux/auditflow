@@ -95,6 +95,24 @@ export default function NewFindingPage() {
       return;
     }
 
+    const { count: findingCount } = await supabase
+  .from("findings")
+  .select("id", { count: "exact", head: true })
+  .eq("user_id", user.id);
+
+const { data: subscription } = await supabase
+  .from("subscriptions")
+  .select("plan")
+  .eq("user_id", user.id)
+  .maybeSingle();
+
+const currentPlan = subscription?.plan || "Free";
+
+if (currentPlan === "Free" && (findingCount ?? 0) >= 25) {
+  router.push("/settings/billing?limit=findings");
+  return;
+}
+
     const { data: finding, error } = await supabase
       .from("findings")
       .insert({

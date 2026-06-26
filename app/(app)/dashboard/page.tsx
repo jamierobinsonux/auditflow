@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { formatDisplayName } from "@/lib/format-name";
 import type { Project } from "@/types/project";
 import type { Finding } from "@/types/finding";
+import { FreePlanUsageCard } from "@/components/free-plan-usage-card";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -29,29 +30,45 @@ export default async function DashboardPage() {
     .select("*")
     .eq("user_id", user?.id);
 
+  const { data: subscription } = await supabase
+    .from("subscriptions")
+    .select("plan")
+    .eq("user_id", user?.id)
+    .maybeSingle();
+
+  const currentPlan = subscription?.plan || "Free";
+
   const projects = (projectData ?? []) as Project[];
   const findings = (findingData ?? []) as Finding[];
 
   const totalProjects = projects.length;
   const totalFindings = findings.length;
   const totalRecommendations = findings.filter((f) => f.recommendation).length;
-  const completedAudits = projects.filter((p) => p.status === "Completed").length;
-
+  const completedAudits = projects.filter(
+    (p) => p.status === "Completed"
+  ).length;
   const openFindings = findings.filter((f) => f.status !== "Resolved").length;
 
-  let summary = "";
+  const isFreePlan = currentPlan === "Free";
 
-  if (totalProjects === 0) {
-    summary = "Let's create your first UX audit project.";
-  } else {
-    summary = `You have ${totalProjects} ${
-      totalProjects === 1 ? "project" : "projects"
-    }, ${totalFindings} ${
-      totalFindings === 1 ? "finding" : "findings"
-    }, and ${openFindings} open ${
-      openFindings === 1 ? "finding" : "findings"
-    }.`;
-  }
+  const projectStatValue = isFreePlan
+    ? `${totalProjects} / 3`
+    : totalProjects.toString();
+
+  const findingStatValue = isFreePlan
+    ? `${totalFindings} / 25`
+    : totalFindings.toString();
+
+  const summary =
+    totalProjects === 0
+      ? "Let's create your first UX audit project."
+      : `You have ${totalProjects} ${
+          totalProjects === 1 ? "project" : "projects"
+        }, ${totalFindings} ${
+          totalFindings === 1 ? "finding" : "findings"
+        }, and ${openFindings} open ${
+          openFindings === 1 ? "finding" : "findings"
+        }.`;
 
   return (
     <main className="px-12 py-10">
@@ -72,9 +89,15 @@ export default async function DashboardPage() {
         </Link>
       </header>
 
+      <FreePlanUsageCard
+        plan={currentPlan}
+        projectsUsed={totalProjects}
+        findingsUsed={totalFindings}
+      />
+
       <section className="mt-8 grid grid-cols-4 gap-5">
-        <StatCard value={totalProjects.toString()} label="Projects" />
-        <StatCard value={totalFindings.toString()} label="Findings" />
+        <StatCard value={projectStatValue} label="Projects" />
+        <StatCard value={findingStatValue} label="Findings" />
         <StatCard
           value={totalRecommendations.toString()}
           label="Recommendations"

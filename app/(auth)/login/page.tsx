@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { BrandLogo } from "@/components/brand-logo";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
@@ -39,26 +40,41 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#F1F5F9] p-6">
+    <main className="flex min-h-screen items-center justify-center bg-[#F1F5F9] px-6">
       <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+        <div className="mb-8">
+          <BrandLogo />
+        </div>
+
         <h1 className="text-[24px] font-semibold text-slate-950">
           Sign in to AuditFlow
         </h1>
+        <p className="mt-2 text-sm text-slate-500">
+          Continue managing your UX audits, findings, and reports.
+        </p>
 
-        <form onSubmit={handleEmailLogin} className="mt-6 space-y-4">
+        <button
+          type="button"
+          onClick={handleGoogleLogin}
+          className="mt-6 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+        >
+          Continue with Google
+        </button>
+
+        <form onSubmit={handleEmailLogin} className="mt-5 space-y-4">
           <input
+            type="email"
             className="w-full rounded-xl border border-slate-200 p-3 text-sm"
             placeholder="Email"
-            type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
           />
 
           <input
+            type="password"
             className="w-full rounded-xl border border-slate-200 p-3 text-sm"
             placeholder="Password"
-            type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -69,17 +85,10 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <button
-          onClick={handleGoogleLogin}
-          className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-        >
-          Sign in with Google
-        </button>
-
-        <p className="mt-4 text-sm text-slate-500">
-          Don’t have an account?{" "}
-          <Link href="/signup" className="font-medium text-violet-600">
-            Sign up
+        <p className="mt-6 text-center text-sm text-slate-500">
+          New to AuditFlow?{" "}
+          <Link href="/signup" className="font-semibold text-violet-600">
+            Start free
           </Link>
         </p>
       </div>

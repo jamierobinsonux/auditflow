@@ -1,8 +1,19 @@
 import { createClient } from "@/lib/supabase/server";
 import { subscriptionPlans } from "@/lib/subscription-plans";
 import { PlanCard } from "@/components/billing/plan-card";
+import { ManageSubscriptionButton } from "@/components/billing/manage-subscription-button";
 
-export default async function BillingPage() {
+export default async function BillingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    limit?: string;
+    feature?: string;
+    success?: string;
+    canceled?: string;
+  }>;
+}) {
+  const params = await searchParams;
   const supabase = await createClient();
 
   const {
@@ -37,6 +48,13 @@ export default async function BillingPage() {
         </p>
       </div>
 
+      <BillingNotice
+        limit={params.limit}
+        feature={params.feature}
+        success={params.success}
+        canceled={params.canceled}
+      />
+
       <section className="mt-8 grid gap-4 md:grid-cols-3">
         <UsageCard
           label="Current plan"
@@ -66,17 +84,14 @@ export default async function BillingPage() {
               Subscription
             </h2>
             <p className="mt-1 text-sm text-slate-500">
-              Stripe billing will be connected later. These plan controls are
-              currently for UI and product setup.
+              Upgrade to unlock unlimited audits, public report sharing, and
+              professional exports.
             </p>
           </div>
 
-          <button
-            disabled
-            className="rounded-xl border border-slate-200 bg-slate-100 px-4 py-2 text-sm font-medium text-slate-500"
-          >
-            Manage subscription
-          </button>
+          <ManageSubscriptionButton
+            disabled={!subscription?.stripe_customer_id}
+          />
         </div>
       </section>
 
@@ -86,6 +101,94 @@ export default async function BillingPage() {
         ))}
       </section>
     </main>
+  );
+}
+
+function BillingNotice({
+  limit,
+  feature,
+  success,
+  canceled,
+}: {
+  limit?: string;
+  feature?: string;
+  success?: string;
+  canceled?: string;
+}) {
+  if (success) {
+    return (
+      <Notice
+        tone="success"
+        title="Subscription updated"
+        description="Your payment was successful. Your plan will update once Stripe confirms the subscription."
+      />
+    );
+  }
+
+  if (canceled) {
+    return (
+      <Notice
+        tone="neutral"
+        title="Checkout canceled"
+        description="No changes were made to your subscription."
+      />
+    );
+  }
+
+  if (limit === "projects") {
+    return (
+      <Notice
+        tone="upgrade"
+        title="You’ve reached the Free plan project limit"
+        description="Free includes 3 projects. Upgrade to Pro to create unlimited audit projects."
+      />
+    );
+  }
+
+  if (limit === "findings") {
+    return (
+      <Notice
+        tone="upgrade"
+        title="You’ve reached the Free plan finding limit"
+        description="Free includes 25 findings. Upgrade to Pro to add unlimited findings across your audits."
+      />
+    );
+  }
+
+  if (feature === "public-reports") {
+    return (
+      <Notice
+        tone="upgrade"
+        title="Public report sharing is a Pro feature"
+        description="Upgrade to Pro to create client-ready public report links."
+      />
+    );
+  }
+
+  return null;
+}
+
+function Notice({
+  title,
+  description,
+  tone,
+}: {
+  title: string;
+  description: string;
+  tone: "upgrade" | "success" | "neutral";
+}) {
+  const styles =
+    tone === "success"
+      ? "border-green-200 bg-green-50 text-green-700"
+      : tone === "upgrade"
+      ? "border-violet-200 bg-violet-50 text-violet-700"
+      : "border-slate-200 bg-white text-slate-700";
+
+  return (
+    <section className={`mt-8 rounded-2xl border p-5 shadow-sm ${styles}`}>
+      <p className="text-sm font-semibold">{title}</p>
+      <p className="mt-2 text-sm leading-6">{description}</p>
+    </section>
   );
 }
 

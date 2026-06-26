@@ -5,6 +5,8 @@ import { useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { auditFrameworks } from "@/lib/audit-frameworks";
+import { getUsage, getUserSubscription, canCreateProject } from "@/lib/subscription";
+import { UpgradeRequiredCard } from "@/components/upgrade-required-card";
 
 export default function NewProjectPage() {
   const router = useRouter();
@@ -35,6 +37,24 @@ export default function NewProjectPage() {
       router.push("/login");
       return;
     }
+
+    const { count: projectCount } = await supabase
+  .from("projects")
+  .select("id", { count: "exact", head: true })
+  .eq("user_id", user.id);
+
+const { data: subscription } = await supabase
+  .from("subscriptions")
+  .select("plan")
+  .eq("user_id", user.id)
+  .maybeSingle();
+
+const currentPlan = subscription?.plan || "Free";
+
+if (currentPlan === "Free" && (projectCount ?? 0) >= 3) {
+  router.push("/settings/billing?limit=projects");
+  return;
+}
 
     const { data: project, error } = await supabase
       .from("projects")

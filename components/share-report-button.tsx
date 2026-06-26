@@ -14,6 +14,19 @@ export function ShareReportButton({ projectId }: { projectId: string }) {
 
     if (!user) return;
 
+    const { data: subscription } = await supabase
+      .from("subscriptions")
+      .select("plan")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    const currentPlan = subscription?.plan || "Free";
+
+    if (currentPlan === "Free") {
+      window.location.href = "/settings/billing?feature=public-reports";
+      return;
+    }
+
     const token = crypto.randomUUID();
 
     const { data, error } = await supabase

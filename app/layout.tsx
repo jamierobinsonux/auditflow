@@ -1,29 +1,25 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
 import "./globals.css";
-
-const inter = Inter({
-  subsets: ["latin"],
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: "AuditFlow",
-  description: "UX Audit Management Platform",
+  description:
+    "Professional UX audit software for designers, consultants, and agencies.",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="en">
-      <body
-        className={`${inter.className} bg-[#F1F5F9] text-slate-900 antialiased`}
-      >
-        {children}
-      </body>
+    <html
+      lang="en"
+      className={`${GeistSans.variable} ${GeistMono.variable}`}
+    >
+      <body>{children}</body>
     </html>
   );
 }
