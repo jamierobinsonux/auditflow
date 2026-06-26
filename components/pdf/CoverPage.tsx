@@ -1,11 +1,18 @@
-import { Page, Text, View, StyleSheet } from "@react-pdf/renderer";
+import path from "path";
+import { Image, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 import { pdfStyles } from "./PdfStyles";
 
 export function CoverPage({ project }: { project: any }) {
+  const logoPath = path.join(process.cwd(), "public", "AFLogo.png");
+
   return (
     <Page size="A4" style={pdfStyles.coverPage}>
       <View style={styles.top}>
-        <Text style={styles.logo}>AuditFlow</Text>
+        <View style={styles.logoRow}>
+          <Image src={logoPath} style={styles.logoIcon} />
+          <Text style={styles.logo}>AuditFlow</Text>
+        </View>
+
         <Text style={styles.eyebrow}>UX Audit Report</Text>
       </View>
 
@@ -41,6 +48,15 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 120,
+  },
+  logoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  logoIcon: {
+    width: 22,
+    height: 22,
   },
   logo: {
     fontSize: 16,

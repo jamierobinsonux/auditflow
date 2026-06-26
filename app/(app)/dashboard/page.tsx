@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { formatDisplayName } from "@/lib/format-name";
 import type { Project } from "@/types/project";
 import type { Finding } from "@/types/finding";
 
@@ -9,6 +10,13 @@ export default async function DashboardPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  const rawName =
+    user?.user_metadata?.full_name ||
+    user?.user_metadata?.name ||
+    user?.email?.split("@")[0];
+
+  const displayName = formatDisplayName(rawName);
 
   const { data: projectData } = await supabase
     .from("projects")
@@ -27,19 +35,33 @@ export default async function DashboardPage() {
   const totalProjects = projects.length;
   const totalFindings = findings.length;
   const totalRecommendations = findings.filter((f) => f.recommendation).length;
-  const totalReports = projects.filter((p) => p.status === "Completed").length;
+  const completedAudits = projects.filter((p) => p.status === "Completed").length;
+
+  const openFindings = findings.filter((f) => f.status !== "Resolved").length;
+
+  let summary = "";
+
+  if (totalProjects === 0) {
+    summary = "Let's create your first UX audit project.";
+  } else {
+    summary = `You have ${totalProjects} ${
+      totalProjects === 1 ? "project" : "projects"
+    }, ${totalFindings} ${
+      totalFindings === 1 ? "finding" : "findings"
+    }, and ${openFindings} open ${
+      openFindings === 1 ? "finding" : "findings"
+    }.`;
+  }
 
   return (
     <main className="px-12 py-10">
       <header className="flex items-start justify-between">
         <div>
-          <h1 className="text-[28px] font-semibold leading-[36px] tracking-[-0.02em] text-slate-950">
-            Welcome back 👋
+          <h1 className="text-[28px] font-semibold tracking-[-0.02em] text-slate-950">
+            Welcome, {displayName}
           </h1>
 
-          <p className="mt-3 text-sm leading-6 text-slate-700">
-            Here’s what’s happening with your audits.
-          </p>
+          <p className="mt-3 text-sm leading-6 text-slate-600">{summary}</p>
         </div>
 
         <Link
@@ -53,8 +75,11 @@ export default async function DashboardPage() {
       <section className="mt-8 grid grid-cols-4 gap-5">
         <StatCard value={totalProjects.toString()} label="Projects" />
         <StatCard value={totalFindings.toString()} label="Findings" />
-        <StatCard value={totalRecommendations.toString()} label="Recommendations" />
-        <StatCard value={totalReports.toString()} label="Reports generated" />
+        <StatCard
+          value={totalRecommendations.toString()}
+          label="Recommendations"
+        />
+        <StatCard value={completedAudits.toString()} label="Completed Audits" />
       </section>
 
       <section className="mt-8">
@@ -83,7 +108,10 @@ export default async function DashboardPage() {
                 className="grid grid-cols-[2fr_1.2fr_1.2fr_0.9fr_1fr] items-center border-t border-slate-100 px-10 py-4 text-sm transition hover:bg-slate-50"
               >
                 <div>
-                  <p className="font-semibold text-slate-950">{project.name}</p>
+                  <p className="font-semibold text-slate-950">
+                    {project.name}
+                  </p>
+
                   <p className="mt-1 text-xs text-slate-500">
                     {project.website_url || "No website"}
                   </p>
@@ -129,7 +157,11 @@ function StatCard({ value, label }: { value: string; label: string }) {
 
 function TypeBadge({ label }: { label: string }) {
   return (
-    <span className={`w-fit rounded-lg px-3 py-1 text-xs font-semibold ${getTypeStyles(label)}`}>
+    <span
+      className={`w-fit rounded-lg px-3 py-1 text-xs font-semibold ${getTypeStyles(
+        label
+      )}`}
+    >
       {label}
     </span>
   );
@@ -145,7 +177,9 @@ function StatusBadge({ label }: { label: string }) {
     : "bg-blue-100 text-blue-600";
 
   return (
-    <span className={`w-fit rounded-lg px-3 py-1 text-xs font-semibold ${styles}`}>
+    <span
+      className={`w-fit rounded-lg px-3 py-1 text-xs font-semibold ${styles}`}
+    >
       {label}
     </span>
   );

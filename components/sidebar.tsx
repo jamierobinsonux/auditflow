@@ -1,13 +1,17 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { BrandLogo } from "@/components/brand-logo";
+import { formatDisplayName } from "@/lib/format-name";
 import {
   LayoutDashboard,
   BarChart3,
   FolderKanban,
   Shapes,
   Settings,
+  CreditCard,
   LogOut,
 } from "lucide-react";
 import { SignOutButton } from "@/components/sign-out-button";
@@ -52,21 +56,27 @@ const navigation = [
 export function Sidebar({ user }: SidebarProps) {
   const pathname = usePathname();
 
-  const displayName =
-    user?.user_metadata?.full_name ||
-    user?.user_metadata?.name ||
-    user?.email?.split("@")[0] ||
-    "Account";
+  const rawName =
+  user?.user_metadata?.full_name ||
+  user?.user_metadata?.name ||
+  user?.email?.split("@")[0];
+
+const displayName = formatDisplayName(rawName);
 
   const initials = getInitials(displayName);
 
   return (
     <aside className="fixed left-0 top-0 flex h-screen w-64 flex-col border-r border-slate-200 bg-white">
-      <div className="border-b border-slate-200 px-6 py-6">
-        <h1 className="text-xl font-bold text-violet-600">AuditFlow</h1>
-      </div>
+
+      <Link
+  href="/dashboard"
+  className="border-b border-slate-200 px-6 py-5 transition hover:bg-slate-50"
+>
+  <BrandLogo />
+</Link>
 
       <nav className="flex-1 px-4 py-6">
+
         <p className="mb-3 px-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
           Workspace
         </p>
@@ -89,11 +99,22 @@ export function Sidebar({ user }: SidebarProps) {
       </nav>
 
       <div className="border-t border-slate-200 p-4">
+
         <NavItem
           item={{
             name: "Settings",
             href: "/settings",
             icon: Settings,
+            exact: true,
+          }}
+          pathname={pathname}
+        />
+
+        <NavItem
+          item={{
+            name: "Billing",
+            href: "/settings/billing",
+            icon: CreditCard,
             exact: false,
           }}
           pathname={pathname}
@@ -101,6 +122,7 @@ export function Sidebar({ user }: SidebarProps) {
 
         <div className="mt-4 rounded-2xl bg-slate-50 p-4">
           <div className="flex items-center gap-3">
+
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-violet-100 text-sm font-semibold text-violet-700">
               {initials}
             </div>
@@ -109,8 +131,9 @@ export function Sidebar({ user }: SidebarProps) {
               <p className="truncate text-sm font-semibold text-slate-900">
                 {displayName}
               </p>
+
               <p className="truncate text-xs text-slate-500">
-                {user?.email ?? "Signed in"}
+                {user?.email}
               </p>
             </div>
           </div>
