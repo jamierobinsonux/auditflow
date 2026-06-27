@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { BarChart3 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { EmptyState } from "@/components/empty-state";
 import type { Finding } from "@/types/finding";
 import type { Project } from "@/types/project";
 
@@ -22,6 +24,8 @@ export default async function AnalyticsDashboardPage() {
 
   const projects = (projectsData ?? []) as Project[];
   const findings = (findingsData ?? []) as Finding[];
+
+  const hasAnalyticsData = projects.length > 0 || findings.length > 0;
 
   const severityItems = [
     { label: "P0 Critical", value: count(findings, "severity", "P0"), color: "#EF4444" },
@@ -49,14 +53,19 @@ export default async function AnalyticsDashboardPage() {
   ).length;
 
   const avgFindings =
-    projects.length > 0 ? Math.round((findings.length / projects.length) * 10) / 10 : 0;
+    projects.length > 0
+      ? Math.round((findings.length / projects.length) * 10) / 10
+      : 0;
 
   const projectsWithCounts = projects
     .map((project) => ({
       ...project,
-      findingCount: findings.filter((finding) => finding.project_id === project.id).length,
+      findingCount: findings.filter(
+        (finding) => finding.project_id === project.id
+      ).length,
       openCount: findings.filter(
-        (finding) => finding.project_id === project.id && finding.status !== "Resolved"
+        (finding) =>
+          finding.project_id === project.id && finding.status !== "Resolved"
       ).length,
     }))
     .sort((a, b) => b.findingCount - a.findingCount)
@@ -82,123 +91,151 @@ export default async function AnalyticsDashboardPage() {
         </Link>
       </div>
 
-      <SectionHeading
-        title="Portfolio Overview"
-        description="Project-level health across your audit portfolio."
-      />
+      {!hasAnalyticsData ? (
+        <AnalyticsEmptyState />
+      ) : (
+        <>
+          <SectionHeading
+            title="Portfolio Overview"
+            description="Project-level health across your audit portfolio."
+          />
 
-      <section className="mt-4 grid gap-4 md:grid-cols-4">
-        <StatCard label="Total projects" value={projects.length} helper="All audit projects" />
-        <StatCard label="Total findings" value={findings.length} helper="Across all projects" />
-        <StatCard label="Avg. findings / project" value={avgFindings} helper="Audit size indicator" />
-        <StatCard
-          label="Completed projects"
-          value={projects.filter((p) => p.status === "Completed").length}
-          helper="Project status = completed"
-        />
-      </section>
-
-      <section className="mt-8 grid gap-6 lg:grid-cols-2">
-        <Card
-          title="Projects by status"
-          description="Current status of your audit projects."
-        >
-          <DonutChart items={projectStatusItems} totalLabel="Projects" />
-        </Card>
-
-        <Card
-          title="Findings by project"
-          description="Top projects by finding volume."
-        >
-          <ProjectFindingList projects={projectsWithCounts} />
-        </Card>
-      </section>
-
-      <SectionHeading
-        title="Finding Analytics"
-        description="Finding-level severity, workflow, and prioritization insights."
-      />
-
-      <section className="mt-4 grid gap-4 md:grid-cols-4">
-        <StatCard label="High impact findings" value={highImpact} helper="Impact = High" />
-        <StatCard label="Quick wins" value={quickWins} helper="High impact / low effort" />
-        <StatCard
-          label="Open findings"
-          value={findings.filter((f) => f.status !== "Resolved").length}
-          helper="Not yet resolved"
-        />
-        <StatCard
-          label="Resolved findings"
-          value={findings.filter((f) => f.status === "Resolved").length}
-          helper="Completed fixes"
-        />
-      </section>
-
-      <section className="mt-8 grid gap-6 lg:grid-cols-2">
-        <Card
-          title="Finding severity"
-          description="Breakdown of findings by priority level across all projects."
-        >
-          <DonutChart items={severityItems} totalLabel="Findings" />
-        </Card>
-
-        <Card
-          title="Finding workflow"
-          description="Distribution of findings by workflow stage."
-        >
-          <DonutChart items={findingStatusItems} totalLabel="Findings" />
-        </Card>
-      </section>
-
-      <section className="mt-8 grid gap-6 lg:grid-cols-2">
-        <Card
-          title="Prioritization matrix"
-          description="Impact and effort breakdown for scoped findings."
-        >
-          <div className="grid grid-cols-2 gap-3">
-            <MatrixCell
-              title="Quick Wins"
-              subtitle="High impact / Low effort"
-              count={quickWins}
+          <section className="mt-4 grid gap-4 md:grid-cols-4">
+            <StatCard label="Total projects" value={projects.length} helper="All audit projects" />
+            <StatCard label="Total findings" value={findings.length} helper="Across all projects" />
+            <StatCard label="Avg. findings / project" value={avgFindings} helper="Audit size indicator" />
+            <StatCard
+              label="Completed projects"
+              value={projects.filter((p) => p.status === "Completed").length}
+              helper="Project status = completed"
             />
-            <MatrixCell
-              title="Strategic Bets"
-              subtitle="High impact / High effort"
-              count={
-                findings.filter(
-                  (f) => f.impact === "High" && f.effort === "High"
-                ).length
-              }
-            />
-            <MatrixCell
-              title="Small Fixes"
-              subtitle="Low impact / Low effort"
-              count={
-                findings.filter(
-                  (f) => f.impact === "Low" && f.effort === "Low"
-                ).length
-              }
-            />
-            <MatrixCell
-              title="Deprioritize"
-              subtitle="Low impact / High effort"
-              count={
-                findings.filter(
-                  (f) => f.impact === "Low" && f.effort === "High"
-                ).length
-              }
-            />
-          </div>
-        </Card>
+          </section>
 
-        <Card
-          title="Highest priority findings"
-          description="P0 and P1 findings that need attention first."
-        >
-          <PriorityList findings={findings} />
-        </Card>
-      </section>
+          <section className="mt-8 grid gap-6 lg:grid-cols-2">
+            <Card title="Projects by status" description="Current status of your audit projects.">
+              <DonutChart items={projectStatusItems} totalLabel="Projects" />
+            </Card>
+
+            <Card title="Findings by project" description="Top projects by finding volume.">
+              <ProjectFindingList projects={projectsWithCounts} />
+            </Card>
+          </section>
+
+          <SectionHeading
+            title="Finding Analytics"
+            description="Finding-level severity, workflow, and prioritization insights."
+          />
+
+          <section className="mt-4 grid gap-4 md:grid-cols-4">
+            <StatCard label="High impact findings" value={highImpact} helper="Impact = High" />
+            <StatCard label="Quick wins" value={quickWins} helper="High impact / low effort" />
+            <StatCard
+              label="Open findings"
+              value={findings.filter((f) => f.status !== "Resolved").length}
+              helper="Not yet resolved"
+            />
+            <StatCard
+              label="Resolved findings"
+              value={findings.filter((f) => f.status === "Resolved").length}
+              helper="Completed fixes"
+            />
+          </section>
+
+          <section className="mt-8 grid gap-6 lg:grid-cols-2">
+            <Card title="Finding severity" description="Breakdown of findings by priority level across all projects.">
+              <DonutChart items={severityItems} totalLabel="Findings" />
+            </Card>
+
+            <Card title="Finding workflow" description="Distribution of findings by workflow stage.">
+              <DonutChart items={findingStatusItems} totalLabel="Findings" />
+            </Card>
+          </section>
+
+          <section className="mt-8 grid gap-6 lg:grid-cols-2">
+            <Card title="Prioritization matrix" description="Impact and effort breakdown for scoped findings.">
+              <div className="grid grid-cols-2 gap-3">
+                <MatrixCell title="Quick Wins" subtitle="High impact / Low effort" count={quickWins} />
+                <MatrixCell
+                  title="Strategic Bets"
+                  subtitle="High impact / High effort"
+                  count={findings.filter((f) => f.impact === "High" && f.effort === "High").length}
+                />
+                <MatrixCell
+                  title="Small Fixes"
+                  subtitle="Low impact / Low effort"
+                  count={findings.filter((f) => f.impact === "Low" && f.effort === "Low").length}
+                />
+                <MatrixCell
+                  title="Deprioritize"
+                  subtitle="Low impact / High effort"
+                  count={findings.filter((f) => f.impact === "Low" && f.effort === "High").length}
+                />
+              </div>
+            </Card>
+
+            <Card title="Highest priority findings" description="P0 and P1 findings that need attention first.">
+              <PriorityList findings={findings} />
+            </Card>
+          </section>
+        </>
+      )}
     </main>
+  );
+}
+
+function AnalyticsEmptyState() {
+  return (
+    <div className="mt-8 space-y-6">
+      <EmptyState
+        icon={BarChart3}
+        title="No analytics data yet"
+        description="Create your first project and add findings to unlock portfolio insights, severity trends, workflow analytics, and prioritization data."
+        actionLabel="Create Project"
+        actionHref="/projects/new"
+      />
+
+      <section className="grid gap-4 md:grid-cols-4 opacity-60">
+        <PreviewStat label="Projects" />
+        <PreviewStat label="Findings" />
+        <PreviewStat label="High Severity" />
+        <PreviewStat label="Completed" />
+      </section>
+
+      <section className="grid gap-6 lg:grid-cols-2 opacity-60">
+        <PreviewCard title="Project health" />
+        <PreviewCard title="Finding severity" />
+      </section>
+    </div>
+  );
+}
+
+function PreviewStat({ label }: { label: string }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <p className="text-[24px] font-semibold text-slate-300">--</p>
+      <p className="mt-1 text-sm font-medium text-slate-500">{label}</p>
+      <p className="mt-1 text-xs text-slate-400">Waiting for audit data</p>
+    </div>
+  );
+}
+
+function PreviewCard({ title }: { title: string }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h2 className="text-[18px] font-semibold text-slate-500">{title}</h2>
+      <p className="mt-1 text-sm text-slate-400">
+        Charts will appear once projects and findings are added.
+      </p>
+
+      <div className="mt-6 flex items-center gap-8">
+        <div className="h-36 w-36 rounded-full bg-slate-100" />
+        <div className="flex-1 space-y-3">
+          <div className="h-3 rounded-full bg-slate-100" />
+          <div className="h-3 w-4/5 rounded-full bg-slate-100" />
+          <div className="h-3 w-3/5 rounded-full bg-slate-100" />
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -277,7 +314,9 @@ function DonutChart({
             const percent = (item.value / total) * 100;
             runningPercent += percent;
 
-            return `${item.color} ${start * 3.6}deg ${runningPercent * 3.6}deg`;
+            return `${item.color} ${start * 3.6}deg ${
+              runningPercent * 3.6
+            }deg`;
           })
           .join(", ");
 
@@ -296,7 +335,8 @@ function DonutChart({
 
       <div className="flex-1 space-y-4">
         {items.map((item) => {
-          const percent = total > 0 ? Math.round((item.value / total) * 100) : 0;
+          const percent =
+            total > 0 ? Math.round((item.value / total) * 100) : 0;
 
           return (
             <div key={item.label}>

@@ -3,10 +3,16 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { auditFrameworks } from "@/lib/audit-frameworks";
-import { getUsage, getUserSubscription, canCreateProject } from "@/lib/subscription";
-import { UpgradeRequiredCard } from "@/components/upgrade-required-card";
+import { PageShell } from "@/components/layout/page-shell";
+import { PageHeader } from "@/components/layout/page-header";
+import { Card } from "@/components/layout/card";
+import { FormField } from "@/components/ui/form-field";
+import { TextInput } from "@/components/ui/text-input";
+import { SelectInput } from "@/components/ui/select-input";
+import { Button } from "@/components/ui/button";
 
 export default function NewProjectPage() {
   const router = useRouter();
@@ -25,9 +31,11 @@ export default function NewProjectPage() {
   const [auditType, setAuditType] = useState(
     selectedFramework?.auditType || "Onboarding"
   );
+  const [isSaving, setIsSaving] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setIsSaving(true);
 
     const {
       data: { user },
@@ -39,22 +47,22 @@ export default function NewProjectPage() {
     }
 
     const { count: projectCount } = await supabase
-  .from("projects")
-  .select("id", { count: "exact", head: true })
-  .eq("user_id", user.id);
+      .from("projects")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id);
 
-const { data: subscription } = await supabase
-  .from("subscriptions")
-  .select("plan")
-  .eq("user_id", user.id)
-  .maybeSingle();
+    const { data: subscription } = await supabase
+      .from("subscriptions")
+      .select("plan")
+      .eq("user_id", user.id)
+      .maybeSingle();
 
-const currentPlan = subscription?.plan || "Free";
+    const currentPlan = subscription?.plan || "Free";
 
-if (currentPlan === "Free" && (projectCount ?? 0) >= 3) {
-  router.push("/settings/billing?limit=projects");
-  return;
-}
+    if (currentPlan === "Free" && (projectCount ?? 0) >= 3) {
+      router.push("/settings/billing?limit=projects");
+      return;
+    }
 
     const { data: project, error } = await supabase
       .from("projects")
@@ -70,7 +78,8 @@ if (currentPlan === "Free" && (projectCount ?? 0) >= 3) {
       .single();
 
     if (error) {
-      alert(error.message);
+      toast.error(error.message);
+      setIsSaving(false);
       return;
     }
 
@@ -88,7 +97,8 @@ if (currentPlan === "Free" && (projectCount ?? 0) >= 3) {
           .single();
 
         if (journeyError) {
-          alert(journeyError.message);
+          toast.error(journeyError.message);
+          setIsSaving(false);
           return;
         }
 
@@ -103,26 +113,29 @@ if (currentPlan === "Free" && (projectCount ?? 0) >= 3) {
             });
 
           if (stepError) {
-            alert(stepError.message);
+            toast.error(stepError.message);
+            setIsSaving(false);
             return;
           }
         }
       }
     }
 
+    toast.success("Project created.");
     router.push(`/projects/${project.id}`);
     router.refresh();
   }
 
   return (
-    <main className="p-10">
-      <div className="mx-auto max-w-xl rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-        <h1 className="text-[24px] font-semibold text-slate-950">
-          New Project
-        </h1>
+    <PageShell>
+      <PageHeader
+        title="New Project"
+        description="Create a UX audit project to organize findings, evidence, and recommendations."
+      />
 
+      <Card className="mx-auto mt-8 max-w-xl p-8">
         {selectedFramework && (
-          <div className="mt-4 rounded-xl border border-violet-200 bg-violet-50 p-4">
+          <div className="mb-6 rounded-xl border border-violet-200 bg-violet-50 p-4">
             <p className="text-sm font-semibold text-violet-700">
               Using framework: {selectedFramework.name}
             </p>
@@ -133,56 +146,59 @@ if (currentPlan === "Free" && (projectCount ?? 0) >= 3) {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-          <input
-            className="w-full rounded-xl border border-slate-200 p-3 text-sm"
-            placeholder="Project name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <FormField label="Project name">
+            <TextInput
+              placeholder="e.g. SaaS onboarding audit"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </FormField>
 
-          <input
-            className="w-full rounded-xl border border-slate-200 p-3 text-sm"
-            placeholder="Client name"
-            value={clientName}
-            onChange={(e) => setClientName(e.target.value)}
-          />
+          <FormField label="Client name" description="Optional">
+            <TextInput
+              placeholder="e.g. Acme"
+              value={clientName}
+              onChange={(e) => setClientName(e.target.value)}
+            />
+          </FormField>
 
-          <input
-            className="w-full rounded-xl border border-slate-200 p-3 text-sm"
-            placeholder="Website URL"
-            value={websiteUrl}
-            onChange={(e) => setWebsiteUrl(e.target.value)}
-          />
+          <FormField label="Website URL" description="Optional">
+            <TextInput
+              placeholder="https://example.com"
+              value={websiteUrl}
+              onChange={(e) => setWebsiteUrl(e.target.value)}
+            />
+          </FormField>
 
-          <select
-            className="w-full rounded-xl border border-slate-200 p-3 text-sm"
-            value={auditType}
-            onChange={(e) => setAuditType(e.target.value)}
-          >
-            <option>Onboarding</option>
-            <option>SaaS</option>
-            <option>Mobile App</option>
-            <option>Ecommerce</option>
-            <option>Accessibility</option>
-            <option>Dashboard</option>
-          </select>
+          <FormField label="Audit type">
+            <SelectInput
+              value={auditType}
+              onChange={(e) => setAuditType(e.target.value)}
+            >
+              <option>Onboarding</option>
+              <option>SaaS</option>
+              <option>Mobile App</option>
+              <option>Ecommerce</option>
+              <option>Accessibility</option>
+              <option>Dashboard</option>
+            </SelectInput>
+          </FormField>
 
           <div className="flex gap-3 pt-2">
-            <Link
-              href={selectedFramework ? "/templates" : "/projects"}
-              className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50"
-            >
-              Cancel
-            </Link>
+            <Button asChild variant="outline" className="flex-1">
+              <Link href={selectedFramework ? "/frameworks" : "/projects"}>
+                Cancel
+              </Link>
+            </Button>
 
-            <button className="flex-1 rounded-xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white hover:bg-violet-700">
-              Create Project
-            </button>
+            <Button disabled={isSaving} className="flex-1">
+              {isSaving ? "Creating..." : "Create Project"}
+            </Button>
           </div>
         </form>
-      </div>
-    </main>
+      </Card>
+    </PageShell>
   );
 }

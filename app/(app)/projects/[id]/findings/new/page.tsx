@@ -3,12 +3,21 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import {
   EvidenceUploader,
   type EvidenceUpload,
 } from "@/components/evidence-uploader";
 import { createSafeStoragePath } from "@/lib/storage";
+import { PageShell } from "@/components/layout/page-shell";
+import { PageHeader } from "@/components/layout/page-header";
+import { Card } from "@/components/layout/card";
+import { FormField } from "@/components/ui/form-field";
+import { TextInput } from "@/components/ui/text-input";
+import { TextArea } from "@/components/ui/text-area";
+import { SelectInput } from "@/components/ui/select-input";
+import { Button } from "@/components/ui/button";
 
 type Journey = {
   id: string;
@@ -40,6 +49,7 @@ export default function NewFindingPage() {
   const [effort, setEffort] = useState("");
   const [journeyId, setJourneyId] = useState(preselectedJourneyId);
   const [journeyStepId, setJourneyStepId] = useState(preselectedStepId);
+  const [isSaving, setIsSaving] = useState(false);
 
   const [journeys, setJourneys] = useState<Journey[]>([]);
   const [steps, setSteps] = useState<JourneyStep[]>([]);
@@ -85,6 +95,7 @@ export default function NewFindingPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setIsSaving(true);
 
     const {
       data: { user },
@@ -96,22 +107,22 @@ export default function NewFindingPage() {
     }
 
     const { count: findingCount } = await supabase
-  .from("findings")
-  .select("id", { count: "exact", head: true })
-  .eq("user_id", user.id);
+      .from("findings")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id);
 
-const { data: subscription } = await supabase
-  .from("subscriptions")
-  .select("plan")
-  .eq("user_id", user.id)
-  .maybeSingle();
+    const { data: subscription } = await supabase
+      .from("subscriptions")
+      .select("plan")
+      .eq("user_id", user.id)
+      .maybeSingle();
 
-const currentPlan = subscription?.plan || "Free";
+    const currentPlan = subscription?.plan || "Free";
 
-if (currentPlan === "Free" && (findingCount ?? 0) >= 25) {
-  router.push("/settings/billing?limit=findings");
-  return;
-}
+    if (currentPlan === "Free" && (findingCount ?? 0) >= 25) {
+      router.push("/settings/billing?limit=findings");
+      return;
+    }
 
     const { data: finding, error } = await supabase
       .from("findings")
@@ -132,7 +143,8 @@ if (currentPlan === "Free" && (findingCount ?? 0) >= 25) {
       .single();
 
     if (error) {
-      alert(error.message);
+      toast.error(error.message);
+      setIsSaving(false);
       return;
     }
 
@@ -146,7 +158,8 @@ if (currentPlan === "Free" && (findingCount ?? 0) >= 25) {
         .upload(filePath, imageItem.file);
 
       if (uploadError) {
-        alert(uploadError.message);
+        toast.error(uploadError.message);
+        setIsSaving(false);
         return;
       }
 
@@ -164,7 +177,8 @@ if (currentPlan === "Free" && (findingCount ?? 0) >= 25) {
         });
 
       if (imageInsertError) {
-        alert(imageInsertError.message);
+        toast.error(imageInsertError.message);
+        setIsSaving(false);
         return;
       }
     }
@@ -175,136 +189,144 @@ if (currentPlan === "Free" && (findingCount ?? 0) >= 25) {
       .eq("id", projectId)
       .eq("user_id", user.id);
 
+    toast.success("Finding added.");
     router.push(`/projects/${projectId}/findings/${finding.id}`);
     router.refresh();
   }
 
   return (
-    <main className="p-10">
-      <div className="mx-auto max-w-2xl rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-        <h1 className="text-[24px] font-semibold text-slate-950">
-          Add Finding
-        </h1>
+    <PageShell>
+      <PageHeader
+        title="Add Finding"
+        description="Document an issue, connect it to a journey, and add evidence."
+      />
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-5">
-          <input
-            className="w-full rounded-xl border border-slate-200 p-3 text-sm"
-            placeholder="Finding title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-          />
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <select
-              className="w-full rounded-xl border border-slate-200 p-3 text-sm"
-              value={journeyId}
-              onChange={(e) => {
-                setJourneyId(e.target.value);
-                setJourneyStepId("");
-              }}
-            >
-              <option value="">No journey</option>
-              {journeys.map((journey) => (
-                <option key={journey.id} value={journey.id}>
-                  {journey.name}
-                </option>
-              ))}
-            </select>
-
-            <select
-              className="w-full rounded-xl border border-slate-200 p-3 text-sm"
-              value={journeyStepId}
-              onChange={(e) => setJourneyStepId(e.target.value)}
-              disabled={!journeyId}
-            >
-              <option value="">No step</option>
-              {availableSteps.map((step) => (
-                <option key={step.id} value={step.id}>
-                  {step.title}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <textarea
-            className="min-h-28 w-full rounded-xl border border-slate-200 p-3 text-sm"
-            placeholder="Describe the issue"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
+      <Card className="mx-auto mt-8 max-w-2xl p-8">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <FormField label="Finding title">
+            <TextInput
+              placeholder="e.g. Primary CTA is difficult to notice"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+            />
+          </FormField>
 
           <div className="grid gap-4 md:grid-cols-2">
-            <select
-              className="w-full rounded-xl border border-slate-200 p-3 text-sm"
-              value={severity}
-              onChange={(e) => setSeverity(e.target.value)}
-            >
-              <option value="P0">P0 - Critical</option>
-              <option value="P1">P1 - High</option>
-              <option value="P2">P2 - Medium</option>
-              <option value="P3">P3 - Low</option>
-            </select>
+            <FormField label="Journey" description="Optional">
+              <SelectInput
+                value={journeyId}
+                onChange={(e) => {
+                  setJourneyId(e.target.value);
+                  setJourneyStepId("");
+                }}
+              >
+                <option value="">No journey</option>
+                {journeys.map((journey) => (
+                  <option key={journey.id} value={journey.id}>
+                    {journey.name}
+                  </option>
+                ))}
+              </SelectInput>
+            </FormField>
 
-            <select
-              className="w-full rounded-xl border border-slate-200 p-3 text-sm"
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-            >
-              <option>Open</option>
-              <option>In Progress</option>
-              <option>In Review</option>
-              <option>Resolved</option>
-            </select>
+            <FormField label="Journey step" description="Optional">
+              <SelectInput
+                value={journeyStepId}
+                onChange={(e) => setJourneyStepId(e.target.value)}
+                disabled={!journeyId}
+              >
+                <option value="">No step</option>
+                {availableSteps.map((step) => (
+                  <option key={step.id} value={step.id}>
+                    {step.title}
+                  </option>
+                ))}
+              </SelectInput>
+            </FormField>
+          </div>
+
+          <FormField label="Description">
+            <TextArea
+              placeholder="Describe the issue and where it appears."
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </FormField>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <FormField label="Severity">
+              <SelectInput
+                value={severity}
+                onChange={(e) => setSeverity(e.target.value)}
+              >
+                <option value="P0">P0 - Critical</option>
+                <option value="P1">P1 - High</option>
+                <option value="P2">P2 - Medium</option>
+                <option value="P3">P3 - Low</option>
+              </SelectInput>
+            </FormField>
+
+            <FormField label="Status">
+              <SelectInput
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+              >
+                <option>Open</option>
+                <option>In Progress</option>
+                <option>In Review</option>
+                <option>Resolved</option>
+              </SelectInput>
+            </FormField>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
-            <select
-              className="w-full rounded-xl border border-slate-200 p-3 text-sm"
-              value={impact}
-              onChange={(e) => setImpact(e.target.value)}
-            >
-              <option value="">Impact</option>
-              <option>High</option>
-              <option>Medium</option>
-              <option>Low</option>
-            </select>
+            <FormField label="Impact" description="Optional">
+              <SelectInput
+                value={impact}
+                onChange={(e) => setImpact(e.target.value)}
+              >
+                <option value="">Select impact</option>
+                <option>High</option>
+                <option>Medium</option>
+                <option>Low</option>
+              </SelectInput>
+            </FormField>
 
-            <select
-              className="w-full rounded-xl border border-slate-200 p-3 text-sm"
-              value={effort}
-              onChange={(e) => setEffort(e.target.value)}
-            >
-              <option value="">Effort</option>
-              <option>High</option>
-              <option>Medium</option>
-              <option>Low</option>
-            </select>
+            <FormField label="Effort" description="Optional">
+              <SelectInput
+                value={effort}
+                onChange={(e) => setEffort(e.target.value)}
+              >
+                <option value="">Select effort</option>
+                <option>High</option>
+                <option>Medium</option>
+                <option>Low</option>
+              </SelectInput>
+            </FormField>
           </div>
 
-          <textarea
-            className="min-h-28 w-full rounded-xl border border-slate-200 p-3 text-sm"
-            placeholder="Recommendation"
-            value={recommendation}
-            onChange={(e) => setRecommendation(e.target.value)}
-          />
+          <FormField label="Recommendation">
+            <TextArea
+              placeholder="Explain what should change and why."
+              value={recommendation}
+              onChange={(e) => setRecommendation(e.target.value)}
+            />
+          </FormField>
 
           <EvidenceUploader images={images} setImages={setImages} />
 
-          <div className="flex gap-3">
-            <Link
-              href={`/projects/${projectId}`}
-              className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50"
-            >
-              Cancel
-            </Link>
+          <div className="flex gap-3 pt-2">
+            <Button asChild variant="outline" className="flex-1">
+              <Link href={`/projects/${projectId}`}>Cancel</Link>
+            </Button>
 
-            <button className="flex-1 rounded-xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white hover:bg-violet-700">
-              Save Finding
-            </button>
+            <Button disabled={isSaving} className="flex-1">
+              {isSaving ? "Saving..." : "Save Finding"}
+            </Button>
           </div>
         </form>
-      </div>
-    </main>
+      </Card>
+    </PageShell>
   );
 }

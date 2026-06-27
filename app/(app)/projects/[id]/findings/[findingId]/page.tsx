@@ -1,9 +1,18 @@
 import Link from "next/link";
+import { ImageIcon } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { ProjectTabs } from "@/components/project-tabs";
 import { DeleteFindingButton } from "@/components/delete-finding-button";
 import { AnnotatedEvidenceGallery } from "@/components/annotated-evidence-gallery";
 import { AddEvidenceForm } from "@/components/add-evidence-form";
+import { EmptyState } from "@/components/empty-state";
+import { PageShell } from "@/components/layout/page-shell";
+import { PageHeader } from "@/components/layout/page-header";
+import { SectionHeader } from "@/components/layout/section-header";
+import { Card } from "@/components/layout/card";
+import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { SeverityBadge } from "@/components/ui/severity-badge";
 
 export default async function FindingViewPage({
   params,
@@ -39,83 +48,76 @@ export default async function FindingViewPage({
     .eq("user_id", user?.id)
     .order("created_at", { ascending: true });
 
-  if (!finding) return <main className="p-10">Finding not found.</main>;
+  if (!finding) return <PageShell>Finding not found.</PageShell>;
+
+  const evidenceImages = images ?? [];
 
   return (
-    <main className="p-10">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-[24px] font-semibold text-slate-950">
-            {finding.title}
-          </h1>
+    <PageShell>
+      <PageHeader
+        title={finding.title}
+        description="Review finding details, recommendations, and annotated evidence."
+        action={
+          <div className="flex gap-3">
+            <Button asChild variant="outline">
+              <Link href={`/projects/${id}/findings/${findingId}/edit`}>
+                Edit Finding
+              </Link>
+            </Button>
 
-          <div className="mt-3 flex gap-2">
-            <span className="rounded-lg bg-violet-100 px-3 py-1 text-sm font-medium text-violet-700">
-              {finding.severity}
-            </span>
-
-            <span className="rounded-lg bg-blue-100 px-3 py-1 text-sm font-medium text-blue-700">
-              {finding.status}
-            </span>
+            <DeleteFindingButton projectId={id} findingId={findingId} />
           </div>
-        </div>
+        }
+      />
 
-        <div className="flex gap-3">
-          <Link
-            href={`/projects/${id}/findings/${findingId}/edit`}
-            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium hover:bg-slate-50"
-          >
-            Edit Finding
-          </Link>
-
-          <DeleteFindingButton projectId={id} findingId={findingId} />
-        </div>
+      <div className="mt-3 flex gap-2">
+        <SeverityBadge severity={finding.severity} />
+        <StatusBadge status={finding.status} />
       </div>
 
       <ProjectTabs projectId={id} />
 
       <div className="mt-6 space-y-6">
-        <section className="rounded-2xl border border-slate-200 bg-white p-6">
-          <h2 className="text-[16px] font-semibold text-slate-950">
-            Description
-          </h2>
-          <p className="mt-3 text-sm leading-6 text-slate-600">
+        <Card className="p-6">
+          <SectionHeader title="Description" />
+
+          <p className="text-sm leading-6 text-slate-600">
             {finding.description || "No description added."}
           </p>
-        </section>
+        </Card>
 
-        <section className="rounded-2xl border border-slate-200 bg-white p-6">
-          <h2 className="text-[16px] font-semibold text-slate-950">
-            Recommendation
-          </h2>
-          <p className="mt-3 text-sm leading-6 text-slate-600">
+        <Card className="p-6">
+          <SectionHeader title="Recommendation" />
+
+          <p className="text-sm leading-6 text-slate-600">
             {finding.recommendation || "No recommendation added."}
           </p>
-        </section>
+        </Card>
 
-        <section className="rounded-2xl border border-slate-200 bg-white p-6">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h2 className="text-[16px] font-semibold text-slate-950">
-                Annotated Evidence
-              </h2>
-
-              <p className="mt-2 text-sm text-slate-500">
-                Add screenshots, then click anywhere on an image to add
-                numbered annotations.
-              </p>
-            </div>
-
-            <AddEvidenceForm findingId={findingId} />
-          </div>
-
-          <AnnotatedEvidenceGallery
-            images={images ?? []}
-            annotations={annotations ?? []}
-            findingId={findingId}
+        <Card className="p-6">
+          <SectionHeader
+            title="Annotated Evidence"
+            description="Add screenshots, then click anywhere on an image to add numbered annotations."
+            action={<AddEvidenceForm findingId={findingId} />}
           />
-        </section>
+
+          <div className="mt-5">
+            {evidenceImages.length === 0 ? (
+              <EmptyState
+                icon={ImageIcon}
+                title="No evidence added yet"
+                description="Upload screenshots or product images to support this finding and add numbered annotations."
+              />
+            ) : (
+              <AnnotatedEvidenceGallery
+                images={evidenceImages}
+                annotations={annotations ?? []}
+                findingId={findingId}
+              />
+            )}
+          </div>
+        </Card>
       </div>
-    </main>
+    </PageShell>
   );
 }

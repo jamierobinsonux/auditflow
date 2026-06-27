@@ -1,8 +1,17 @@
 import Link from "next/link";
+import { ClipboardList } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { ProjectTabs } from "@/components/project-tabs";
 import { DeleteProjectButton } from "@/components/delete-project-button";
 import { EditProjectMetaCard } from "@/components/edit-project-meta-card";
+import { EmptyState } from "@/components/empty-state";
+import { PageShell } from "@/components/layout/page-shell";
+import { PageHeader } from "@/components/layout/page-header";
+import { SectionHeader } from "@/components/layout/section-header";
+import { Card } from "@/components/layout/card";
+import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { SeverityBadge } from "@/components/ui/severity-badge";
 import type { Finding } from "@/types/finding";
 
 export default async function ProjectDetailPage({
@@ -33,36 +42,27 @@ export default async function ProjectDetailPage({
 
   const findings = (findingData ?? []) as Finding[];
 
-  if (!project) return <main className="p-10">Project not found.</main>;
+  if (!project) return <PageShell>Project not found.</PageShell>;
 
   return (
-    <main className="p-10">
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-[24px] font-semibold text-slate-950">
-            {project.name}
-          </h1>
+    <PageShell>
+      <PageHeader
+        title={project.name}
+        description={project.website_url || "No website provided"}
+        action={
+          <div className="flex gap-3">
+            <Button asChild variant="outline">
+              <Link href={`/projects/${id}/edit`}>Edit Project</Link>
+            </Button>
 
-          <p className="mt-1 text-sm text-slate-500">
-            {project.website_url || "No website provided"}
-          </p>
-        </div>
-
-        <div className="flex gap-3">
-          <Link
-            href={`/projects/${id}/edit`}
-            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium hover:bg-slate-50"
-          >
-            Edit Project
-          </Link>
-
-          <DeleteProjectButton projectId={id} />
-        </div>
-      </div>
+            <DeleteProjectButton projectId={id} />
+          </div>
+        }
+      />
 
       <ProjectTabs projectId={id} />
 
-      <div className="mt-8 grid gap-4 md:grid-cols-3">
+      <section className="mt-8 grid gap-4 md:grid-cols-3">
         <EditProjectMetaCard
           projectId={id}
           label="Audit Type"
@@ -94,59 +94,58 @@ export default async function ProjectDetailPage({
           value={project.client_name}
           field="client_name"
         />
-      </div>
+      </section>
 
       <section className="mt-8">
-        <div className="mb-4 flex items-center justify-between">
-          <div>
-            <h2 className="text-[18px] font-semibold text-slate-950">
-              Findings
-            </h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Review, prioritize, and annotate issues found during the audit.
-            </p>
-          </div>
+        <SectionHeader
+          title="Findings"
+          description="Review, prioritize, and annotate issues found during the audit."
+          action={
+            <Button asChild>
+              <Link href={`/projects/${id}/findings/new`}>+ Add Finding</Link>
+            </Button>
+          }
+        />
 
-          <Link
-            href={`/projects/${id}/findings/new`}
-            className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-700"
-          >
-            + Add Finding
-          </Link>
-        </div>
+        {findings.length === 0 ? (
+          <EmptyState
+            icon={ClipboardList}
+            title="No findings yet"
+            description="Start documenting usability issues, friction points, and recommendations for this audit."
+            actionLabel="Add Finding"
+            actionHref={`/projects/${id}/findings/new`}
+          />
+        ) : (
+          <Card className="overflow-hidden">
+            <div className="grid grid-cols-4 bg-slate-100 p-4 text-xs font-semibold uppercase tracking-wide text-slate-600">
+              <span>Finding</span>
+              <span>Severity</span>
+              <span>Status</span>
+              <span>Recommendation</span>
+            </div>
 
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-          <div className="grid grid-cols-4 bg-slate-100 p-4 text-xs font-semibold uppercase tracking-wide text-slate-600">
-            <span>Finding</span>
-            <span>Severity</span>
-            <span>Status</span>
-            <span>Recommendation</span>
-          </div>
+            {findings.map((finding) => (
+              <Link
+                key={finding.id}
+                href={`/projects/${id}/findings/${finding.id}`}
+                className="grid grid-cols-4 items-center border-t border-slate-100 p-4 text-sm hover:bg-slate-50"
+              >
+                <span className="font-medium text-slate-950">
+                  {finding.title}
+                </span>
 
-          {findings.map((finding) => (
-            <Link
-              key={finding.id}
-              href={`/projects/${id}/findings/${finding.id}`}
-              className="grid grid-cols-4 border-t border-slate-100 p-4 text-sm hover:bg-slate-50"
-            >
-              <span className="font-medium text-slate-950">
-                {finding.title}
-              </span>
-              <span>{finding.severity}</span>
-              <span>{finding.status}</span>
-              <span className="truncate">
-                {finding.recommendation || "—"}
-              </span>
-            </Link>
-          ))}
+                <SeverityBadge severity={finding.severity} />
 
-          {findings.length === 0 && (
-            <p className="border-t border-slate-100 p-6 text-sm text-slate-500">
-              No findings yet.
-            </p>
-          )}
-        </div>
+                <StatusBadge status={finding.status} />
+
+                <span className="truncate text-slate-600">
+                  {finding.recommendation || "—"}
+                </span>
+              </Link>
+            ))}
+          </Card>
+        )}
       </section>
-    </main>
+    </PageShell>
   );
 }
