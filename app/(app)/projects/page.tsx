@@ -1,14 +1,22 @@
 import Link from "next/link";
-import { FolderOpen } from "lucide-react";
+import { Archive, FolderOpen } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { EmptyState } from "@/components/empty-state";
 import { PageShell } from "@/components/layout/page-shell";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card } from "@/components/layout/card";
 import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/ui/status-badge";
 import type { Project } from "@/types/project";
 
-export default async function ProjectsPage() {
+export default async function ProjectsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ view?: string }>;
+}) {
+  const { view } = await searchParams;
+  const showArchived = view === "archived";
+
   const supabase = await createClient();
 
   const {
@@ -19,6 +27,7 @@ export default async function ProjectsPage() {
     .from("projects")
     .select("*")
     .eq("user_id", user?.id)
+    .eq("archived", showArchived)
     .order("created_at", { ascending: false });
 
   const projects = (data ?? []) as Project[];
@@ -27,7 +36,7 @@ export default async function ProjectsPage() {
     <PageShell>
       <PageHeader
         title="Projects"
-        description="Manage your UX audit projects and keep everything organized in one place."
+        description="Manage active and archived UX audit projects."
         action={
           <Button asChild size="lg">
             <Link href="/projects/new">+ New Project</Link>
@@ -35,14 +44,28 @@ export default async function ProjectsPage() {
         }
       />
 
+      <div className="mt-8 flex gap-2">
+        <Button asChild variant={!showArchived ? "default" : "outline"}>
+          <Link href="/projects">Active</Link>
+        </Button>
+
+        <Button asChild variant={showArchived ? "default" : "outline"}>
+          <Link href="/projects?view=archived">Archived</Link>
+        </Button>
+      </div>
+
       {projects.length === 0 ? (
         <div className="mt-8">
           <EmptyState
-            icon={FolderOpen}
-            title="No projects yet"
-            description="Create your first UX audit project to start tracking findings, evidence, and recommendations."
-            actionLabel="Create Project"
-            actionHref="/projects/new"
+            icon={showArchived ? Archive : FolderOpen}
+            title={showArchived ? "No archived projects" : "No active projects yet"}
+            description={
+              showArchived
+                ? "Archived projects will appear here when you want to hide completed work from your active dashboard."
+                : "Create your first UX audit project to start tracking findings, evidence, and recommendations."
+            }
+            actionLabel={showArchived ? undefined : "Create Project"}
+            actionHref={showArchived ? undefined : "/projects/new"}
           />
         </div>
       ) : (
@@ -67,9 +90,7 @@ export default async function ProjectsPage() {
                 </div>
 
                 <div className="text-right">
-                  <span className="rounded-lg bg-violet-50 px-3 py-1 text-xs font-medium text-violet-700">
-                    {project.status || "In Progress"}
-                  </span>
+                  <StatusBadge status={project.status} />
 
                   <p className="mt-2 text-xs text-slate-400">
                     {new Date(

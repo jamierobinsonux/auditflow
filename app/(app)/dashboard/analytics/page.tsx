@@ -13,9 +13,10 @@ export default async function AnalyticsDashboardPage() {
   } = await supabase.auth.getUser();
 
   const { data: projectsData } = await supabase
-    .from("projects")
-    .select("*")
-    .eq("user_id", user?.id);
+  .from("projects")
+  .select("*")
+  .eq("user_id", user?.id)
+  .eq("archived", false);
 
   const { data: findingsData } = await supabase
     .from("findings")
@@ -23,7 +24,11 @@ export default async function AnalyticsDashboardPage() {
     .eq("user_id", user?.id);
 
   const projects = (projectsData ?? []) as Project[];
-  const findings = (findingsData ?? []) as Finding[];
+const activeProjectIds = projects.map((project) => project.id);
+
+const findings = ((findingsData ?? []) as Finding[]).filter((finding) =>
+  activeProjectIds.includes(finding.project_id)
+);
 
   const hasAnalyticsData = projects.length > 0 || findings.length > 0;
 

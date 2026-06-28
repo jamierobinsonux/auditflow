@@ -12,6 +12,9 @@ import { Card } from "@/components/layout/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { SeverityBadge } from "@/components/ui/severity-badge";
+import { ArchiveProjectButton } from "@/components/archive-project-button";
+import { ArchivedProjectBanner } from "@/components/archived-project-banner";
+import { ArchivedBadge } from "@/components/ui/archived-badge";
 import type { Finding } from "@/types/finding";
 
 export default async function ProjectDetailPage({
@@ -51,59 +54,104 @@ export default async function ProjectDetailPage({
         description={project.website_url || "No website provided"}
         action={
           <div className="flex gap-3">
-            <Button asChild variant="outline">
-              <Link href={`/projects/${id}/edit`}>Edit Project</Link>
-            </Button>
+            {!project.archived && (
+              <Button asChild variant="outline">
+                <Link href={`/projects/${id}/edit`}>Edit Project</Link>
+              </Button>
+            )}
 
-            <DeleteProjectButton projectId={id} />
+            <ArchiveProjectButton projectId={id} archived={project.archived} />
+
+            {!project.archived && <DeleteProjectButton projectId={id} />}
           </div>
         }
       />
 
+      {project.archived && <ArchivedProjectBanner projectId={id} />}
+
+      <div className="mt-4">
+        {project.archived && <ArchivedBadge />}
+      </div>
+
       <ProjectTabs projectId={id} />
 
-      <section className="mt-8 grid gap-4 md:grid-cols-3">
-        <EditProjectMetaCard
-          projectId={id}
-          label="Audit Type"
-          value={project.audit_type}
-          field="audit_type"
-          type="select"
-          options={[
-            "Onboarding",
-            "SaaS",
-            "Mobile App",
-            "Ecommerce",
-            "Accessibility",
-            "Dashboard",
-          ]}
-        />
+      {!project.archived && (
+        <section className="mt-8 grid gap-4 md:grid-cols-3">
+          <EditProjectMetaCard
+            projectId={id}
+            label="Audit Type"
+            value={project.audit_type}
+            field="audit_type"
+            type="select"
+            options={[
+              "Onboarding",
+              "SaaS",
+              "Mobile App",
+              "Ecommerce",
+              "Accessibility",
+              "Dashboard",
+            ]}
+          />
 
-        <EditProjectMetaCard
-          projectId={id}
-          label="Status"
-          value={project.status}
-          field="status"
-          type="select"
-          options={["In Progress", "In Review", "Completed"]}
-        />
+          <EditProjectMetaCard
+            projectId={id}
+            label="Status"
+            value={project.status}
+            field="status"
+            type="select"
+            options={["In Progress", "In Review", "Completed"]}
+          />
 
-        <EditProjectMetaCard
-          projectId={id}
-          label="Client"
-          value={project.client_name}
-          field="client_name"
-        />
-      </section>
+          <EditProjectMetaCard
+            projectId={id}
+            label="Client"
+            value={project.client_name}
+            field="client_name"
+          />
+        </section>
+      )}
+
+      {project.archived && (
+        <section className="mt-8 grid gap-4 md:grid-cols-3">
+          <Card className="p-5">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Audit Type
+            </p>
+            <p className="mt-2 text-sm font-semibold text-slate-950">
+              {project.audit_type || "—"}
+            </p>
+          </Card>
+
+          <Card className="p-5">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Status
+            </p>
+            <p className="mt-2 text-sm font-semibold text-slate-950">
+              {project.status || "—"}
+            </p>
+          </Card>
+
+          <Card className="p-5">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Client
+            </p>
+            <p className="mt-2 text-sm font-semibold text-slate-950">
+              {project.client_name || "—"}
+            </p>
+          </Card>
+        </section>
+      )}
 
       <section className="mt-8">
         <SectionHeader
           title="Findings"
           description="Review, prioritize, and annotate issues found during the audit."
           action={
-            <Button asChild>
-              <Link href={`/projects/${id}/findings/new`}>+ Add Finding</Link>
-            </Button>
+            !project.archived ? (
+              <Button asChild>
+                <Link href={`/projects/${id}/findings/new`}>+ Add Finding</Link>
+              </Button>
+            ) : undefined
           }
         />
 
@@ -111,9 +159,13 @@ export default async function ProjectDetailPage({
           <EmptyState
             icon={ClipboardList}
             title="No findings yet"
-            description="Start documenting usability issues, friction points, and recommendations for this audit."
-            actionLabel="Add Finding"
-            actionHref={`/projects/${id}/findings/new`}
+            description={
+              project.archived
+                ? "This archived project has no findings."
+                : "Start documenting usability issues, friction points, and recommendations for this audit."
+            }
+            actionLabel={!project.archived ? "Add Finding" : undefined}
+            actionHref={!project.archived ? `/projects/${id}/findings/new` : undefined}
           />
         ) : (
           <Card className="overflow-hidden">
@@ -135,7 +187,6 @@ export default async function ProjectDetailPage({
                 </span>
 
                 <SeverityBadge severity={finding.severity} />
-
                 <StatusBadge status={finding.status} />
 
                 <span className="truncate text-slate-600">

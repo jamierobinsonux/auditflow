@@ -18,7 +18,7 @@ export function ProjectTabs({ projectId }: { projectId: string }) {
       active: pathname.includes(`/projects/${projectId}/journeys`),
     },
     {
-      label: "Report",
+      label: "Reports",
       href: `/projects/${projectId}/report`,
       active: pathname.includes(`/projects/${projectId}/report`),
     },

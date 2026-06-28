@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { FolderOpen } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { formatDisplayName } from "@/lib/format-name";
-import { EmptyState } from "@/components/empty-state";
 import { FreePlanUsageCard } from "@/components/free-plan-usage-card";
+import { OnboardingChecklist } from "@/components/onboarding-checklist";
+import { WelcomeBanner } from "@/components/welcome-banner";
 import { PageShell } from "@/components/layout/page-shell";
 import { PageHeader } from "@/components/layout/page-header";
 import { SectionHeader } from "@/components/layout/section-header";
@@ -28,16 +28,22 @@ export default async function DashboardPage() {
 
   const displayName = formatDisplayName(rawName);
 
-  const { data: projectData } = await supabase
-    .from("projects")
-    .select("*")
-    .eq("user_id", user?.id)
-    .order("created_at", { ascending: false });
+const { data: projectData } = await supabase
+  .from("projects")
+  .select("*")
+  .eq("user_id", user?.id)
+  .eq("archived", false)
+  .order("created_at", { ascending: false });
 
   const { data: findingData } = await supabase
     .from("findings")
     .select("*")
     .eq("user_id", user?.id);
+
+const { data: evidenceData } = await supabase
+  .from("finding_images")
+  .select("id, finding_id")
+  .eq("user_id", user?.id);
 
   const { data: subscription } = await supabase
     .from("subscriptions")
@@ -48,14 +54,30 @@ export default async function DashboardPage() {
   const currentPlan = subscription?.plan || "Free";
 
   const projects = (projectData ?? []) as Project[];
-  const findings = (findingData ?? []) as Finding[];
+  const activeProjectIds = projects.map((project) => project.id);
+
+const findings = ((findingData ?? []) as Finding[]).filter((finding) =>
+  activeProjectIds.includes(finding.project_id)
+);
 
   const totalProjects = projects.length;
   const totalFindings = findings.length;
+  const activeFindingIds = findings.map((finding) => finding.id);
+
+const totalEvidence =
+  evidenceData?.filter((evidence) =>
+    activeFindingIds.includes(evidence.finding_id)
+  ).length ?? 0;
   const totalRecommendations = findings.filter((f) => f.recommendation).length;
   const completedAudits = projects.filter(
     (p) => p.status === "Completed"
   ).length;
+const { data: reportExports } = await supabase
+  .from("report_exports")
+  .select("id")
+  .eq("user_id", user?.id);
+
+const completedReports = reportExports?.length ?? 0;
   const openFindings = findings.filter((f) => f.status !== "Resolved").length;
 
   const isFreePlan = currentPlan === "Free";
@@ -91,10 +113,22 @@ export default async function DashboardPage() {
         }
       />
 
+      {totalProjects === 0 && <WelcomeBanner />}
+
       <FreePlanUsageCard
         plan={currentPlan}
         projectsUsed={totalProjects}
         findingsUsed={totalFindings}
+      />
+
+      <OnboardingChecklist
+        projectCount={totalProjects}
+        findingCount={totalFindings}
+        evidenceCount={totalEvidence}
+        completedReportCount={completedReports}
+        latestProjectId={projects[0]?.id}
+        latestFindingProjectId={findings[0]?.project_id}
+        latestFindingId={findings[0]?.id}
       />
 
       <section className="mt-8 grid grid-cols-4 gap-5">
@@ -107,18 +141,10 @@ export default async function DashboardPage() {
         <StatCard value={completedAudits.toString()} label="Completed Audits" />
       </section>
 
-      <section className="mt-8">
-        <SectionHeader title="Recent Projects" />
+      {projects.length > 0 && (
+        <section className="mt-8">
+          <SectionHeader title="Recent Projects" />
 
-        {projects.length === 0 ? (
-          <EmptyState
-            icon={FolderOpen}
-            title="No projects yet"
-            description="Create your first UX audit project to start documenting findings, evidence, and recommendations."
-            actionLabel="Create Project"
-            actionHref="/projects/new"
-          />
-        ) : (
           <Card className="overflow-hidden">
             <div className="grid grid-cols-[2fr_1.2fr_1.2fr_0.9fr_1fr] bg-slate-100 px-10 py-4 text-xs font-semibold uppercase tracking-wide text-slate-600">
               <span>Project</span>
@@ -163,8 +189,8 @@ export default async function DashboardPage() {
               );
             })}
           </Card>
-        )}
-      </section>
+        </section>
+      )}
     </PageShell>
   );
 }

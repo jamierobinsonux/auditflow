@@ -1,7 +1,161 @@
-import { Document, Page, Text, View, Image } from "@react-pdf/renderer";
-import { CoverPage } from "./CoverPage";
-import { SectionTitle } from "./SectionTitle";
-import { pdfStyles } from "./PdfStyles";
+import { Document } from "@react-pdf/renderer";
+import { createReportTheme } from "./theme";
+import type {
+  AuditReportProps,
+  ReportOptions,
+  ReportSectionId,
+  ReportStats,
+} from "./types";
+import { CoverPage } from "./pages/CoverPage";
+import { ContentsPage, type ContentsItem } from "./pages/ContentsPage";
+import { ExecutiveSummaryPage } from "./pages/ExecutiveSummaryPage";
+import { ScopePage } from "./pages/ScopePage";
+import { RisksPage } from "./pages/RisksPage";
+import { FindingsPage } from "./pages/FindingsPage";
+import { JourneyAnalysisPage } from "./pages/JourneyAnalysisPage";
+import { PrioritizationPage } from "./pages/PrioritizationPage";
+import { RecommendationsPage } from "./pages/RecommendationsPage";
+import { AppendixPage } from "./pages/AppendixPage";
+import { ConclusionPage } from "./pages/ConclusionPage";
+
+const SEVERITY_ORDER = [
+  "P0",
+  "P1",
+  "P2",
+  "P3",
+  "critical",
+  "high",
+  "medium",
+  "low",
+];
+
+const DEFAULT_SECTIONS: ReportSectionId[] = [
+  "cover",
+  "contents",
+  "executive",
+  "scope",
+  "risks",
+  "findings",
+  "journeys",
+  "prioritization",
+  "recommendations",
+  "appendix",
+  "conclusion",
+];
+
+const TEMPLATE_SECTIONS: Record<string, ReportSectionId[]> = {
+  professional: DEFAULT_SECTIONS,
+  executive: [
+    "cover",
+    "contents",
+    "executive",
+    "scope",
+    "risks",
+    "prioritization",
+    "recommendations",
+    "conclusion",
+  ],
+  minimal: ["cover", "contents", "executive", "findings", "recommendations"],
+  findings: ["cover", "contents", "findings", "prioritization", "recommendations"],
+  evidence: ["cover", "contents", "findings", "appendix"],
+  accessibility: [
+    "cover",
+    "contents",
+    "executive",
+    "scope",
+    "findings",
+    "prioritization",
+    "recommendations",
+    "appendix",
+    "conclusion",
+  ],
+};
+
+const SECTION_LABELS: Record<ReportSectionId, string> = {
+  cover: "Cover",
+  contents: "Contents",
+  executive: "Executive Summary",
+  scope: "Scope & Methodology",
+  risks: "Top Risks",
+  findings: "Findings",
+  journeys: "Journey Analysis",
+  prioritization: "Prioritization",
+  recommendations: "Recommendations",
+  appendix: "Evidence Appendix",
+  conclusion: "Conclusion",
+};
+
+type NumberedSectionId = Exclude<ReportSectionId, "cover" | "contents">;
+
+function isNumberedSection(section: ReportSectionId): section is NumberedSectionId {
+  return section !== "cover" && section !== "contents";
+}
+
+function severityRank(value: unknown) {
+  if (!value) return 99;
+
+  const severity = String(value).toLowerCase();
+
+  if (severity === "p0" || severity === "critical") return 0;
+  if (severity === "p1" || severity === "high") return 1;
+  if (severity === "p2" || severity === "medium") return 2;
+  if (severity === "p3" || severity === "low") return 3;
+
+  const index = SEVERITY_ORDER.map((item) => item.toLowerCase()).indexOf(severity);
+  return index === -1 ? 99 : index;
+}
+
+function hasSeverity(
+  finding: any,
+  expected: "critical" | "high" | "medium" | "low"
+) {
+  const rank = severityRank(finding.severity);
+  return (
+    (expected === "critical" && rank === 0) ||
+    (expected === "high" && rank === 1) ||
+    (expected === "medium" && rank === 2) ||
+    (expected === "low" && rank === 3)
+  );
+}
+
+function resolveSections(options?: ReportOptions | null, hasEvidence = false) {
+  const template = options?.template || "professional";
+  const baseSections = options?.sections?.length
+    ? options.sections
+    : TEMPLATE_SECTIONS[String(template)] ?? DEFAULT_SECTIONS;
+
+  const normalized = baseSections.filter((section): section is ReportSectionId =>
+    DEFAULT_SECTIONS.includes(section as ReportSectionId)
+  );
+
+  const unique = Array.from(new Set(normalized));
+  const sections = unique.length ? unique : DEFAULT_SECTIONS;
+
+  if (!hasEvidence) {
+    return sections.filter((section) => section !== "appendix");
+  }
+
+  return sections;
+}
+
+function createContentsItems(sections: ReportSectionId[]): ContentsItem[] {
+  return sections.filter(isNumberedSection).map((section, index) => ({
+    number: String(index + 1).padStart(2, "0"),
+    title: SECTION_LABELS[section],
+  }));
+}
+
+function getSectionNumber(sections: ReportSectionId[], section: ReportSectionId) {
+  if (!isNumberedSection(section)) return "";
+  const contentSections = sections.filter(isNumberedSection);
+  const index = contentSections.indexOf(section);
+  return index >= 0 ? String(index + 1).padStart(2, "0") : "";
+}
+
+function calculateUxScore(stats: Omit<ReportStats, "uxScore">) {
+  const penalty = stats.critical * 18 + stats.high * 10 + stats.medium * 5 + stats.low * 2;
+  return Math.max(0, Math.min(100, 100 - penalty));
+}
 
 export function AuditReport({
   project,
@@ -9,328 +163,129 @@ export function AuditReport({
   journeys,
   steps,
   images,
-}: {
-  project: any;
-  findings: any[];
-  journeys: any[];
-  steps: any[];
-  images: any[];
-}) {
-  const p0 = findings.filter((f) => f.severity === "P0");
-  const p1 = findings.filter((f) => f.severity === "P1");
-  const quickWins = findings.filter(
-    (f) => f.impact === "High" && f.effort === "Low"
+  annotations,
+  branding,
+  isPro,
+  options,
+}: AuditReportProps) {
+  const safeFindings = findings ?? [];
+  const safeJourneys = journeys ?? [];
+  const safeSteps = steps ?? [];
+  const safeImages = images ?? [];
+  const safeAnnotations = annotations ?? [];
+
+  const theme = createReportTheme({ branding, isPro });
+  const sections = resolveSections(options, safeImages.length > 0);
+  const contentsItems = createContentsItems(sections);
+
+  const sortedFindings = [...safeFindings].sort(
+    (a, b) => severityRank(a.severity) - severityRank(b.severity)
   );
-  const unassignedFindings = findings.filter((finding) => !finding.journey_id);
+
+  const baseStats = {
+    totalFindings: safeFindings.length,
+    critical: safeFindings.filter((finding) => hasSeverity(finding, "critical")).length,
+    high: safeFindings.filter((finding) => hasSeverity(finding, "high")).length,
+    medium: safeFindings.filter((finding) => hasSeverity(finding, "medium")).length,
+    low: safeFindings.filter((finding) => hasSeverity(finding, "low")).length,
+    quickWins: safeFindings.filter(
+      (finding) =>
+        String(finding.impact || "").toLowerCase() === "high" &&
+        String(finding.effort || "").toLowerCase() === "low"
+    ).length,
+    journeys: safeJourneys.length,
+    evidence: safeImages.length,
+  };
+
+  const stats: ReportStats = {
+    ...baseStats,
+    uxScore: calculateUxScore(baseStats),
+  };
+
+  const reportTitle = options?.title?.trim() || `${project.name || "UX Audit"} Report`;
 
   return (
-    <Document>
-      <CoverPage project={project} />
-
-      <Page size="A4" style={pdfStyles.page}>
-        <SectionTitle eyebrow="01" title="Executive Summary" />
-
-        <Text style={pdfStyles.body}>
-          This audit reviews {project.name} across key user experience
-          touchpoints, with a focus on identifying friction, prioritizing
-          improvements, and translating findings into clear product
-          recommendations.
-        </Text>
-
-        <View style={{ flexDirection: "row", gap: 12, marginTop: 24 }}>
-          <SummaryCard label="Total Findings" value={findings.length} />
-          <SummaryCard label="Critical Issues" value={p0.length} />
-          <SummaryCard label="High Priority" value={p1.length} />
-          <SummaryCard label="Quick Wins" value={quickWins.length} />
-        </View>
-
-        <View style={{ marginTop: 36 }}>
-          <SectionTitle eyebrow="02" title="Journey Overview" />
-
-          {journeys.length === 0 && (
-            <Text style={pdfStyles.body}>No journeys have been added yet.</Text>
-          )}
-
-          {journeys.map((journey) => {
-            const journeySteps = steps.filter(
-              (step) => step.journey_id === journey.id
-            );
-
-            const journeyFindings = findings.filter(
-              (finding) => finding.journey_id === journey.id
-            );
-
-            return (
-              <View key={journey.id} style={pdfStyles.mutedCard} wrap={false}>
-                <Text style={{ fontSize: 15, fontWeight: "bold" }}>
-                  {journey.name}
-                </Text>
-
-                {journey.description && (
-                  <Text style={[pdfStyles.body, { marginTop: 8 }]}>
-                    {journey.description}
-                  </Text>
-                )}
-
-                <Text style={{ marginTop: 8, fontSize: 9, color: "#7C3AED" }}>
-                  {journeySteps.length} steps • {journeyFindings.length} findings
-                </Text>
-              </View>
-            );
-          })}
-
-          {unassignedFindings.length > 0 && (
-            <View style={pdfStyles.mutedCard} wrap={false}>
-              <Text style={{ fontSize: 15, fontWeight: "bold" }}>
-                Unassigned Findings
-              </Text>
-              <Text style={{ marginTop: 8, fontSize: 9, color: "#7C3AED" }}>
-                {unassignedFindings.length} findings
-              </Text>
-            </View>
-          )}
-        </View>
-      </Page>
-
-      <Page size="A4" style={pdfStyles.page}>
-        <SectionTitle eyebrow="03" title="Journey-Based Findings" />
-
-        {journeys.map((journey) => {
-          const journeySteps = steps.filter(
-            (step) => step.journey_id === journey.id
-          );
-
-          const journeyFindings = findings.filter(
-            (finding) => finding.journey_id === journey.id
-          );
-
-          return (
-            <View key={journey.id} style={pdfStyles.mutedCard}>
-              <Text style={{ fontSize: 18, fontWeight: "bold" }}>
-                {journey.name}
-              </Text>
-
-              {journey.description && (
-                <Text style={[pdfStyles.body, { marginTop: 10 }]}>
-                  {journey.description}
-                </Text>
-              )}
-
-              {journeySteps.map((step, index) => {
-                const stepFindings = journeyFindings.filter(
-                  (finding) => finding.journey_step_id === step.id
-                );
-
-                return (
-                  <View key={step.id} style={pdfStyles.card} wrap={false}>
-                    <Text style={{ fontSize: 13, fontWeight: "bold" }}>
-                      {index + 1}. {step.title}
-                    </Text>
-
-                    {stepFindings.length === 0 && (
-                      <Text style={[pdfStyles.body, { marginTop: 10 }]}>
-                        No findings assigned to this step.
-                      </Text>
-                    )}
-
-                    {stepFindings.map((finding) => (
-                      <FindingCard
-                        key={finding.id}
-                        finding={finding}
-                        hasImages={
-                          images.filter(
-                            (image) => image.finding_id === finding.id
-                          ).length > 0
-                        }
-                      />
-                    ))}
-                  </View>
-                );
-              })}
-
-              {journeyFindings.filter((finding) => !finding.journey_step_id)
-                .length > 0 && (
-                <View style={pdfStyles.card}>
-                  <Text style={{ fontSize: 13, fontWeight: "bold" }}>
-                    Unassigned to step
-                  </Text>
-
-                  {journeyFindings
-                    .filter((finding) => !finding.journey_step_id)
-                    .map((finding) => (
-                      <FindingCard
-                        key={finding.id}
-                        finding={finding}
-                        hasImages={
-                          images.filter(
-                            (image) => image.finding_id === finding.id
-                          ).length > 0
-                        }
-                      />
-                    ))}
-                </View>
-              )}
-            </View>
-          );
-        })}
-
-        {unassignedFindings.length > 0 && (
-          <View style={pdfStyles.mutedCard}>
-            <Text style={{ fontSize: 18, fontWeight: "bold" }}>
-              Unassigned Findings
-            </Text>
-
-            {unassignedFindings.map((finding) => (
-              <FindingCard
-                key={finding.id}
-                finding={finding}
-                hasImages={
-                  images.filter((image) => image.finding_id === finding.id)
-                    .length > 0
-                }
-              />
-            ))}
-          </View>
-        )}
-      </Page>
-
-      <Page size="A4" style={pdfStyles.page}>
-        <SectionTitle eyebrow="04" title="Recommendations Summary" />
-
-        {["P0", "P1", "P2", "P3"].map((severity) => {
-          const severityFindings = findings.filter(
-            (finding) => finding.severity === severity
-          );
-
-          if (severityFindings.length === 0) return null;
-
-          return (
-            <View key={severity} style={{ marginBottom: 28 }}>
-              <Text style={{ fontSize: 15, fontWeight: "bold" }}>
-                {severity} Recommendations
-              </Text>
-
-              {severityFindings.map((finding, index) => (
-                <View key={finding.id} style={pdfStyles.card} wrap={false}>
-                  <Text style={{ fontSize: 11, fontWeight: "bold" }}>
-                    {index + 1}. {finding.title}
-                  </Text>
-                  <Text style={[pdfStyles.body, { marginTop: 10 }]}>
-                    {finding.recommendation || "No recommendation added."}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          );
-        })}
-
-        <SectionTitle eyebrow="05" title="Conclusion" />
-
-        <Text style={pdfStyles.body}>
-          The findings in this report should guide the next design iteration,
-          roadmap discussion, or stakeholder review. Addressing the highest
-          severity and highest impact issues first will create the clearest
-          improvement in user experience and product performance.
-        </Text>
-      </Page>
-
-      {images.length > 0 && (
-        <Page size="A4" style={pdfStyles.page}>
-          <SectionTitle eyebrow="06" title="Evidence Appendix" />
-
-          {images.map((image, index) => {
-            const finding = findings.find((f) => f.id === image.finding_id);
-
-            return (
-              <View key={image.id} style={pdfStyles.card} wrap={false}>
-                <Text style={{ fontSize: 12, fontWeight: "bold" }}>
-                  Evidence {index + 1}
-                </Text>
-
-                {finding && (
-                  <Text style={{ marginTop: 8, fontSize: 9, color: "#64748B" }}>
-                    Related finding: {finding.title}
-                  </Text>
-                )}
-
-                <View style={{ marginTop: 16 }}>
-                  <Image src={image.image_url} style={pdfStyles.image} />
-                </View>
-
-                {image.caption && (
-                  <Text style={pdfStyles.caption}>{image.caption}</Text>
-                )}
-              </View>
-            );
-          })}
-        </Page>
+    <Document
+      title={reportTitle}
+      author={theme.preparedBy}
+      subject="UX audit report"
+      creator="AuditFlow"
+      producer="AuditFlow"
+    >
+      {sections.includes("cover") && <CoverPage project={project} theme={theme} />}
+      {sections.includes("contents") && <ContentsPage theme={theme} items={contentsItems} />}
+      {sections.includes("executive") && (
+        <ExecutiveSummaryPage
+          project={project}
+          findings={sortedFindings}
+          stats={stats}
+          theme={theme}
+          sectionNumber={getSectionNumber(sections, "executive")}
+        />
+      )}
+      {sections.includes("scope") && (
+        <ScopePage
+          project={project}
+          theme={theme}
+          sectionNumber={getSectionNumber(sections, "scope")}
+        />
+      )}
+      {sections.includes("risks") && (
+        <RisksPage
+          findings={sortedFindings}
+          journeys={safeJourneys}
+          theme={theme}
+          sectionNumber={getSectionNumber(sections, "risks")}
+        />
+      )}
+      {sections.includes("findings") && (
+        <FindingsPage
+          findings={sortedFindings}
+          journeys={safeJourneys}
+          images={safeImages}
+          annotations={safeAnnotations}
+          theme={theme}
+          sectionNumber={getSectionNumber(sections, "findings")}
+        />
+      )}
+      {sections.includes("journeys") && (
+        <JourneyAnalysisPage
+          journeys={safeJourneys}
+          steps={safeSteps}
+          findings={safeFindings}
+          theme={theme}
+          sectionNumber={getSectionNumber(sections, "journeys")}
+        />
+      )}
+      {sections.includes("prioritization") && (
+        <PrioritizationPage
+          findings={sortedFindings}
+          theme={theme}
+          sectionNumber={getSectionNumber(sections, "prioritization")}
+        />
+      )}
+      {sections.includes("recommendations") && (
+        <RecommendationsPage
+          findings={sortedFindings}
+          theme={theme}
+          sectionNumber={getSectionNumber(sections, "recommendations")}
+        />
+      )}
+      {sections.includes("appendix") && safeImages.length > 0 && (
+        <AppendixPage
+          images={safeImages}
+          findings={safeFindings}
+          annotations={safeAnnotations}
+          theme={theme}
+          sectionNumber={getSectionNumber(sections, "appendix")}
+        />
+      )}
+      {sections.includes("conclusion") && (
+        <ConclusionPage
+          theme={theme}
+          sectionNumber={getSectionNumber(sections, "conclusion")}
+        />
       )}
     </Document>
-  );
-}
-
-function SummaryCard({ label, value }: { label: string; value: number }) {
-  return (
-    <View style={[pdfStyles.mutedCard, { flex: 1, padding: 24 }]}>
-      <Text style={{ fontSize: 30, fontWeight: "bold" }}>{value}</Text>
-      <Text style={{ marginTop: 8, fontSize: 8, color: "#64748B" }}>
-        {label}
-      </Text>
-    </View>
-  );
-}
-
-function FindingCard({
-  finding,
-  hasImages,
-}: {
-  finding: any;
-  hasImages: boolean;
-}) {
-  return (
-    <View style={[pdfStyles.card, { marginTop: 18 }]} wrap={false}>
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          marginBottom: 12,
-        }}
-        wrap={false}
-      >
-        <Text style={{ fontSize: 14, fontWeight: "bold", maxWidth: "75%" }}>
-          {finding.title}
-        </Text>
-        <Text style={pdfStyles.badge}>{finding.severity}</Text>
-      </View>
-
-      <Text style={pdfStyles.label}>Status</Text>
-      <Text style={pdfStyles.body}>{finding.status || "Open"}</Text>
-
-      <Text style={pdfStyles.label}>Description</Text>
-      <Text style={pdfStyles.body}>
-        {finding.description || "No description added."}
-      </Text>
-
-      <Text style={pdfStyles.label}>Recommendation</Text>
-      <Text style={pdfStyles.body}>
-        {finding.recommendation || "No recommendation added."}
-      </Text>
-
-      {(finding.impact || finding.effort) && (
-        <View style={{ flexDirection: "row", gap: 8, marginTop: 12 }}>
-          <Text style={pdfStyles.badge}>Impact: {finding.impact || "—"}</Text>
-          <Text style={pdfStyles.badge}>Effort: {finding.effort || "—"}</Text>
-        </View>
-      )}
-
-      {hasImages && (
-        <>
-          <View style={pdfStyles.divider} />
-          <Text style={{ fontSize: 9, color: "#64748B" }}>
-            Evidence screenshots are included in the appendix.
-          </Text>
-        </>
-      )}
-    </View>
   );
 }
