@@ -26,7 +26,7 @@ export function PlanCard({ plan, currentPlan }: PlanCardProps) {
 
   return (
     <div
-      className={`relative rounded-2xl border bg-white p-6 shadow-sm ${
+      className={`relative rounded-3xl border bg-white p-6 shadow-sm ${
         plan.recommended ? "border-violet-300" : "border-slate-200"
       }`}
     >
@@ -46,7 +46,9 @@ export function PlanCard({ plan, currentPlan }: PlanCardProps) {
         <p className="text-[32px] font-semibold text-slate-950">
           {plan.price}
         </p>
-        <p className="pb-2 text-sm text-slate-500">{plan.cadence}</p>
+        {plan.cadence !== "forever" && (
+          <p className="pb-2 text-sm text-slate-500">/{plan.cadence}</p>
+        )}
       </div>
 
       {plan.id === "Free" ? (

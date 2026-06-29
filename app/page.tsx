@@ -1,24 +1,29 @@
 import Link from "next/link";
 import { BrandLogo } from "@/components/brand-logo";
+import { BarChart3, ClipboardCheck, FileText, GitBranch } from "lucide-react";
 import { LandingProductTour } from "@/components/landing-product-tour";
 import { subscriptionPlans } from "@/lib/subscription-plans";
 
 const workflow = [
   {
     title: "Capture",
-    description: "Document issues with severity, status, impact, effort, and recommendation details.",
+    icon: ClipboardCheck,
+    description: "Record findings with screenshots, severity, evidence, and recommendations.",
   },
   {
     title: "Connect",
-    description: "Attach screenshots, captions, annotations, and journey context to every finding.",
+    icon: GitBranch,
+    description: "Organize findings by journey, client, project, and reusable framework.",
   },
   {
     title: "Prioritize",
-    description: "Understand top risks, quick wins, audit health, and what should be addressed first.",
+    icon: BarChart3,
+    description: "Use analytics and scoring to identify the highest-impact UX issues.",
   },
   {
     title: "Deliver",
-    description: "Generate polished reports for stakeholders without rebuilding everything in slides.",
+    icon: FileText,
+    description: "Export polished reports and keep every client audit organized.",
   },
 ];
 
@@ -120,35 +125,50 @@ export default function LandingPage() {
 
       <LandingProductTour />
 
-      <section className="mx-auto max-w-7xl px-6 py-10 sm:px-8">
-        <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr]">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-violet-600">
-              One connected workflow
-            </p>
-            <h2 className="mt-4 text-3xl font-semibold tracking-[-0.04em] text-slate-950 sm:text-5xl">
-              Replace scattered audit work with structure.
-            </h2>
-            <p className="mt-5 text-base leading-8 text-slate-600">
-              AuditFlow brings findings, screenshots, journey notes, prioritization, and reporting into one workflow so teams can move from usability issues to product decisions faster.
-            </p>
-          </div>
+      <section className="mx-auto max-w-7xl px-6 py-12 sm:px-8 lg:py-14">
+        <div className="mx-auto max-w-4xl text-center">
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-violet-600">
+            One connected workflow
+          </p>
+          <h2 className="mt-4 text-3xl font-semibold tracking-[-0.04em] text-slate-950 sm:text-5xl">
+            Replace scattered audit work with structure.
+          </h2>
+          <p className="mx-auto mt-5 max-w-3xl text-base leading-8 text-slate-600">
+            AuditFlow brings findings, screenshots, journey notes, prioritization, and reporting into one workflow so teams can move from usability issues to product decisions faster.
+          </p>
+        </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {workflow.map((item, index) => (
-              <div key={item.title} className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-violet-600">
-                  {String(index + 1).padStart(2, "0")}
-                </p>
-                <h3 className="mt-5 text-lg font-semibold text-slate-950">
+        <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+          {workflow.map((item, index) => {
+            const Icon = item.icon;
+
+            return (
+              <div
+                key={item.title}
+                className="group relative rounded-3xl border border-slate-200 bg-white p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-violet-300 hover:shadow-xl hover:shadow-violet-100/70"
+              >
+                {index < workflow.length - 1 && (
+                  <div className="pointer-events-none absolute left-[calc(100%+0.125rem)] top-1/2 z-10 hidden h-px w-5 -translate-y-1/2 bg-slate-200 lg:block" />
+                )}
+
+                <div className="flex items-center justify-between gap-4">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-50 text-violet-600 ring-1 ring-violet-100">
+                    <Icon className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <span className="text-xs font-semibold uppercase tracking-[0.18em] text-violet-600">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                </div>
+
+                <h3 className="mt-6 text-xl font-semibold tracking-[-0.02em] text-slate-950">
                   {item.title}
                 </h3>
                 <p className="mt-3 text-sm leading-6 text-slate-600">
                   {item.description}
                 </p>
               </div>
-            ))}
-          </div>
+            );
+          })}
         </div>
       </section>
 
@@ -210,10 +230,10 @@ export default function LandingPage() {
       <section id="pricing" className="mx-auto max-w-7xl px-6 py-10 sm:px-8">
         <div className="text-center">
           <h2 className="text-3xl font-semibold tracking-[-0.04em] text-slate-950 sm:text-5xl">
-            Simple pricing for audit work
+            Pricing that scales from solo audits to studio work
           </h2>
           <p className="mt-4 text-base text-slate-600">
-            Start free, then upgrade when your audit workflow grows.
+            Start with the core audit workflow, then upgrade for branded reports, client workspaces, and reusable Studio systems.
           </p>
         </div>
 
@@ -277,10 +297,10 @@ export default function LandingPage() {
       <section className="mx-auto max-w-7xl px-6 py-12 sm:px-8">
         <div className="rounded-[2rem] bg-slate-950 px-8 py-12 text-center text-white">
           <h2 className="text-3xl font-semibold tracking-[-0.04em] sm:text-5xl">
-            Bring structure to your next UX audit.
+            Run cleaner audits from the first finding to the final report.
           </h2>
           <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-slate-300">
-            Start with a project, capture findings, connect evidence, and export a report when your audit is ready.
+            Use AuditFlow to organize findings, evidence, journeys, frameworks, clients, and reports without stitching together spreadsheets and slide decks.
           </p>
           <Link
             href="/signup"

@@ -8,9 +8,9 @@ export function PageHeader({
   action?: React.ReactNode;
 }) {
   return (
-    <header className="flex items-start justify-between gap-6">
-      <div>
-        <h1 className="text-[28px] font-semibold tracking-[-0.02em] text-slate-950">
+    <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+      <div className="min-w-0">
+        <h1 className="text-[26px] font-semibold tracking-[-0.03em] text-slate-950 sm:text-[28px]">
           {title}
         </h1>
 
@@ -21,7 +21,7 @@ export function PageHeader({
         )}
       </div>
 
-      {action && <div className="shrink-0">{action}</div>}
+      {action && <div className="shrink-0 sm:pt-0.5">{action}</div>}
     </header>
   );
 }

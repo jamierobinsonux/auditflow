@@ -36,6 +36,15 @@ export default async function ProjectDetailPage({
     .eq("user_id", user?.id)
     .maybeSingle();
 
+  const { data: client } = project?.client_id
+    ? await supabase
+        .from("clients")
+        .select("id,name,industry")
+        .eq("id", project.client_id)
+        .eq("user_id", user?.id)
+        .maybeSingle()
+    : { data: null };
+
   const { data: findingData } = await supabase
     .from("findings")
     .select("*")
@@ -102,12 +111,23 @@ export default async function ProjectDetailPage({
             options={["In Progress", "In Review", "Completed"]}
           />
 
-          <EditProjectMetaCard
-            projectId={id}
-            label="Client"
-            value={project.client_name}
-            field="client_name"
-          />
+          <Card className="p-5">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Client
+            </p>
+            {client ? (
+              <Link
+                href={`/clients/${client.id}`}
+                className="mt-2 block text-sm font-semibold text-violet-700 hover:text-violet-800"
+              >
+                {client.name}
+              </Link>
+            ) : (
+              <p className="mt-2 text-sm font-semibold text-slate-950">
+                {project.client_name || "No client"}
+              </p>
+            )}
+          </Card>
         </section>
       )}
 
@@ -136,7 +156,7 @@ export default async function ProjectDetailPage({
               Client
             </p>
             <p className="mt-2 text-sm font-semibold text-slate-950">
-              {project.client_name || "—"}
+              {client ? client.name : project.client_name || "—"}
             </p>
           </Card>
         </section>

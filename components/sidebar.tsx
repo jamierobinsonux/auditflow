@@ -9,7 +9,10 @@ import {
   LayoutDashboard,
   BarChart3,
   FolderKanban,
+  Building2,
   Shapes,
+  FileText,
+  Lightbulb,
   Settings,
   CreditCard,
   LogOut,
@@ -46,6 +49,27 @@ const navigation = [
     exact: false,
   },
   {
+    name: "Clients",
+    href: "/clients",
+    icon: Building2,
+    exact: false,
+    studio: true,
+  },
+  {
+    name: "Reports",
+    href: "/reports",
+    icon: FileText,
+    exact: false,
+    studio: true,
+  },
+  {
+    name: "Recommendations",
+    href: "/recommendations",
+    icon: Lightbulb,
+    exact: false,
+    studio: true,
+  },
+  {
     name: "Frameworks",
     href: "/templates",
     icon: Shapes,
@@ -66,7 +90,7 @@ const displayName = formatDisplayName(rawName);
   const initials = getInitials(displayName);
 
   return (
-    <aside className="fixed left-0 top-0 flex h-screen w-64 flex-col border-r border-slate-200 bg-white">
+    <aside className="fixed left-0 top-0 flex h-screen w-72 flex-col border-r border-slate-200 bg-white">
 
       <Link
   href="/dashboard"
@@ -157,6 +181,7 @@ function NavItem({
     href: string;
     icon: React.ElementType;
     exact: boolean;
+    studio?: boolean;
   };
   pathname: string;
 }) {
@@ -169,14 +194,19 @@ function NavItem({
   return (
     <Link
       href={item.href}
-      className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
+      className={`grid grid-cols-[20px_minmax(0,1fr)_auto] items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors ${
         active
           ? "bg-violet-50 text-violet-700"
           : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
       }`}
     >
-      <Icon size={18} strokeWidth={2} />
-      {item.name}
+      <Icon size={18} strokeWidth={2} className="shrink-0" />
+      <span className="min-w-0 truncate">{item.name}</span>
+      {item.studio && (
+        <span className="shrink-0 rounded-full border border-violet-200 bg-white px-2 py-0.5 text-[10px] font-semibold leading-none text-violet-700">
+          Studio
+        </span>
+      )}
     </Link>
   );
 }

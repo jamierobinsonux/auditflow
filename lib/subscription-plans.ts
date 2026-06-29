@@ -1,12 +1,11 @@
-export type PlanId = "Free" | "Pro" | "Studio";
-
 export const subscriptionPlans = [
   {
     id: "Free",
     name: "Free",
     price: "$0",
     cadence: "forever",
-    description: "For testing AuditFlow with small audits.",
+    description:
+      "For trying AuditFlow with small UX audits before upgrading to a professional workflow.",
     limits: {
       projects: 3,
       findings: 25,
@@ -14,19 +13,20 @@ export const subscriptionPlans = [
       teamMembers: 1,
     },
     features: [
-      "3 projects",
-      "25 findings",
-      "Audit frameworks",
-      "Screenshot annotations",
-      "Basic PDF export",
+      "3 audit projects",
+      "25 total findings",
+      "Evidence uploads and journey maps",
+      "Basic PDF exports with AuditFlow branding",
     ],
   },
   {
     id: "Pro",
     name: "Pro",
     price: "$19",
-    cadence: "per month",
-    description: "For freelancers and solo UX consultants.",
+    cadence: "month",
+    description:
+      "For independent UX consultants who need polished reports and flexible audit workflows.",
+    recommended: true,
     limits: {
       projects: null,
       findings: null,
@@ -34,21 +34,20 @@ export const subscriptionPlans = [
       teamMembers: 1,
     },
     features: [
-      "Unlimited projects",
-      "Unlimited findings",
-      "Public report links",
-      "Professional PDF exports",
-      "Screenshot annotations",
-      "Custom branding later",
+      "Unlimited projects and findings",
+      "Custom report branding",
+      "Advanced report builder and templates",
+      "Public report sharing",
+      "Audit analytics and prioritization",
     ],
-    recommended: true,
   },
   {
     id: "Studio",
     name: "Studio",
     price: "$49",
-    cadence: "per month",
-    description: "For agencies and small teams.",
+    cadence: "month",
+    description:
+      "For agencies and consultancies managing multiple clients, reusable frameworks, and branded deliverables.",
     limits: {
       projects: null,
       findings: null,
@@ -57,10 +56,13 @@ export const subscriptionPlans = [
     },
     features: [
       "Everything in Pro",
-      "Client management later",
-      "Team members later",
-      "Report versions later",
-      "Priority support",
+      "Client workspaces and client-aware projects",
+      "Client brand assets applied to reports",
+      "Reusable Studio frameworks",
+      "Recommendation library and report history",
     ],
   },
 ] as const;
+
+export type PlanId = (typeof subscriptionPlans)[number]["id"];
+export type SubscriptionPlan = (typeof subscriptionPlans)[number];

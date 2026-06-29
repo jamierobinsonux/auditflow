@@ -2,7 +2,7 @@ import { renderToStream } from "@react-pdf/renderer";
 import { createClient } from "@/lib/supabase/server";
 import { AuditReport } from "@/components/pdf/AuditReport";
 import { getUserSubscription } from "@/lib/subscription";
-import { getReportBranding } from "@/lib/report-branding";
+import { getEffectiveReportBranding } from "@/lib/report-branding";
 import type { ReportOptions, ReportSectionId, ReportTemplateId } from "@/components/pdf/types";
 
 const VALID_SECTIONS: ReportSectionId[] = [
@@ -99,7 +99,13 @@ export async function GET(
 
   const subscription = await getUserSubscription(user.id);
   const isProReport = subscription.isPro || subscription.isStudio;
-  const branding = isProReport ? await getReportBranding(user.id) : null;
+  const branding = isProReport
+    ? await getEffectiveReportBranding({
+        userId: user.id,
+        clientId: project.client_id,
+        preferClientBranding: subscription.isStudio,
+      })
+    : null;
 
   const stream = await renderToStream(
     <AuditReport

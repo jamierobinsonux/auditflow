@@ -3,10 +3,11 @@ import { createClient } from "@/lib/supabase/server";
 import { getUserSubscription } from "@/lib/subscription";
 import { PageShell } from "@/components/layout/page-shell";
 import { PageHeader } from "@/components/layout/page-header";
+import { Card } from "@/components/layout/card";
+import { ClientForm } from "@/components/client-form";
 import { UpgradeRequiredCard } from "@/components/upgrade-required-card";
-import { FrameworkForm } from "@/components/framework-form";
 
-export default async function NewFrameworkPage() {
+export default async function NewClientPage() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -19,8 +20,8 @@ export default async function NewFrameworkPage() {
   if (!subscription.isStudio) {
     return (
       <UpgradeRequiredCard
-        title="Custom frameworks are available on Studio"
-        description="Upgrade to Studio to create reusable audit frameworks for your client work."
+        title="Client workspaces are available on Studio"
+        description="Upgrade to Studio to create client workspaces and organize projects by client."
       />
     );
   }
@@ -28,12 +29,13 @@ export default async function NewFrameworkPage() {
   return (
     <PageShell>
       <PageHeader
-        title="New Framework"
-        description="Create reusable categories, journey stages, and recommendations for future projects."
+        title="Create Client"
+        description="Add client details that will power Studio workspaces, reports, and brand context."
       />
-      <div className="mt-8">
-        <FrameworkForm userId={user.id} />
-      </div>
+
+      <Card className="mt-8 p-8">
+        <ClientForm />
+      </Card>
     </PageShell>
   );
 }

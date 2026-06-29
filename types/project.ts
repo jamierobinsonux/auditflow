@@ -1,12 +1,14 @@
-export type ProjectStatus = "In Progress" | "In Review" | "Completed";
-
 export type Project = {
   id: string;
-  name: string;
+  user_id: string;
+  client_id: string | null;
+  framework_id?: string | null;
   client_name: string | null;
+  name: string;
   website_url: string | null;
   audit_type: string | null;
-  status: ProjectStatus;
+  status: string | null;
+  archived: boolean;
   created_at: string;
   updated_at: string | null;
 };

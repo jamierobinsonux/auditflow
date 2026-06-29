@@ -4,9 +4,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ElementType, ReactNode } from "react";
 import {
   BarChart3,
+  Building2,
   CreditCard,
+  FileText,
   FolderKanban,
   LayoutDashboard,
+  Lightbulb,
   LogOut,
   Settings,
   Shapes,
@@ -16,25 +19,30 @@ import { BrandLogo } from "@/components/brand-logo";
 type WorkflowStepId =
   | "dashboard"
   | "analytics"
-  | "createProject"
+  | "clients"
+  | "frameworks"
   | "manageProject"
   | "exportReport";
 
 type ScreenId =
   | "dashboard"
   | "analytics"
+  | "clients"
   | "projects"
-  | "projectsReturn"
+  | "projectsForFramework"
   | "createProject"
+  | "frameworks"
   | "projectOverview"
   | "createdProjectOverview"
+  | "frameworkApplied"
   | "newFinding"
   | "evidence"
   | "journeys"
+  | "recommendations"
   | "reports"
   | "reportExported";
 
-type SidebarItemId = "dashboard" | "analytics" | "projects" | "frameworks";
+type SidebarItemId = "dashboard" | "analytics" | "projects" | "clients" | "reports" | "recommendations" | "frameworks";
 
 type TourAction = {
   id: ScreenId;
@@ -46,11 +54,12 @@ type TourAction = {
 };
 
 const workflowSteps: { id: WorkflowStepId; label: string }[] = [
-  { id: "dashboard", label: "Open Dashboard" },
-  { id: "analytics", label: "Review Analytics" },
-  { id: "createProject", label: "Create Project" },
-  { id: "manageProject", label: "Manage Project" },
-  { id: "exportReport", label: "Export Report" },
+  { id: "dashboard", label: "Dashboard" },
+  { id: "analytics", label: "Analytics" },
+  { id: "clients", label: "Clients" },
+  { id: "frameworks", label: "Frameworks" },
+  { id: "manageProject", label: "Project Work" },
+  { id: "exportReport", label: "Reports" },
 ];
 
 const tourActions: TourAction[] = [
@@ -58,108 +67,144 @@ const tourActions: TourAction[] = [
     id: "dashboard",
     workflow: "dashboard",
     sidebar: "dashboard",
-    label: "Open Dashboard",
+    label: "Track audit work",
     description:
-      "Start from a portfolio view of active audits, findings, and recent work.",
+      "Start from a portfolio view of active audits, recommendations, open findings, and recent work.",
     targetKey: "sidebar-dashboard",
   },
   {
     id: "analytics",
     workflow: "analytics",
     sidebar: "analytics",
-    label: "Review Analytics",
+    label: "Review audit health",
     description:
-      "Review project health, finding volume, and audit activity across your portfolio.",
+      "Use analytics to see where findings, project status, and audit activity are concentrated.",
     targetKey: "sidebar-analytics",
   },
   {
-    id: "projects",
-    workflow: "createProject",
-    sidebar: "projects",
-    label: "View Existing Projects",
+    id: "clients",
+    workflow: "clients",
+    sidebar: "clients",
+    label: "Manage clients",
     description:
-      "Browse active and archived audits before deciding whether to continue or start new work.",
+      "Studio workspaces keep each client’s projects, reports, brand assets, and activity together.",
+    targetKey: "sidebar-clients",
+  },
+  {
+    id: "projects",
+    workflow: "clients",
+    sidebar: "projects",
+    label: "View projects",
+    description:
+      "Browse existing projects, continue active audits, or start something new for a client.",
     targetKey: "sidebar-projects",
   },
   {
     id: "projectOverview",
-    workflow: "createProject",
+    workflow: "clients",
     sidebar: "projects",
-    label: "Open Existing Audit",
+    label: "Open an existing audit",
     description:
-      "Open an existing project to review findings, journeys, evidence, and report progress.",
+      "Open a project to review findings, journeys, evidence, recommendations, and report progress.",
     targetKey: "project-row-checkout",
   },
   {
-    id: "projectsReturn",
-    workflow: "createProject",
+    id: "projectsForFramework",
+    workflow: "frameworks",
     sidebar: "projects",
-    label: "Start a New Audit",
+    label: "Start a new audit",
     description:
-      "Return to Projects when you are ready to create a new audit workspace.",
+      "Return to Projects when it is time to create another audit workspace.",
     targetKey: "sidebar-projects",
   },
   {
     id: "createProject",
-    workflow: "createProject",
+    workflow: "frameworks",
     sidebar: "projects",
-    label: "Create a Project",
+    label: "Create a project",
     description:
-      "Start from a blank project or use a framework when you want a guided audit structure.",
+      "Start blank or choose a reusable Studio framework when the audit should follow a standard process.",
     targetKey: "new-project-button",
   },
   {
-    id: "createdProjectOverview",
-    workflow: "createProject",
-    sidebar: "projects",
-    label: "Start Blank Project",
+    id: "frameworks",
+    workflow: "frameworks",
+    sidebar: "frameworks",
+    label: "Choose a framework",
     description:
-      "Blank projects let teams define their own structure instead of starting from a template.",
-    targetKey: "start-blank-button",
+      "Projects can start blank, or use a framework for categories, journeys, recommendations, and report defaults.",
+    targetKey: "use-framework-button",
+  },
+  {
+    id: "frameworkApplied",
+    workflow: "manageProject",
+    sidebar: "projects",
+    label: "Apply the framework",
+    description:
+      "Frameworks can bring in categories, journey stages, recommendations, and report defaults.",
+    targetKey: "framework-card-saas",
+  },
+  {
+    id: "createdProjectOverview",
+    workflow: "manageProject",
+    sidebar: "projects",
+    label: "Manage the project",
+    description:
+      "The project workspace keeps findings, evidence, journeys, recommendations, and reports connected.",
+    targetKey: "new-finding-button",
   },
   {
     id: "newFinding",
     workflow: "manageProject",
     sidebar: "projects",
-    label: "Add a Finding",
+    label: "Add findings",
     description:
-      "Capture the issue, severity, impact, effort, and recommendation while context is fresh.",
-    targetKey: "new-finding-button",
+      "Capture severity, impact, effort, journey context, and a recommended next step while the issue is fresh.",
+    targetKey: "add-evidence-button",
   },
   {
     id: "evidence",
     workflow: "manageProject",
     sidebar: "projects",
-    label: "Add Evidence",
+    label: "Attach evidence",
     description:
-      "Attach screenshots and captions so findings are easy for stakeholders to understand.",
-    targetKey: "add-evidence-button",
+      "Add screenshots and captions so stakeholders can understand exactly what happened.",
+    targetKey: "save-finding-button",
   },
   {
     id: "journeys",
     workflow: "manageProject",
     sidebar: "projects",
-    label: "Add User Journeys",
+    label: "Map user journeys",
     description:
-      "Map the user journey and connect findings to the steps where friction occurs.",
+      "Connect findings to the exact steps where users experience friction.",
     targetKey: "tab-journeys",
+  },
+  {
+    id: "recommendations",
+    workflow: "manageProject",
+    sidebar: "recommendations",
+    label: "Reuse recommendations",
+    description:
+      "Studio teams can maintain reusable guidance and insert it into findings for consistent deliverables.",
+    targetKey: "sidebar-recommendations",
   },
   {
     id: "reports",
     workflow: "exportReport",
-    sidebar: "projects",
-    label: "Open Report Builder",
+    sidebar: "reports",
+    label: "Build reports",
     description:
-      "Preview the report, choose the right sections, and prepare a stakeholder-ready PDF.",
+      "Choose the right report template, preview sections, and apply client branding before export.",
     targetKey: "tab-reports",
   },
   {
     id: "reportExported",
     workflow: "exportReport",
-    sidebar: "projects",
-    label: "Export Report",
+    sidebar: "reports",
+    label: "Export and save history",
     description:
-      "Export a polished PDF that packages findings, evidence, journeys, and recommendations.",
+      "Export a polished PDF and keep the report available in project and client history.",
     targetKey: "export-pdf-button",
   },
 ];
@@ -272,7 +317,7 @@ export function LandingProductTour() {
         moveToAction(next);
       },
       activeAction.workflow === "manageProject" ||
-        activeAction.workflow === "createProject"
+        activeAction.workflow === "frameworks"
         ? 2500
         : 3200,
     );
@@ -289,11 +334,10 @@ export function LandingProductTour() {
           Product tour
         </p>
         <h2 className="mt-4 text-3xl font-semibold tracking-[-0.04em] text-slate-950 sm:text-5xl">
-          See how an audit comes together.
+          See the AuditFlow workflow in action.
         </h2>
         <p className="mt-4 text-base leading-7 text-slate-600">
-          Follow the complete workflow from portfolio review to project
-          creation, finding documentation, journey mapping, and report export.
+          Follow the current AuditFlow workflow from portfolio analytics to client workspaces, reusable frameworks, findings, evidence, journeys, recommendations, and report history.
         </p>
       </div>
 
@@ -414,6 +458,9 @@ function AppSidebar({ active }: { active: SidebarItemId }) {
 
   const auditItems = [
     { id: "projects" as const, label: "Projects", icon: FolderKanban },
+    { id: "clients" as const, label: "Clients", icon: Building2 },
+    { id: "reports" as const, label: "Reports", icon: FileText },
+    { id: "recommendations" as const, label: "Recommendations", icon: Lightbulb },
     { id: "frameworks" as const, label: "Frameworks", icon: Shapes },
   ];
 
@@ -518,15 +565,23 @@ function SidebarUtility({
 
 function ProductScreen({ screen }: { screen: ScreenId }) {
   if (screen === "analytics") return <AnalyticsScreen />;
-  if (screen === "projects" || screen === "projectsReturn")
-    return <ProjectsScreen />;
+  if (screen === "clients") return <ClientsScreen />;
+  if (screen === "projects" || screen === "projectsForFramework") return <ProjectsScreen />;
   if (screen === "createProject") return <CreateProjectScreen />;
+  if (screen === "frameworks") return <FrameworksScreen />;
   if (screen === "projectOverview")
     return (
       <ProjectOverviewScreen
         projectName="Checkout Optimization Audit"
         projectUrl="shopdemo.io/checkout"
         existing
+      />
+    );
+  if (screen === "frameworkApplied")
+    return (
+      <ProjectOverviewScreen
+        projectName="SaaS Onboarding Audit"
+        projectUrl="acme.io/onboarding"
       />
     );
   if (screen === "createdProjectOverview")
@@ -539,6 +594,7 @@ function ProductScreen({ screen }: { screen: ScreenId }) {
   if (screen === "newFinding") return <NewFindingScreen />;
   if (screen === "evidence") return <EvidenceScreen />;
   if (screen === "journeys") return <JourneyMapsScreen />;
+  if (screen === "recommendations") return <RecommendationLibraryScreen />;
   if (screen === "reports") return <ReportsScreen />;
   if (screen === "reportExported") return <ReportsScreen exported />;
   return <DashboardScreen />;
@@ -553,7 +609,7 @@ function DashboardScreen() {
             Welcome, Jamie Robinson
           </h3>
           <p className="mt-3 text-base text-slate-500">
-            You have 4 projects, 16 findings, and 13 open findings.
+            You have 4 projects, 16 findings, 11 recommendations, and 13 open findings.
           </p>
         </div>
         <span
@@ -791,7 +847,7 @@ function CreateProjectScreen() {
               Pick SaaS, mobile, ecommerce, or accessibility when you want a
               head start.
             </p>
-            <div className="mt-5 inline-flex rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700">
+            <div data-tour-target="use-framework-button" className="mt-5 inline-flex rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700">
               Browse frameworks
             </div>
           </div>
@@ -805,6 +861,123 @@ function CreateProjectScreen() {
         </div>
       </div>
     </div>
+  );
+}
+
+
+function ClientsScreen() {
+  return (
+    <div className="h-full">
+      <div className="flex items-start justify-between gap-6">
+        <div>
+          <h3 className="text-[28px] font-semibold tracking-[-0.04em] text-slate-950">
+            Clients
+          </h3>
+          <p className="mt-2 text-base text-slate-500">
+            Manage client workspaces, brand assets, projects, reports, and activity.
+          </p>
+        </div>
+        <span className="rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-md shadow-violet-200">
+          + New Client
+        </span>
+      </div>
+
+      <div className="mt-7 grid grid-cols-4 gap-4">
+        <DashboardStat value="6" label="Clients" description="Across your studio" />
+        <DashboardStat value="18" label="Projects" description="Client and internal audits" />
+        <DashboardStat value="41" label="Reports" description="Generated deliverables" />
+        <DashboardStat value="86" label="Avg. health" description="Across active clients" />
+      </div>
+
+      <div className="mt-7 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="grid grid-cols-[1.2fr_0.7fr_0.8fr_0.8fr_0.8fr] bg-slate-50 px-6 py-4 text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <span>Client</span>
+          <span>Status</span>
+          <span>Projects</span>
+          <span>Reports</span>
+          <span>Health</span>
+        </div>
+        <ClientTableRow name="Acme Retail" url="acmeretail.com" status="Active" projects="8" reports="12" health="88" />
+        <ClientTableRow name="FinBank" url="finbank.com" status="Active" projects="6" reports="9" health="85" />
+        <ClientTableRow name="HealthPlus" url="healthplus.com" status="Active" projects="4" reports="6" health="72" />
+        <ClientTableRow name="Northpeak" url="northpeak.io" status="Active" projects="5" reports="8" health="79" />
+      </div>
+    </div>
+  );
+}
+
+function FrameworksScreen() {
+  return (
+    <div className="h-full">
+      <div className="flex items-start justify-between gap-6">
+        <div>
+          <h3 className="text-[28px] font-semibold tracking-[-0.04em] text-slate-950">
+            Frameworks
+          </h3>
+          <p className="mt-2 text-base text-slate-500">
+            Start with a reusable audit methodology or customize your own Studio framework.
+          </p>
+        </div>
+        <span className="rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-md shadow-violet-200">
+          + New Framework
+        </span>
+      </div>
+
+      <div className="mt-7 grid gap-5 lg:grid-cols-2">
+        <FrameworkCard
+          targetKey="framework-card-saas"
+          title="SaaS Onboarding Audit"
+          label="Studio"
+          description="Categories, journey stages, recommendations, and report defaults for product onboarding reviews."
+          items={["Activation", "Empty states", "Forms", "Trust"]}
+        />
+        <FrameworkCard
+          title="Mobile App Audit"
+          label="Built-in"
+          description="Review first launch, permissions, navigation, primary task flows, and mobile usability."
+          items={["First launch", "Navigation", "Task flow", "Accessibility"]}
+        />
+        <FrameworkCard
+          title="Accessibility Review"
+          label="Studio"
+          description="A reusable WCAG-focused audit setup with recommendation guidance and report defaults."
+          items={["Keyboard", "Contrast", "Labels", "Semantics"]}
+        />
+        <FrameworkCard
+          title="Ecommerce Checkout Audit"
+          label="Built-in"
+          description="Review product detail, cart, checkout, trust, error recovery, and purchase confidence."
+          items={["Cart", "Payment", "Validation", "Confirmation"]}
+        />
+      </div>
+    </div>
+  );
+}
+
+function RecommendationLibraryScreen() {
+  return (
+    <ProjectWorkspaceShell activeTab="recommendations">
+      <div className="flex items-start justify-between gap-6">
+        <div>
+          <h3 className="text-[28px] font-semibold tracking-[-0.04em] text-slate-950">
+            Recommendations
+          </h3>
+          <p className="mt-2 text-base text-slate-500">
+            Save reusable guidance and insert it into findings across client projects.
+          </p>
+        </div>
+        <span className="rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-md shadow-violet-200">
+          + New Recommendation
+        </span>
+      </div>
+
+      <div className="mt-7 grid gap-4 lg:grid-cols-2">
+        <RecommendationCard title="Improve form validation" category="Forms" used="Used 24 times" />
+        <RecommendationCard title="Clarify empty states" category="UX Writing" used="Used 18 times" />
+        <RecommendationCard title="Increase button contrast" category="Accessibility" used="Used 31 times" />
+        <RecommendationCard title="Preserve progress after errors" category="Checkout" used="Used 12 times" />
+      </div>
+    </ProjectWorkspaceShell>
   );
 }
 
@@ -1022,7 +1195,7 @@ function EvidenceScreen() {
             Add evidence so the issue is clear to stakeholders.
           </p>
         </div>
-        <span className="rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-md shadow-violet-200">
+        <span data-tour-target="save-finding-button" className="rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-md shadow-violet-200">
           Save Finding
         </span>
       </div>
@@ -1168,13 +1341,14 @@ function ProjectWorkspaceShell({
   activeTab,
   children,
 }: {
-  activeTab: "overview" | "findings" | "journeys" | "reports";
+  activeTab: "overview" | "findings" | "journeys" | "recommendations" | "reports";
   children: ReactNode;
 }) {
   const tabs = [
     { id: "overview" as const, label: "Overview" },
     { id: "findings" as const, label: "Findings" },
     { id: "journeys" as const, label: "Journey Maps" },
+    { id: "recommendations" as const, label: "Recommendations" },
     { id: "reports" as const, label: "Reports" },
   ];
 
@@ -1253,6 +1427,109 @@ function ProjectListRow({
   );
 }
 
+
+function ClientTableRow({
+  name,
+  url,
+  status,
+  projects,
+  reports,
+  health,
+}: {
+  name: string;
+  url: string;
+  status: string;
+  projects: string;
+  reports: string;
+  health: string;
+}) {
+  return (
+    <div className="grid grid-cols-[1.2fr_0.7fr_0.8fr_0.8fr_0.8fr] items-center border-b border-slate-100 px-6 py-4 text-sm last:border-b-0">
+      <div>
+        <p className="font-semibold text-slate-950">{name}</p>
+        <p className="mt-1 text-xs text-slate-500">{url}</p>
+      </div>
+      <StatusPill status={status} />
+      <p className="font-semibold text-slate-700">{projects}</p>
+      <p className="font-semibold text-slate-700">{reports}</p>
+      <span className="flex h-9 w-9 items-center justify-center rounded-full border border-green-200 bg-green-50 text-xs font-semibold text-green-700">
+        {health}
+      </span>
+    </div>
+  );
+}
+
+function FrameworkCard({
+  title,
+  label,
+  description,
+  items,
+  targetKey,
+}: {
+  title: string;
+  label: string;
+  description: string;
+  items: string[];
+  targetKey?: string;
+}) {
+  return (
+    <div
+      data-tour-target={targetKey}
+      className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-violet-600">
+            {label}
+          </p>
+          <h4 className="mt-3 text-xl font-semibold text-slate-950">{title}</h4>
+        </div>
+        <span className="rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700">
+          Use
+        </span>
+      </div>
+      <p className="mt-4 text-sm leading-6 text-slate-600">{description}</p>
+      <div className="mt-5 rounded-2xl bg-slate-50 p-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Includes
+        </p>
+        <div className="mt-3 grid grid-cols-2 gap-2 text-sm text-slate-700">
+          {items.map((item) => (
+            <p key={item}>• {item}</p>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RecommendationCard({
+  title,
+  category,
+  used,
+}: {
+  title: string;
+  category: string;
+  used: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h4 className="text-base font-semibold text-slate-950">{title}</h4>
+          <p className="mt-2 text-sm text-slate-500">{used}</p>
+        </div>
+        <span className="rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700">
+          {category}
+        </span>
+      </div>
+      <p className="mt-4 text-sm leading-6 text-slate-600">
+        Reusable guidance that can be inserted into finding recommendations.
+      </p>
+    </div>
+  );
+}
+
 function ProjectTableRow({
   name,
   url,
@@ -1277,39 +1554,6 @@ function ProjectTableRow({
       </span>
       <span className="text-slate-600">{findings}</span>
       <StatusPill status={status} />
-    </div>
-  );
-}
-
-function FrameworkCard({
-  type,
-  title,
-  description,
-  items,
-}: {
-  type: string;
-  title: string;
-  description: string;
-  items: string[];
-}) {
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <p className="text-xs font-semibold uppercase tracking-wide text-violet-600">
-        {type}
-      </p>
-      <h4 className="mt-3 text-xl font-semibold text-slate-950">{title}</h4>
-      <p className="mt-4 text-sm leading-6 text-slate-600">{description}</p>
-      <div className="mt-5 rounded-xl bg-slate-50 p-4 text-sm leading-7 text-slate-600">
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-          Includes
-        </p>
-        {items.map((item) => (
-          <p key={item}>• {item}</p>
-        ))}
-      </div>
-      <div className="mt-5 inline-flex rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-violet-100">
-        Use Framework
-      </div>
     </div>
   );
 }

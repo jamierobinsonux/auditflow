@@ -7,14 +7,16 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Card } from "@/components/layout/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { AuditTypeBadge } from "@/components/ui/audit-type-badge";
+import type { Client } from "@/types/client";
 import type { Project } from "@/types/project";
 
 export default async function ProjectsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ view?: string }>;
+  searchParams: Promise<{ view?: string; clientId?: string }>;
 }) {
-  const { view } = await searchParams;
+  const { view, clientId } = await searchParams;
   const showArchived = view === "archived";
 
   const supabase = await createClient();
@@ -23,35 +25,66 @@ export default async function ProjectsPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data } = await supabase
+  let query = supabase
     .from("projects")
     .select("*")
     .eq("user_id", user?.id)
     .eq("archived", showArchived)
     .order("created_at", { ascending: false });
 
+  if (clientId) {
+    query = query.eq("client_id", clientId);
+  }
+
+  const [{ data }, { data: clientsData }] = await Promise.all([
+    query,
+    supabase
+      .from("clients")
+      .select("id,name")
+      .eq("user_id", user?.id)
+      .order("name", { ascending: true }),
+  ]);
+
   const projects = (data ?? []) as Project[];
+  const clients = (clientsData ?? []) as Pick<Client, "id" | "name">[];
+  const selectedClient = clients.find((client) => client.id === clientId);
+
+  const baseHref = clientId ? `/projects?clientId=${clientId}` : "/projects";
 
   return (
     <PageShell>
       <PageHeader
-        title="Projects"
-        description="Manage active and archived UX audit projects."
+        title={selectedClient ? `${selectedClient.name} Projects` : "Projects"}
+        description={
+          selectedClient
+            ? "Manage projects connected to this client workspace."
+            : "Manage active and archived UX audit projects."
+        }
         action={
           <Button asChild size="lg">
-            <Link href="/projects/new">+ New Project</Link>
+            <Link href={clientId ? `/projects/new?clientId=${clientId}` : "/projects/new"}>
+              + New Project
+            </Link>
           </Button>
         }
       />
 
-      <div className="mt-8 flex gap-2">
+      <div className="mt-8 flex flex-wrap items-center gap-2">
         <Button asChild variant={!showArchived ? "default" : "outline"}>
-          <Link href="/projects">Active</Link>
+          <Link href={baseHref}>Active</Link>
         </Button>
 
         <Button asChild variant={showArchived ? "default" : "outline"}>
-          <Link href="/projects?view=archived">Archived</Link>
+          <Link href={clientId ? `/projects?clientId=${clientId}&view=archived` : "/projects?view=archived"}>
+            Archived
+          </Link>
         </Button>
+
+        {selectedClient && (
+          <Button asChild variant="ghost">
+            <Link href={`/clients/${selectedClient.id}`}>Back to client</Link>
+          </Button>
+        )}
       </div>
 
       {projects.length === 0 ? (
@@ -62,10 +95,12 @@ export default async function ProjectsPage({
             description={
               showArchived
                 ? "Archived projects will appear here when you want to hide completed work from your active dashboard."
+                : selectedClient
+                ? `Create the first project for ${selectedClient.name}.`
                 : "Create your first UX audit project to start tracking findings, evidence, and recommendations."
             }
             actionLabel={showArchived ? undefined : "Create Project"}
-            actionHref={showArchived ? undefined : "/projects/new"}
+            actionHref={showArchived ? undefined : clientId ? `/projects/new?clientId=${clientId}` : "/projects/new"}
           />
         </div>
       ) : (
@@ -78,13 +113,22 @@ export default async function ProjectsPage({
                 index !== 0 ? "border-t border-slate-100" : ""
               }`}
             >
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-6">
                 <div>
                   <h2 className="text-base font-semibold text-slate-950">
                     {project.name}
                   </h2>
 
-                  <p className="mt-1 text-sm text-slate-500">
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <AuditTypeBadge type={project.audit_type} />
+                    {project.client_name && (
+                      <span className="rounded-lg bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                        {project.client_name}
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="mt-2 text-sm text-slate-500">
                     {project.website_url || "No website provided"}
                   </p>
                 </div>
