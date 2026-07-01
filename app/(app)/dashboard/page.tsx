@@ -127,11 +127,11 @@ export default async function DashboardPage() {
 
 
   const projectStatValue = isFreePlan
-    ? `${totalProjects} / 3`
+    ? `${totalProjects} / 1`
     : totalProjects.toString();
 
   const findingStatValue = isFreePlan
-    ? `${totalFindings} / 25`
+    ? `${totalFindings} / 5`
     : totalFindings.toString();
 
   const summary =

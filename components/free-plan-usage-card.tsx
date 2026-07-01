@@ -11,14 +11,14 @@ export function FreePlanUsageCard({
 }) {
   if (plan !== "Free") return null;
 
-  const projectLimit = 3;
-  const findingLimit = 25;
+  const projectLimit = 1;
+  const findingLimit = 5;
 
   const projectPercent = Math.min((projectsUsed / projectLimit) * 100, 100);
   const findingPercent = Math.min((findingsUsed / findingLimit) * 100, 100);
 
   const isNearLimit =
-    projectsUsed >= projectLimit - 1 || findingsUsed >= findingLimit - 5;
+    projectsUsed >= projectLimit || findingsUsed >= findingLimit - 1;
 
   return (
     <section
@@ -37,7 +37,7 @@ export function FreePlanUsageCard({
               : "Track your Free plan usage"}
           </h2>
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            Free includes 3 projects and 25 findings. Upgrade to Pro for
+            Free includes 1 project and 5 findings. Upgrade to Pro for
             unlimited projects, unlimited findings, public report links, and
             professional exports.
           </p>

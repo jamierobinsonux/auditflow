@@ -5,16 +5,16 @@ export const subscriptionPlans = [
     price: "$0",
     cadence: "forever",
     description:
-      "For trying AuditFlow with small UX audits before upgrading to a professional workflow.",
+      "For trying AuditFlow with your first UX audit before upgrading to a professional workflow.",
     limits: {
-      projects: 3,
-      findings: 25,
+      projects: 1,
+      findings: 5,
       publicReports: false,
       teamMembers: 1,
     },
     features: [
-      "3 audit projects",
-      "25 total findings",
+      "1 audit project",
+      "5 total findings",
       "Evidence uploads and journey maps",
       "Basic PDF exports with AuditFlow branding",
     ],
@@ -22,7 +22,7 @@ export const subscriptionPlans = [
   {
     id: "Pro",
     name: "Pro",
-    price: "$19",
+    price: "$29",
     cadence: "month",
     description:
       "For independent UX consultants who need polished reports and flexible audit workflows.",
@@ -44,7 +44,7 @@ export const subscriptionPlans = [
   {
     id: "Studio",
     name: "Studio",
-    price: "$49",
+    price: "$59",
     cadence: "month",
     description:
       "For agencies and consultancies managing multiple clients, reusable frameworks, and branded deliverables.",

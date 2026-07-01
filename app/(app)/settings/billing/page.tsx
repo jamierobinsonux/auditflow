@@ -140,7 +140,7 @@ function BillingNotice({
       <Notice
         tone="upgrade"
         title="You’ve reached the Free plan project limit"
-        description="Free includes 3 projects. Upgrade to Pro to create unlimited audit projects."
+        description="Free includes 1 project. Upgrade to Pro to create unlimited audit projects."
       />
     );
   }
@@ -150,7 +150,7 @@ function BillingNotice({
       <Notice
         tone="upgrade"
         title="You’ve reached the Free plan finding limit"
-        description="Free includes 25 findings. Upgrade to Pro to add unlimited findings across your audits."
+        description="Free includes 5 findings. Upgrade to Pro to add unlimited findings across your audits."
       />
     );
   }
