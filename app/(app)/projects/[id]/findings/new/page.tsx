@@ -37,6 +37,7 @@ export default function NewFindingPage() {
   const [status, setStatus] = useState("Open");
   const [category, setCategory] = useState("");
   const [recommendation, setRecommendation] = useState("");
+  const [selectedRecommendation, setSelectedRecommendation] = useState<RecommendationOption | null>(null);
   const [impact, setImpact] = useState("");
   const [effort, setEffort] = useState("");
   const [journeyId, setJourneyId] = useState("");
@@ -46,7 +47,7 @@ export default function NewFindingPage() {
   const [journeys, setJourneys] = useState<Journey[]>([]);
   const [steps, setSteps] = useState<JourneyStep[]>([]);
   const [recommendations, setRecommendations] = useState<RecommendationOption[]>([]);
-  const [images, setImages] = useState<EvidenceUpload[]>([{ file: null, caption: "" }]);
+  const [images, setImages] = useState<EvidenceUpload[]>([{ file: null, evidenceName: "", caption: "" }]);
 
   const availableSteps = useMemo(
     () => steps.filter((step) => step.journey_id === journeyId),
@@ -146,6 +147,9 @@ export default function NewFindingPage() {
         status,
         category: category || null,
         recommendation,
+        recommendation_source: selectedRecommendation?.source ?? null,
+        saved_recommendation_id: selectedRecommendation?.source === "library" ? selectedRecommendation.id : null,
+        framework_recommendation_id: selectedRecommendation?.source === "framework" ? selectedRecommendation.id : null,
         impact,
         effort,
         journey_id: journeyId || null,
@@ -177,6 +181,7 @@ export default function NewFindingPage() {
         finding_id: finding.id,
         user_id: user.id,
         image_url: publicUrlData.publicUrl,
+        evidence_name: image.evidenceName || image.file.name.replace(/\.[^/.]+$/, ""),
         caption: image.caption,
       });
 
@@ -202,6 +207,7 @@ export default function NewFindingPage() {
     setRecommendation(item.recommendation);
     setImpact(item.impact ?? impact);
     setCategory(item.category ?? category);
+    setSelectedRecommendation(item);
   }
 
   return (

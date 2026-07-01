@@ -9,6 +9,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Card } from "@/components/layout/card";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/empty-state";
+import { DeleteReportButton } from "@/components/delete-report-button";
 import { UpgradeRequiredCard } from "@/components/upgrade-required-card";
 import type { ReportExport } from "@/types/report";
 
@@ -92,6 +93,7 @@ export default async function ReportsPage() {
                     <Button asChild variant="outline" size="icon-sm">
                       <a href={downloadUrl} aria-label="Download report"><Download className="size-4" /></a>
                     </Button>
+                    <DeleteReportButton reportId={report.id} title={title} />
                   </div>
                 </div>
               );

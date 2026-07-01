@@ -48,6 +48,7 @@ export default async function ProjectsPage({
   const projects = (data ?? []) as Project[];
   const clients = (clientsData ?? []) as Pick<Client, "id" | "name">[];
   const selectedClient = clients.find((client) => client.id === clientId);
+  const clientNameById = new Map(clients.map((client) => [client.id, client.name]));
 
   const baseHref = clientId ? `/projects?clientId=${clientId}` : "/projects";
 
@@ -105,46 +106,52 @@ export default async function ProjectsPage({
         </div>
       ) : (
         <Card className="mt-8 overflow-hidden">
-          {projects.map((project, index) => (
-            <Link
-              key={project.id}
-              href={`/projects/${project.id}`}
-              className={`block p-6 transition hover:bg-slate-50 ${
-                index !== 0 ? "border-t border-slate-100" : ""
-              }`}
-            >
-              <div className="flex items-center justify-between gap-6">
-                <div>
-                  <h2 className="text-base font-semibold text-slate-950">
-                    {project.name}
-                  </h2>
+          {projects.map((project, index) => {
+            const currentClientName = project.client_id
+              ? clientNameById.get(project.client_id) || project.client_name
+              : project.client_name;
 
-                  <div className="mt-2 flex flex-wrap items-center gap-2">
-                    <AuditTypeBadge type={project.audit_type} />
-                    {project.client_name && (
-                      <span className="rounded-lg bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
-                        {project.client_name}
-                      </span>
-                    )}
+            return (
+              <Link
+                key={project.id}
+                href={`/projects/${project.id}`}
+                className={`block p-6 transition hover:bg-slate-50 ${
+                  index !== 0 ? "border-t border-slate-100" : ""
+                }`}
+              >
+                <div className="flex items-center justify-between gap-6">
+                  <div>
+                    <h2 className="text-base font-semibold text-slate-950">
+                      {project.name}
+                    </h2>
+
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <AuditTypeBadge type={project.audit_type} />
+                      {currentClientName && (
+                        <span className="rounded-lg bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                          {currentClientName}
+                        </span>
+                      )}
+                    </div>
+
+                    <p className="mt-2 text-sm text-slate-500">
+                      {project.website_url || "No website provided"}
+                    </p>
                   </div>
 
-                  <p className="mt-2 text-sm text-slate-500">
-                    {project.website_url || "No website provided"}
-                  </p>
-                </div>
+                  <div className="text-right">
+                    <StatusBadge status={project.status} />
 
-                <div className="text-right">
-                  <StatusBadge status={project.status} />
-
-                  <p className="mt-2 text-xs text-slate-400">
-                    {new Date(
-                      project.updated_at || project.created_at
-                    ).toLocaleDateString()}
-                  </p>
+                    <p className="mt-2 text-xs text-slate-400">
+                      {new Date(
+                        project.updated_at || project.created_at
+                      ).toLocaleDateString()}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </Card>
       )}
     </PageShell>

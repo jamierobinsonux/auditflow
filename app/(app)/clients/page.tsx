@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Building2, MoreVertical, Search } from "lucide-react";
+import { Building2, ChevronDown, MoreVertical, Search } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getUserSubscription } from "@/lib/subscription";
 import { getClientHealth, getClientHealthClasses, getClientInitials } from "@/lib/studio";
@@ -141,17 +141,24 @@ export default async function ClientsPage({
 
         <form action="/clients">
           {q && <input type="hidden" name="q" value={q} />}
-          <select
-            name="status"
-            defaultValue={status}
-            className="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none transition focus:border-violet-300 focus:ring-4 focus:ring-violet-100"
-          >
-            <option value="all">All Status</option>
-            <option value="healthy">Healthy</option>
-            <option value="on-track">On Track</option>
-            <option value="at-risk">At Risk</option>
-            <option value="inactive">Inactive</option>
-          </select>
+          <div className="relative">
+            <select
+              name="status"
+              defaultValue={status}
+              className="h-11 appearance-none rounded-xl border border-slate-200 bg-white py-2 pl-3 pr-14 text-sm text-slate-700 outline-none transition focus:border-violet-300 focus:ring-4 focus:ring-violet-100"
+            >
+              <option value="all">All Status</option>
+              <option value="healthy">Healthy</option>
+              <option value="on-track">On Track</option>
+              <option value="not-started">Not Started</option>
+              <option value="at-risk">At Risk</option>
+              <option value="inactive">Inactive</option>
+            </select>
+            <ChevronDown
+              aria-hidden="true"
+              className="pointer-events-none absolute right-5 top-1/2 size-4 -translate-y-1/2 text-slate-400"
+            />
+          </div>
         </form>
       </div>
 
@@ -190,12 +197,20 @@ export default async function ClientsPage({
               }`}
             >
               <span className="flex items-center gap-3">
-                <span
-                  className="flex h-10 w-10 items-center justify-center rounded-xl text-sm font-bold text-white"
-                  style={{ backgroundColor: client.brand_color || "#7C3AED" }}
-                >
-                  {getClientInitials(client.name)}
-                </span>
+                {client.logo_url ? (
+                  <img
+                    src={client.logo_url}
+                    alt=""
+                    className="h-10 w-10 rounded-xl border border-slate-200 bg-white object-contain p-1"
+                  />
+                ) : (
+                  <span
+                    className="flex h-10 w-10 items-center justify-center rounded-xl text-sm font-bold text-white"
+                    style={{ backgroundColor: client.brand_color || "#7C3AED" }}
+                  >
+                    {getClientInitials(client.name)}
+                  </span>
+                )}
                 <span>
                   <span className="block font-semibold text-slate-950">{client.name}</span>
                   <span className="mt-0.5 block text-xs text-slate-500">{client.industry || client.website_url || "Client workspace"}</span>

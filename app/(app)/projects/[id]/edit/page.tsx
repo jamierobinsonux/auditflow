@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
@@ -13,6 +13,12 @@ import { TextInput } from "@/components/ui/text-input";
 import { SelectInput } from "@/components/ui/select-input";
 import { Button } from "@/components/ui/button";
 
+type ClientOption = {
+  id: string;
+  name: string;
+  website_url: string | null;
+};
+
 export default function EditProjectPage() {
   const router = useRouter();
   const params = useParams();
@@ -20,52 +26,112 @@ export default function EditProjectPage() {
   const supabase = createClient();
 
   const [name, setName] = useState("");
+  const [clientId, setClientId] = useState("");
   const [clientName, setClientName] = useState("");
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [auditType, setAuditType] = useState("");
   const [status, setStatus] = useState("In Progress");
+  const [clients, setClients] = useState<ClientOption[]>([]);
   const [isSaving, setIsSaving] = useState(false);
 
-  useEffect(() => {
-    async function loadProject() {
-      const { data, error } = await supabase
-        .from("projects")
-        .select("*")
-        .eq("id", id)
-        .single();
+  const selectedClient = useMemo(
+    () => clients.find((client) => client.id === clientId),
+    [clients, clientId]
+  );
 
-      if (error) {
-        toast.error(error.message);
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadProject() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        router.push("/login");
         return;
       }
 
-      if (data) {
-        setName(data.name ?? "");
-        setClientName(data.client_name ?? "");
-        setWebsiteUrl(data.website_url ?? "");
-        setAuditType(data.audit_type ?? "");
-        setStatus(data.status ?? "In Progress");
+      const [{ data: projectData, error: projectError }, { data: clientData }] =
+        await Promise.all([
+          supabase
+            .from("projects")
+            .select("*")
+            .eq("id", id)
+            .eq("user_id", user.id)
+            .single(),
+          supabase
+            .from("clients")
+            .select("id,name,website_url")
+            .eq("user_id", user.id)
+            .eq("status", "Active")
+            .order("name", { ascending: true }),
+        ]);
+
+      if (!isMounted) return;
+
+      if (projectError) {
+        toast.error(projectError.message);
+        return;
+      }
+
+      setClients((clientData ?? []) as ClientOption[]);
+
+      if (projectData) {
+        setName(projectData.name ?? "");
+        setClientId(projectData.client_id ?? "");
+        setClientName(projectData.client_name ?? "");
+        setWebsiteUrl(projectData.website_url ?? "");
+        setAuditType(projectData.audit_type ?? "");
+        setStatus(projectData.status ?? "In Progress");
       }
     }
 
     loadProject();
-  }, [id, supabase]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [id, router, supabase]);
+
+  function handleClientChange(value: string) {
+    setClientId(value);
+    const nextClient = clients.find((client) => client.id === value);
+
+    if (nextClient) {
+      setClientName(nextClient.name);
+      setWebsiteUrl((current) => current || nextClient.website_url || "");
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setIsSaving(true);
 
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+
+    const clientSnapshotName = selectedClient?.name || clientName || null;
+
     const { error } = await supabase
       .from("projects")
       .update({
         name,
-        client_name: clientName,
-        website_url: websiteUrl,
-        audit_type: auditType,
+        client_id: clientId || null,
+        client_name: clientSnapshotName,
+        website_url: websiteUrl || null,
+        audit_type: auditType || null,
         status,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", id);
+      .eq("id", id)
+      .eq("user_id", user.id);
 
     if (error) {
       toast.error(error.message);
@@ -82,7 +148,7 @@ export default function EditProjectPage() {
     <PageShell>
       <PageHeader
         title="Edit Project"
-        description="Update audit details, status, and project metadata."
+        description="Update audit details, status, client assignment, and project metadata."
       />
 
       <Card className="mx-auto mt-8 max-w-xl p-8">
@@ -96,13 +162,34 @@ export default function EditProjectPage() {
             />
           </FormField>
 
-          <FormField label="Client name" description="Optional">
-            <TextInput
-              value={clientName}
-              onChange={(e) => setClientName(e.target.value)}
-              placeholder="Client name"
-            />
-          </FormField>
+          {clients.length > 0 && (
+            <FormField
+              label="Client workspace"
+              description="Optional. Use this to assign existing projects to a Studio client workspace."
+            >
+              <SelectInput
+                value={clientId}
+                onChange={(e) => handleClientChange(e.target.value)}
+              >
+                <option value="">No client / personal project</option>
+                {clients.map((client) => (
+                  <option key={client.id} value={client.id}>
+                    {client.name}
+                  </option>
+                ))}
+              </SelectInput>
+            </FormField>
+          )}
+
+          {!selectedClient && (
+            <FormField label="Client name" description="Optional">
+              <TextInput
+                value={clientName}
+                onChange={(e) => setClientName(e.target.value)}
+                placeholder="Client name"
+              />
+            </FormField>
+          )}
 
           <FormField label="Website URL" description="Optional">
             <TextInput
@@ -124,6 +211,7 @@ export default function EditProjectPage() {
               <option>Ecommerce</option>
               <option>Dashboard</option>
               <option>Accessibility</option>
+              <option>General UX</option>
             </SelectInput>
           </FormField>
 

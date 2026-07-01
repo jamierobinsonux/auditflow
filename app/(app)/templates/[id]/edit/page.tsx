@@ -33,7 +33,7 @@ export default async function EditFrameworkPage({
 
   const { data } = await supabase
     .from("studio_frameworks")
-    .select("*, categories:studio_framework_categories(*), journey_stages:studio_framework_journey_stages(*), recommendations:studio_framework_recommendations(*)")
+    .select("*, categories:studio_framework_categories(*), journey_stages:studio_framework_journey_stages(*), recommendations:studio_framework_recommendations(*), report_defaults:studio_framework_report_defaults(*)")
     .eq("id", id)
     .eq("user_id", user.id)
     .maybeSingle();
@@ -45,6 +45,9 @@ export default async function EditFrameworkPage({
     categories: Array.isArray((data as any).categories) ? (data as any).categories : [],
     journey_stages: Array.isArray((data as any).journey_stages) ? (data as any).journey_stages : [],
     recommendations: Array.isArray((data as any).recommendations) ? (data as any).recommendations : [],
+    report_defaults: Array.isArray((data as any).report_defaults)
+      ? (data as any).report_defaults[0] ?? null
+      : (data as any).report_defaults ?? null,
   } as StudioFrameworkWithItems;
 
   return (

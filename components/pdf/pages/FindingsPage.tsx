@@ -14,9 +14,9 @@ export function FindingsPage({ findings, journeys, images, annotations, theme, s
       {findings.length === 0 && <Text style={styles.body}>No findings have been added yet.</Text>}
       {findings.map((finding, index) => {
         const journey = journeys.find((j) => j.id === finding.journey_id);
-        const findingImages = images.filter((image) => image.finding_id === finding.id).slice(0, 2);
+        const findingImages = images.filter((image) => image.finding_id === finding.id);
         return (
-          <View key={finding.id || index} style={{ marginBottom: 34 }} minPresenceAhead={190}>
+          <View key={finding.id || index} style={{ marginBottom: 34 }} minPresenceAhead={240}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }} wrap={false}>
               <View style={{ maxWidth: "78%" }}>
                 <Text style={{ fontSize: 9, color: theme.accent, letterSpacing: 1.2, marginBottom: 8 }}>Finding {String(index + 1).padStart(2, "0")}</Text>
@@ -32,16 +32,19 @@ export function FindingsPage({ findings, journeys, images, annotations, theme, s
             </View>
             <TextSection title="Observation">{finding.description || "No observation has been added yet."}</TextSection>
             <TextSection title="Impact">{finding.impact ? `This finding is marked as ${finding.impact.toLowerCase()} impact and should be considered in prioritization.` : "This issue may create friction, uncertainty, or unnecessary effort for users."}</TextSection>
+            {finding.linked_recommendation_title && (
+              <Text style={[styles.small, { marginBottom: 6 }]}>Linked recommendation: {finding.linked_recommendation_title}</Text>
+            )}
             <TextSection title="Recommendation">{finding.recommendation || "No recommendation has been added yet."}</TextSection>
             {findingImages.length > 0 && (
-              <View style={{ marginTop: 14 }} minPresenceAhead={180}>
+              <View style={{ marginTop: 14 }} minPresenceAhead={220}>
                 <Text style={styles.h3}>Evidence</Text>
                 {findingImages.map((image) => {
                   const notes = annotations.filter((annotation) => annotation.evidence_image_id === image.id || annotation.image_id === image.id);
                   const currentFigure = figureIndex++;
                   return (
                     <View key={image.id || currentFigure} wrap={false}>
-                      <Figure src={image.image_url || image.url || image.public_url} caption={image.caption || finding.title} index={currentFigure} theme={theme} />
+                      <Figure src={image.image_url || image.url || image.public_url} caption={image.evidence_name || image.caption || finding.title} index={currentFigure} theme={theme} />
                       {notes.length > 0 && <Text style={[styles.small, { marginTop: -8, marginBottom: 10 }]}>Annotation notes: {notes.map((note) => note.note || note.label || note.text).filter(Boolean).join("; ")}</Text>}
                     </View>
                   );

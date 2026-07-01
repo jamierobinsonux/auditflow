@@ -10,10 +10,6 @@ export type Finding = {
   status: string | null;
   recommendation?: string | null;
   category?: string | null;
-  recommendation_source?: "library" | "framework" | string | null;
-  saved_recommendation_id?: string | null;
-  framework_recommendation_id?: string | null;
-  linked_recommendation_title?: string | null;
   created_at: string;
   updated_at?: string | null;
 };

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Download, Eye, FileText, LayoutTemplate } from "lucide-react";
+import { Download, Eye, LayoutTemplate } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/layout/card";
 
@@ -147,7 +147,6 @@ export function ReportBuilderClient({
   const [sections, setSections] = useState<ReportSectionId[]>(templates[0].sections);
   const [isExporting, setIsExporting] = useState(false);
 
-  const selectedTemplate = templates.find((item) => item.id === template) ?? templates[0];
 
   const previewUrl = useMemo(
     () => buildReportUrl(project.id, { title, template, sections, mode: "preview" }),
@@ -282,36 +281,6 @@ export function ReportBuilderClient({
         </div>
 
         <aside className="space-y-6">
-          <Card className="p-6">
-            <div className="flex items-center gap-3">
-              <div className="rounded-xl bg-slate-100 p-2 text-slate-600">
-                <FileText className="h-5 w-5" />
-              </div>
-              <div>
-                <h2 className="text-base font-semibold text-slate-950">Report preview</h2>
-                <p className="text-xs text-slate-500">{selectedTemplate.name} template</p>
-              </div>
-            </div>
-
-            <div className="mt-5 space-y-3">
-              {sections.map((section, index) => (
-                <div key={section} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="text-xs font-semibold text-slate-700">{index === 0 ? "Cover" : `Section ${index}`}</p>
-                    <span className="text-[10px] uppercase tracking-wide text-slate-400">{section}</span>
-                  </div>
-                  <div className="mt-3 h-20 rounded-lg border border-slate-200 bg-white p-3">
-                    <div className="h-2 w-2/3 rounded bg-slate-200" />
-                    <div className="mt-2 h-2 w-1/2 rounded bg-slate-100" />
-                    <div className="mt-5 h-2 w-full rounded bg-slate-100" />
-                    <div className="mt-2 h-2 w-4/5 rounded bg-slate-100" />
-                  </div>
-                  <p className="mt-2 text-xs font-medium text-slate-900">{sectionLabels[section]}</p>
-                </div>
-              ))}
-            </div>
-          </Card>
-
           <Card className="p-6">
             <h2 className="text-base font-semibold text-slate-950">Audit snapshot</h2>
             <dl className="mt-4 space-y-3 text-sm">

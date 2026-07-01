@@ -20,11 +20,13 @@ import { TextInput } from "@/components/ui/text-input";
 import { TextArea } from "@/components/ui/text-area";
 import { SelectInput } from "@/components/ui/select-input";
 import { Button } from "@/components/ui/button";
+import { RecommendationPicker, type RecommendationOption } from "@/components/recommendation-picker";
 
 type ExistingImage = {
   id: string;
   image_url: string;
   caption: string | null;
+  evidence_name: string | null;
 };
 
 type Journey = {
@@ -38,6 +40,7 @@ type JourneyStep = {
   title: string;
 };
 
+
 export default function EditFindingPage() {
   const router = useRouter();
   const params = useParams();
@@ -50,7 +53,12 @@ export default function EditFindingPage() {
   const [description, setDescription] = useState("");
   const [severity, setSeverity] = useState("P2");
   const [status, setStatus] = useState("Open");
+  const [category, setCategory] = useState("");
   const [recommendation, setRecommendation] = useState("");
+  const [selectedRecommendation, setSelectedRecommendation] = useState<RecommendationOption | null>(null);
+  const [currentRecommendationSource, setCurrentRecommendationSource] = useState<string | null>(null);
+  const [currentSavedRecommendationId, setCurrentSavedRecommendationId] = useState<string | null>(null);
+  const [currentFrameworkRecommendationId, setCurrentFrameworkRecommendationId] = useState<string | null>(null);
   const [impact, setImpact] = useState("");
   const [effort, setEffort] = useState("");
   const [journeyId, setJourneyId] = useState("");
@@ -59,10 +67,11 @@ export default function EditFindingPage() {
 
   const [journeys, setJourneys] = useState<Journey[]>([]);
   const [steps, setSteps] = useState<JourneyStep[]>([]);
+  const [recommendations, setRecommendations] = useState<RecommendationOption[]>([]);
 
   const [existingImages, setExistingImages] = useState<ExistingImage[]>([]);
   const [images, setImages] = useState<EvidenceUpload[]>([
-    { file: null, caption: "" },
+    { file: null, evidenceName: "", caption: "" },
   ]);
 
   const availableSteps = useMemo(() => {
@@ -102,11 +111,22 @@ export default function EditFindingPage() {
       setDescription(finding.description ?? "");
       setSeverity(finding.severity ?? "P2");
       setStatus(finding.status ?? "Open");
+      setCategory(finding.category ?? "");
       setRecommendation(finding.recommendation ?? "");
+      setCurrentRecommendationSource(finding.recommendation_source ?? null);
+      setCurrentSavedRecommendationId(finding.saved_recommendation_id ?? null);
+      setCurrentFrameworkRecommendationId(finding.framework_recommendation_id ?? null);
       setImpact(finding.impact ?? "");
       setEffort(finding.effort ?? "");
       setJourneyId(finding.journey_id ?? "");
       setJourneyStepId(finding.journey_step_id ?? "");
+
+      const { data: projectData } = await supabase
+        .from("projects")
+        .select("id, framework_id")
+        .eq("id", projectId)
+        .eq("user_id", user.id)
+        .maybeSingle();
 
       const { data: journeyData } = await supabase
         .from("journeys")
@@ -136,6 +156,30 @@ export default function EditFindingPage() {
       setJourneys((journeyData ?? []) as Journey[]);
       setSteps((stepData ?? []) as JourneyStep[]);
       setExistingImages((imageData ?? []) as ExistingImage[]);
+
+      const libraryQuery = supabase
+        .from("studio_recommendations")
+        .select("id,title,category,recommendation,impact")
+        .eq("user_id", user.id)
+        .order("updated_at", { ascending: false });
+
+      const frameworkQuery = projectData?.framework_id
+        ? supabase
+            .from("studio_framework_recommendations")
+            .select("id,title,category,recommendation,impact")
+            .eq("user_id", user.id)
+            .eq("framework_id", projectData.framework_id)
+            .order("sort_order", { ascending: true })
+        : Promise.resolve({ data: [], error: null } as any);
+
+      const [{ data: libraryData }, { data: frameworkData }] = await Promise.all([
+        libraryQuery,
+        frameworkQuery,
+      ]);
+
+      const libraryOptions = (libraryData ?? []).map((item: any) => ({ ...item, source: "library" as const }));
+      const frameworkOptions = (frameworkData ?? []).map((item: any) => ({ ...item, source: "framework" as const }));
+      setRecommendations([...frameworkOptions, ...libraryOptions]);
     }
 
     loadData();
@@ -144,6 +188,14 @@ export default function EditFindingPage() {
   function updateExistingCaption(id: string, caption: string) {
     setExistingImages((current) =>
       current.map((img) => (img.id === id ? { ...img, caption } : img))
+    );
+  }
+
+  function updateExistingName(id: string, evidenceName: string) {
+    setExistingImages((current) =>
+      current.map((img) =>
+        img.id === id ? { ...img, evidence_name: evidenceName } : img
+      )
     );
   }
 
@@ -160,6 +212,18 @@ export default function EditFindingPage() {
       return;
     }
 
+    const recommendationSource = selectedRecommendation?.source ?? currentRecommendationSource;
+    const savedRecommendationId = selectedRecommendation
+      ? selectedRecommendation.source === "library"
+        ? selectedRecommendation.id
+        : null
+      : currentSavedRecommendationId;
+    const frameworkRecommendationId = selectedRecommendation
+      ? selectedRecommendation.source === "framework"
+        ? selectedRecommendation.id
+        : null
+      : currentFrameworkRecommendationId;
+
     const { error } = await supabase
       .from("findings")
       .update({
@@ -167,7 +231,11 @@ export default function EditFindingPage() {
         description,
         severity,
         status,
+        category: category || null,
         recommendation,
+        recommendation_source: recommendationSource,
+        saved_recommendation_id: savedRecommendationId,
+        framework_recommendation_id: frameworkRecommendationId,
         impact,
         effort,
         journey_id: journeyId || null,
@@ -185,7 +253,7 @@ export default function EditFindingPage() {
     for (const existingImage of existingImages) {
       const { error: captionError } = await supabase
         .from("finding_images")
-        .update({ caption: existingImage.caption })
+        .update({ caption: existingImage.caption, evidence_name: existingImage.evidence_name })
         .eq("id", existingImage.id)
         .eq("user_id", user.id);
 
@@ -221,6 +289,7 @@ export default function EditFindingPage() {
           finding_id: findingId,
           user_id: user.id,
           image_url: publicUrlData.publicUrl,
+          evidence_name: image.evidenceName || image.file.name.replace(/\.[^/.]+$/, ""),
           caption: image.caption,
         });
 
@@ -240,6 +309,17 @@ export default function EditFindingPage() {
     toast.success("Finding updated.");
     router.push(`/projects/${projectId}/findings/${findingId}`);
     router.refresh();
+  }
+
+
+  function applyRecommendation(item: RecommendationOption) {
+    setRecommendation(item.recommendation);
+    setImpact(item.impact ?? impact);
+    setCategory(item.category ?? category);
+    setSelectedRecommendation(item);
+    setCurrentRecommendationSource(item.source);
+    setCurrentSavedRecommendationId(item.source === "library" ? item.id : null);
+    setCurrentFrameworkRecommendationId(item.source === "framework" ? item.id : null);
   }
 
   return (
@@ -328,6 +408,16 @@ export default function EditFindingPage() {
             </FormField>
           </div>
 
+          <FormField label="Category" description="Optional">
+            <TextInput
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              placeholder="Forms, Navigation, Accessibility..."
+            />
+          </FormField>
+
+          <RecommendationPicker recommendations={recommendations} onApply={applyRecommendation} />
+
           <div className="grid gap-4 md:grid-cols-2">
             <FormField label="Impact" description="Optional">
               <SelectInput
@@ -385,6 +475,16 @@ export default function EditFindingPage() {
                     alt=""
                     className="rounded-lg border border-slate-200"
                   />
+
+                  <FormField label="Evidence name">
+                    <TextInput
+                      placeholder="Landing Page Hero"
+                      value={image.evidence_name ?? ""}
+                      onChange={(e) =>
+                        updateExistingName(image.id, e.target.value)
+                      }
+                    />
+                  </FormField>
 
                   <FormField label="Image caption">
                     <TextArea

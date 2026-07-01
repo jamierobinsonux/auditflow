@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -20,7 +21,7 @@ export type FrameworkDraftJourney = {
   id?: string;
   name: string;
   description: string;
-  stepsText: string;
+  steps: string[];
 };
 
 export type FrameworkDraftRecommendation = {
@@ -41,7 +42,7 @@ const defaultJourneys: FrameworkDraftJourney[] = [
   {
     name: "Primary Task Flow",
     description: "Review the main user task from entry point to completion.",
-    stepsText: "Entry point\nTask setup\nReview\nCompletion",
+    steps: ["Entry point", "Task setup", "Review", "Completion"],
   },
 ];
 
@@ -85,7 +86,7 @@ export function FrameworkBuilderClient({
         id: item.id,
         name: item.name,
         description: item.description || "",
-        stepsText: (item.steps ?? []).join("\n"),
+        steps: Array.isArray(item.steps) && item.steps.length ? item.steps : [""],
       }));
   }, [framework]);
 
@@ -124,11 +125,72 @@ export function FrameworkBuilderClient({
     setCategories((current) => [...current, { name: "" }]);
   }
 
+  function updateCategory(index: number, name: string) {
+    setCategories((current) =>
+      current.map((item, itemIndex) =>
+        itemIndex === index ? { ...item, name } : item
+      )
+    );
+  }
+
   function addJourney() {
     setJourneys((current) => [
       ...current,
-      { name: "", description: "", stepsText: "" },
+      { name: "", description: "", steps: [""] },
     ]);
+  }
+
+  function updateJourney(index: number, update: Partial<FrameworkDraftJourney>) {
+    setJourneys((current) =>
+      current.map((item, itemIndex) =>
+        itemIndex === index ? { ...item, ...update } : item
+      )
+    );
+  }
+
+  function addJourneyStep(journeyIndex: number) {
+    setJourneys((current) =>
+      current.map((journey, index) =>
+        index === journeyIndex
+          ? { ...journey, steps: [...journey.steps, ""] }
+          : journey
+      )
+    );
+  }
+
+  function updateJourneyStep(
+    journeyIndex: number,
+    stepIndex: number,
+    value: string
+  ) {
+    setJourneys((current) =>
+      current.map((journey, index) =>
+        index === journeyIndex
+          ? {
+              ...journey,
+              steps: journey.steps.map((step, currentStepIndex) =>
+                currentStepIndex === stepIndex ? value : step
+              ),
+            }
+          : journey
+      )
+    );
+  }
+
+  function removeJourneyStep(journeyIndex: number, stepIndex: number) {
+    setJourneys((current) =>
+      current.map((journey, index) =>
+        index === journeyIndex
+          ? {
+              ...journey,
+              steps:
+                journey.steps.length > 1
+                  ? journey.steps.filter((_, currentStepIndex) => currentStepIndex !== stepIndex)
+                  : [""],
+            }
+          : journey
+      )
+    );
   }
 
   function addRecommendation() {
@@ -136,6 +198,17 @@ export function FrameworkBuilderClient({
       ...current,
       { title: "", category: "General", recommendation: "", impact: "Medium" },
     ]);
+  }
+
+  function updateRecommendation(
+    index: number,
+    update: Partial<FrameworkDraftRecommendation>
+  ) {
+    setRecommendations((current) =>
+      current.map((item, itemIndex) =>
+        itemIndex === index ? { ...item, ...update } : item
+      )
+    );
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -152,10 +225,7 @@ export function FrameworkBuilderClient({
       .map((item) => ({
         name: item.name.trim(),
         description: item.description.trim(),
-        steps: item.stepsText
-          .split("\n")
-          .map((step) => step.trim())
-          .filter(Boolean),
+        steps: item.steps.map((step) => step.trim()).filter(Boolean),
       }))
       .filter((item) => item.name.length > 0);
 
@@ -380,7 +450,7 @@ export function FrameworkBuilderClient({
 
       <FrameworkListSection
         title="Categories"
-        description="Categories help organize findings and recommendations during the audit."
+        description="Add the finding categories that should be available when this framework is used."
         actionLabel="Add category"
         onAdd={addCategory}
       >
@@ -391,17 +461,11 @@ export function FrameworkBuilderClient({
           >
             <TextInput
               value={item.name}
-              onChange={(e) =>
-                setCategories((current) =>
-                  current.map((category, categoryIndex) =>
-                    categoryIndex === index
-                      ? { ...category, name: e.target.value }
-                      : category
-                  )
-                )
-              }
+              onChange={(e) => updateCategory(index, e.target.value)}
               placeholder="Navigation"
+              aria-label={`Category ${index + 1} name`}
             />
+
             <Button
               type="button"
               variant="ghost"
@@ -419,7 +483,7 @@ export function FrameworkBuilderClient({
 
       <FrameworkListSection
         title="Journey stages"
-        description="These become journeys and journey steps when a project is created from this framework."
+        description="Create default journeys and steps. These are added to projects created from this framework."
         actionLabel="Add journey"
         onAdd={addJourney}
       >
@@ -431,45 +495,64 @@ export function FrameworkBuilderClient({
             <div className="grid gap-3 md:grid-cols-2">
               <TextInput
                 value={item.name}
-                onChange={(e) =>
-                  setJourneys((current) =>
-                    current.map((journey, journeyIndex) =>
-                      journeyIndex === index
-                        ? { ...journey, name: e.target.value }
-                        : journey
-                    )
-                  )
-                }
+                onChange={(e) => updateJourney(index, { name: e.target.value })}
                 placeholder="Checkout Flow"
+                aria-label={`Journey ${index + 1} name`}
               />
+
               <TextInput
                 value={item.description}
                 onChange={(e) =>
-                  setJourneys((current) =>
-                    current.map((journey, journeyIndex) =>
-                      journeyIndex === index
-                        ? { ...journey, description: e.target.value }
-                        : journey
-                    )
-                  )
+                  updateJourney(index, { description: e.target.value })
                 }
                 placeholder="What to evaluate in this journey"
+                aria-label={`Journey ${index + 1} description`}
               />
             </div>
 
-            <TextArea
-              value={item.stepsText}
-              onChange={(e) =>
-                setJourneys((current) =>
-                  current.map((journey, journeyIndex) =>
-                    journeyIndex === index
-                      ? { ...journey, stepsText: e.target.value }
-                      : journey
-                  )
-                )
-              }
-              placeholder={"Cart\nShipping\nPayment\nConfirmation"}
-            />
+            <div className="rounded-xl bg-slate-50 p-4">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <p className="text-sm font-semibold text-slate-800">Steps</p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => addJourneyStep(index)}
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Add step
+                </Button>
+              </div>
+
+              <div className="space-y-2">
+                {item.steps.map((step, stepIndex) => (
+                  <div
+                    key={stepIndex}
+                    className="grid gap-2 md:grid-cols-[32px_1fr_auto]"
+                  >
+                    <div className="flex h-10 items-center justify-center rounded-lg bg-white text-xs font-semibold text-slate-500">
+                      {stepIndex + 1}
+                    </div>
+                    <TextInput
+                      value={step}
+                      onChange={(e) =>
+                        updateJourneyStep(index, stepIndex, e.target.value)
+                      }
+                      placeholder="Cart"
+                      aria-label={`Step ${stepIndex + 1} for ${item.name || "journey"}`}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => removeJourneyStep(index, stepIndex)}
+                    >
+                      <X className="h-4 w-4" />
+                      <span className="sr-only">Remove step</span>
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
 
             <div className="flex justify-end">
               <Button
@@ -490,7 +573,7 @@ export function FrameworkBuilderClient({
 
       <FrameworkListSection
         title="Recommended guidance"
-        description="Optional reusable recommendations that travel with the framework."
+        description="Add reusable recommendations users can insert while documenting findings."
         actionLabel="Add recommendation"
         onAdd={addRecommendation}
       >
@@ -503,13 +586,7 @@ export function FrameworkBuilderClient({
               <TextInput
                 value={item.title}
                 onChange={(e) =>
-                  setRecommendations((current) =>
-                    current.map((recommendation, recommendationIndex) =>
-                      recommendationIndex === index
-                        ? { ...recommendation, title: e.target.value }
-                        : recommendation
-                    )
-                  )
+                  updateRecommendation(index, { title: e.target.value })
                 }
                 placeholder="Improve form validation"
               />
@@ -517,13 +594,7 @@ export function FrameworkBuilderClient({
               <TextInput
                 value={item.category}
                 onChange={(e) =>
-                  setRecommendations((current) =>
-                    current.map((recommendation, recommendationIndex) =>
-                      recommendationIndex === index
-                        ? { ...recommendation, category: e.target.value }
-                        : recommendation
-                    )
-                  )
+                  updateRecommendation(index, { category: e.target.value })
                 }
                 placeholder="Forms"
               />
@@ -531,13 +602,7 @@ export function FrameworkBuilderClient({
               <SelectInput
                 value={item.impact}
                 onChange={(e) =>
-                  setRecommendations((current) =>
-                    current.map((recommendation, recommendationIndex) =>
-                      recommendationIndex === index
-                        ? { ...recommendation, impact: e.target.value }
-                        : recommendation
-                    )
-                  )
+                  updateRecommendation(index, { impact: e.target.value })
                 }
               >
                 <option>High</option>
@@ -549,16 +614,9 @@ export function FrameworkBuilderClient({
             <TextArea
               value={item.recommendation}
               onChange={(e) =>
-                setRecommendations((current) =>
-                  current.map((recommendation, recommendationIndex) =>
-                    recommendationIndex === index
-                      ? {
-                          ...recommendation,
-                          recommendation: e.target.value,
-                        }
-                      : recommendation
-                  )
-                )
+                updateRecommendation(index, {
+                  recommendation: e.target.value,
+                })
               }
               placeholder="Explain the recommended change and expected UX benefit."
             />

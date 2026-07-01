@@ -20,7 +20,7 @@ export function SectionHeader({
   theme: ReportTheme;
 }) {
   return (
-    <View style={{ marginBottom: 28 }} minPresenceAhead={120}>
+    <View style={{ marginBottom: 22 }} minPresenceAhead={220} wrap={false}>
       <Text style={[styles.label, { color: theme.accent, marginBottom: 10 }]}>
         {number}
       </Text>

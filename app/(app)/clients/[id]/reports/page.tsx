@@ -30,9 +30,10 @@ export default async function ClientReportsPage({ params }: { params: Promise<{ 
     .from("report_exports")
     .select("id,user_id,project_id,client_id,title,template,sections,options,version,file_name,created_at, project:projects(id,name,client_id)")
     .eq("user_id", user.id)
-    .eq("client_id", client.id)
     .order("created_at", { ascending: false });
-  const reports = normalizeReports(data ?? []);
+  const reports = normalizeReports(data ?? []).filter(
+    (report) => report.client_id === client.id || report.project?.client_id === client.id
+  );
   return (
     <PageShell>
       <PageHeader title={`${client.name} Reports`} description="View report exports generated across this client's projects." action={<Button asChild><Link href={`/projects/new?clientId=${client.id}`}>+ New Project</Link></Button>} />

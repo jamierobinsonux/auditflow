@@ -15,7 +15,7 @@ export function AppendixPage({ images, findings, annotations, theme, sectionNumb
         return (
           <View key={image.id || index} style={{ marginBottom: 24 }} wrap={false}>
             <Text style={styles.h3}>{finding?.title || "Evidence item"}</Text>
-            <Figure src={image.image_url || image.url || image.public_url} caption={image.caption || finding?.title || "Evidence screenshot."} index={index + 1} theme={theme} />
+            <Figure src={image.image_url || image.url || image.public_url} caption={image.evidence_name || image.caption || finding?.title || "Evidence screenshot."} index={index + 1} theme={theme} />
             {notes.length > 0 && <Text style={[styles.small, { marginTop: -8 }]}>Annotation notes: {notes.map((note) => note.note || note.label || note.text).filter(Boolean).join("; ")}</Text>}
           </View>
         );

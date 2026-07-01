@@ -16,6 +16,7 @@ import {
   Settings,
   CreditCard,
   LogOut,
+  LifeBuoy,
 } from "lucide-react";
 import { SignOutButton } from "@/components/sign-out-button";
 
@@ -27,6 +28,7 @@ type SidebarProps = {
       name?: string;
     };
   } | null;
+  isStudio?: boolean;
 };
 
 const navigation = [
@@ -77,7 +79,7 @@ const navigation = [
   },
 ];
 
-export function Sidebar({ user }: SidebarProps) {
+export function Sidebar({ user, isStudio = false }: SidebarProps) {
   const pathname = usePathname();
 
   const rawName =
@@ -107,7 +109,7 @@ const displayName = formatDisplayName(rawName);
 
         <div className="space-y-1">
           {navigation.slice(0, 2).map((item) => (
-            <NavItem key={item.name} item={item} pathname={pathname} />
+            <NavItem key={item.name} item={item} pathname={pathname} isStudio={isStudio} />
           ))}
         </div>
 
@@ -117,7 +119,7 @@ const displayName = formatDisplayName(rawName);
 
         <div className="space-y-1">
           {navigation.slice(2).map((item) => (
-            <NavItem key={item.name} item={item} pathname={pathname} />
+            <NavItem key={item.name} item={item} pathname={pathname} isStudio={isStudio} />
           ))}
         </div>
       </nav>
@@ -140,6 +142,16 @@ const displayName = formatDisplayName(rawName);
             href: "/settings/billing",
             icon: CreditCard,
             exact: false,
+          }}
+          pathname={pathname}
+        />
+
+        <NavItem
+          item={{
+            name: "Help",
+            href: "/help",
+            icon: LifeBuoy,
+            exact: true,
           }}
           pathname={pathname}
         />
@@ -175,6 +187,7 @@ const displayName = formatDisplayName(rawName);
 function NavItem({
   item,
   pathname,
+  isStudio = false,
 }: {
   item: {
     name: string;
@@ -184,6 +197,7 @@ function NavItem({
     studio?: boolean;
   };
   pathname: string;
+  isStudio?: boolean;
 }) {
   const Icon = item.icon;
 
@@ -202,7 +216,7 @@ function NavItem({
     >
       <Icon size={18} strokeWidth={2} className="shrink-0" />
       <span className="min-w-0 truncate">{item.name}</span>
-      {item.studio && (
+      {item.studio && !isStudio && (
         <span className="shrink-0 rounded-full border border-violet-200 bg-white px-2 py-0.5 text-[10px] font-semibold leading-none text-violet-700">
           Studio
         </span>

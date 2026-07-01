@@ -2,9 +2,12 @@
 
 import { useRef, useState } from "react";
 import { CheckCircle2, ImagePlus, UploadCloud, X } from "lucide-react";
+import { FormField } from "@/components/ui/form-field";
+import { TextInput } from "@/components/ui/text-input";
 
 export type EvidenceUpload = {
   file: File | null;
+  evidenceName: string;
   caption: string;
 };
 
@@ -33,7 +36,10 @@ export function EvidenceUploader({ images, setImages }: EvidenceUploaderProps) {
   }
 
   function addImageField() {
-    setImages((current) => [...current, { file: null, caption: "" }]);
+    setImages((current) => [
+      ...current,
+      { file: null, evidenceName: "", caption: "" },
+    ]);
   }
 
   function removeImageField(index: number) {
@@ -94,7 +100,10 @@ function EvidenceUploadItem({
 
   function handleFile(file?: File | null) {
     if (!file) return;
-    onUpdate({ file });
+    onUpdate({
+      file,
+      evidenceName: imageItem.evidenceName || file.name.replace(/\.[^/.]+$/, ""),
+    });
   }
 
   function handleDrop(event: React.DragEvent<HTMLDivElement>) {
@@ -184,12 +193,22 @@ function EvidenceUploadItem({
         )}
       </div>
 
-      <textarea
-        className="mt-3 min-h-24 w-full rounded-xl border border-slate-200 bg-white p-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-violet-300 focus:ring-4 focus:ring-violet-100"
-        placeholder="Image caption, e.g. Checkout screen showing unclear payment error"
-        value={imageItem.caption}
-        onChange={(event) => onUpdate({ caption: event.target.value })}
-      />
+      <div className="mt-3 space-y-3">
+        <FormField label="Evidence name">
+          <TextInput
+            placeholder="Landing Page Hero"
+            value={imageItem.evidenceName}
+            onChange={(event) => onUpdate({ evidenceName: event.target.value })}
+          />
+        </FormField>
+
+        <textarea
+          className="min-h-24 w-full rounded-xl border border-slate-200 bg-white p-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-violet-300 focus:ring-4 focus:ring-violet-100"
+          placeholder="Image caption, e.g. Checkout screen showing unclear payment error"
+          value={imageItem.caption}
+          onChange={(event) => onUpdate({ caption: event.target.value })}
+        />
+      </div>
     </div>
   );
 }

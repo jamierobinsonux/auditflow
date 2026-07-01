@@ -10,6 +10,7 @@ import type {
   StudioFrameworkCategory,
   StudioFrameworkJourneyStage,
   StudioFrameworkRecommendation,
+  StudioFrameworkReportDefault,
   StudioFrameworkWithItems,
 } from "@/types/framework";
 
@@ -51,6 +52,7 @@ export default async function EditFrameworkPage({
     { data: categories },
     { data: journeyStages },
     { data: recommendations },
+    { data: reportDefault },
   ] = await Promise.all([
     supabase
       .from("studio_framework_categories")
@@ -70,6 +72,12 @@ export default async function EditFrameworkPage({
       .eq("framework_id", id)
       .eq("user_id", user.id)
       .order("sort_order", { ascending: true }),
+    supabase
+      .from("studio_framework_report_defaults")
+      .select("*")
+      .eq("framework_id", id)
+      .eq("user_id", user.id)
+      .maybeSingle(),
   ]);
 
   const detail: StudioFrameworkWithItems = {
@@ -77,6 +85,7 @@ export default async function EditFrameworkPage({
     categories: (categories ?? []) as StudioFrameworkCategory[],
     journey_stages: (journeyStages ?? []) as StudioFrameworkJourneyStage[],
     recommendations: (recommendations ?? []) as StudioFrameworkRecommendation[],
+    report_defaults: (reportDefault ?? null) as StudioFrameworkReportDefault | null,
   };
 
   return (
