@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createNotification } from "@/lib/notifications";
 
 const SUPPORT_EMAIL = "jamie@auditflowapp.co";
 
@@ -39,6 +40,15 @@ export async function POST(request: Request) {
     category,
     subject,
     message,
+  });
+
+  await createNotification(supabase, {
+    userId: user.id,
+    type: "support_request_sent",
+    title: "Help request sent",
+    message: "Your message was saved and sent to AuditFlow support.",
+    href: "/help",
+    severity: "success",
   });
 
   return Response.json({ ok: true });

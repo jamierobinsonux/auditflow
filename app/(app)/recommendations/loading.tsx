@@ -1,5 +1,5 @@
 import { PageLoading } from "@/components/ui/page-loading";
 
-export default function ProjectsLoading() {
+export default function RecommendationsLoading() {
   return <PageLoading variant="list" />;
 }

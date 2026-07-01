@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { AuditReport } from "@/components/pdf/AuditReport";
 import { getUserSubscription } from "@/lib/subscription";
 import { getEffectiveReportBranding } from "@/lib/report-branding";
+import { createNotification } from "@/lib/notifications";
 import type {
   ReportOptions,
   ReportSectionId,
@@ -221,16 +222,36 @@ export async function GET(
 
     const nextVersion = Number(latestExport?.version || 0) + 1;
 
-    await supabase.from("report_exports").insert({
-      user_id: user.id,
-      project_id: project.id,
-      client_id: project.client_id ?? null,
-      template: options.template,
-      sections: options.sections,
-      options,
-      title: options.title || `${project.name} Report`,
-      version: nextVersion,
-      file_name: fileName,
+    const exportTitle = options.title || `${project.name} Report`;
+
+    const { data: reportExport } = await supabase
+      .from("report_exports")
+      .insert({
+        user_id: user.id,
+        project_id: project.id,
+        client_id: project.client_id ?? null,
+        template: options.template,
+        sections: options.sections,
+        options,
+        title: exportTitle,
+        version: nextVersion,
+        file_name: fileName,
+      })
+      .select("id")
+      .single();
+
+    await createNotification(supabase, {
+      userId: user.id,
+      type: "report_exported",
+      title: "Report exported",
+      message: `${exportTitle} was generated for ${project.name}.`,
+      href: "/reports",
+      severity: "success",
+      metadata: {
+        project_id: project.id,
+        report_export_id: reportExport?.id ?? null,
+        template: options.template,
+      },
     });
   }
 

@@ -1,6 +1,7 @@
 import { Sidebar } from "@/components/sidebar";
 import { createClient } from "@/lib/supabase/server";
 import { getUserSubscription } from "@/lib/subscription";
+import { NotificationBell } from "@/components/notification-bell";
 
 export default async function AppLayout({
   children,
@@ -19,7 +20,12 @@ export default async function AppLayout({
     <div className="min-h-screen bg-[#F1F5F9]">
       <Sidebar user={user} isStudio={Boolean(subscription?.isStudio)} />
 
-      <main className="ml-72 min-h-screen">{children}</main>
+      <main className="ml-72 min-h-screen">
+        <div className="sticky top-0 z-40 flex h-16 items-center justify-end border-b border-slate-200 bg-[#F1F5F9]/90 px-6 backdrop-blur">
+          <NotificationBell />
+        </div>
+        {children}
+      </main>
     </div>
   );
 }
