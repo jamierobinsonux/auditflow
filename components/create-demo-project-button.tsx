@@ -20,6 +20,11 @@ export function CreateDemoProjectButton() {
     const data = await res.json();
 
     if (!res.ok) {
+      if (res.status === 403 && data.upgradeRequired) {
+        router.push("/settings/billing?limit=projects");
+        return;
+      }
+
       toast.error(data.error || "Could not create demo project.");
       setLoading(false);
       return;

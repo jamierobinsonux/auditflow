@@ -43,6 +43,7 @@ export default function NewFindingPage() {
   const [journeyId, setJourneyId] = useState("");
   const [journeyStepId, setJourneyStepId] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [isCheckingAccess, setIsCheckingAccess] = useState(true);
   const [project, setProject] = useState<ProjectContext | null>(null);
   const [journeys, setJourneys] = useState<Journey[]>([]);
   const [steps, setSteps] = useState<JourneyStep[]>([]);
@@ -91,6 +92,26 @@ export default function NewFindingPage() {
         return;
       }
 
+      const [{ count: findingCount }, { data: subscription }] = await Promise.all([
+        supabase
+          .from("findings")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id),
+        supabase
+          .from("subscriptions")
+          .select("plan")
+          .eq("user_id", user.id)
+          .maybeSingle(),
+      ]);
+
+      const currentPlan = subscription?.plan || "Free";
+
+      if (currentPlan === "Free" && (findingCount ?? 0) >= 5) {
+        router.replace("/settings/billing?limit=findings");
+        return;
+      }
+
+      setIsCheckingAccess(false);
       setProject(projectData as ProjectContext);
       setJourneys((journeyData ?? []) as Journey[]);
       setSteps((stepData ?? []) as JourneyStep[]);
@@ -136,11 +157,13 @@ export default function NewFindingPage() {
       return;
     }
 
-    const { data: finding, error } = await supabase
-      .from("findings")
-      .insert({
+    const response = await fetch("/api/findings", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
         project_id: projectId,
-        user_id: user.id,
         title,
         description,
         severity,
@@ -148,21 +171,31 @@ export default function NewFindingPage() {
         category: category || null,
         recommendation,
         recommendation_source: selectedRecommendation?.source ?? null,
-        saved_recommendation_id: selectedRecommendation?.source === "library" ? selectedRecommendation.id : null,
-        framework_recommendation_id: selectedRecommendation?.source === "framework" ? selectedRecommendation.id : null,
+        saved_recommendation_id:
+          selectedRecommendation?.source === "library" ? selectedRecommendation.id : null,
+        framework_recommendation_id:
+          selectedRecommendation?.source === "framework" ? selectedRecommendation.id : null,
         impact,
         effort,
         journey_id: journeyId || null,
         journey_step_id: journeyStepId || null,
-      })
-      .select("id")
-      .single();
+      }),
+    });
 
-    if (error) {
-      toast.error(error.message);
+    const result = await response.json().catch(() => null);
+
+    if (!response.ok || !result?.finding) {
+      if (response.status === 403 && result?.redirectTo) {
+        router.push(result.redirectTo);
+        return;
+      }
+
+      toast.error(result?.error || "Unable to create finding.");
       setIsSaving(false);
       return;
     }
+
+    const finding = result.finding as { id: string };
 
     for (const image of images) {
       if (!image.file) continue;
@@ -208,6 +241,25 @@ export default function NewFindingPage() {
     setImpact(item.impact ?? impact);
     setCategory(item.category ?? category);
     setSelectedRecommendation(item);
+  }
+
+  if (isCheckingAccess) {
+    return (
+      <PageShell>
+        <PageHeader
+          title="New Finding"
+          description="Checking your plan access before opening the finding form."
+        />
+        <Card className="mx-auto mt-8 max-w-2xl p-8">
+          <div className="space-y-4">
+            <div className="h-5 w-1/3 rounded-full bg-slate-200" />
+            <div className="h-10 rounded-xl bg-slate-100" />
+            <div className="h-24 rounded-xl bg-slate-100" />
+            <div className="h-10 rounded-xl bg-slate-100" />
+          </div>
+        </Card>
+      </PageShell>
+    );
   }
 
   return (

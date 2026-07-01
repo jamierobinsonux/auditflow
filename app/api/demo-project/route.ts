@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { canCreateProject, getUsage, getUserSubscription } from "@/lib/subscription";
 
 const demoFindings = [
   {
@@ -57,6 +58,26 @@ export async function POST() {
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const [subscription, usage] = await Promise.all([
+    getUserSubscription(user.id),
+    getUsage(user.id),
+  ]);
+
+  if (
+    !canCreateProject({
+      planId: subscription.planId,
+      projectsUsed: usage.projectsUsed,
+    })
+  ) {
+    return NextResponse.json(
+      {
+        error: "You've reached the Free plan limit of 1 project.",
+        upgradeRequired: true,
+      },
+      { status: 403 }
+    );
   }
 
   const { data: project, error: projectError } = await supabase
