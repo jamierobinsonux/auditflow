@@ -63,7 +63,7 @@ export const styles = StyleSheet.create({
   figureImage: { width: "100%", maxHeight: 245, objectFit: "contain" },
   figureCaption: {
     marginTop: 3,
-    fontSize: 8.3,
+    fontSize: 8.1,
     lineHeight: 1.4,
     color: "#64748B",
   },
