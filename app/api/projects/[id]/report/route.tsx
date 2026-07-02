@@ -51,6 +51,7 @@ export async function GET(
   const options = parseReportOptions(url.searchParams);
   const mode =
     url.searchParams.get("mode") === "download" ? "download" : "preview";
+  const brandingMode = url.searchParams.get("branding") === "account" ? "account" : "client";
 
   const {
     data: { user },
@@ -190,7 +191,7 @@ export async function GET(
     ? await getEffectiveReportBranding({
         userId: user.id,
         clientId: project.client_id,
-        preferClientBranding: subscription.isStudio,
+        preferClientBranding: subscription.isStudio && brandingMode === "client",
       })
     : null;
 
@@ -232,7 +233,7 @@ export async function GET(
         client_id: project.client_id ?? null,
         template: options.template,
         sections: options.sections,
-        options,
+        options: { ...options, brandingMode },
         title: exportTitle,
         version: nextVersion,
         file_name: fileName,

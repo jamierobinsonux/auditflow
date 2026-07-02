@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { AnnotationEditor } from "@/components/annotation-editor";
 import { DeleteEvidenceButton } from "@/components/delete-evidence-button";
+import { EditEvidenceButton } from "@/components/edit-evidence-button";
 
 type Image = {
   id: string;
@@ -72,6 +73,11 @@ export function AnnotatedEvidenceGallery({
               </button>
 
               <div className="flex items-center gap-3">
+                <EditEvidenceButton
+                  imageId={image.id}
+                  evidenceName={image.evidence_name}
+                  caption={image.caption}
+                />
                 <DeleteEvidenceButton imageId={image.id} />
                 <button
                   type="button"

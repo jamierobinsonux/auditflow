@@ -29,6 +29,7 @@ type ReportTemplateId =
 type ProjectSummary = {
   id: string;
   name: string;
+  client_id?: string | null;
   client_name?: string | null;
   audit_type?: string | null;
   status?: string | null;
@@ -49,7 +50,9 @@ type ReportBuilderClientProps = {
     evidence: number;
   };
   isProReport: boolean;
+  isStudioReport?: boolean;
   brandingName?: string | null;
+  clientBrandingName?: string | null;
   history?: ReportHistoryItem[];
 };
 
@@ -120,6 +123,7 @@ function buildReportUrl(
     template: string;
     sections: ReportSectionId[];
     mode: "preview" | "download";
+    brandingMode?: "account" | "client";
   }
 ) {
   const params = new URLSearchParams();
@@ -127,6 +131,7 @@ function buildReportUrl(
   params.set("title", values.title);
   params.set("template", values.template);
   params.set("sections", values.sections.join(","));
+  if (values.brandingMode) params.set("branding", values.brandingMode);
   return `/api/projects/${projectId}/report?${params.toString()}`;
 }
 
@@ -139,23 +144,42 @@ export function ReportBuilderClient({
   project,
   counts,
   isProReport,
+  isStudioReport = false,
   brandingName,
+  clientBrandingName,
   history = [],
 }: ReportBuilderClientProps) {
   const [template, setTemplate] = useState<ReportTemplateId>("professional");
   const [title, setTitle] = useState(`${project.name} UX Audit Report`);
   const [sections, setSections] = useState<ReportSectionId[]>(templates[0].sections);
   const [isExporting, setIsExporting] = useState(false);
-
+  const canUseClientBranding = Boolean(isStudioReport && project.client_id);
+  const [brandingMode, setBrandingMode] = useState<"account" | "client">(
+    canUseClientBranding ? "client" : "account"
+  );
 
   const previewUrl = useMemo(
-    () => buildReportUrl(project.id, { title, template, sections, mode: "preview" }),
-    [project.id, title, template, sections]
+    () =>
+      buildReportUrl(project.id, {
+        title,
+        template,
+        sections,
+        mode: "preview",
+        brandingMode,
+      }),
+    [project.id, title, template, sections, brandingMode]
   );
 
   const downloadUrl = useMemo(
-    () => buildReportUrl(project.id, { title, template, sections, mode: "download" }),
-    [project.id, title, template, sections]
+    () =>
+      buildReportUrl(project.id, {
+        title,
+        template,
+        sections,
+        mode: "download",
+        brandingMode,
+      }),
+    [project.id, title, template, sections, brandingMode]
   );
 
   function selectTemplate(nextTemplate: ReportTemplateId) {
@@ -278,6 +302,57 @@ export function ReportBuilderClient({
               </div>
             </div>
           </Card>
+
+          {isProReport && (
+            <Card className="p-6">
+              <h2 className="text-base font-semibold text-slate-950">Branding</h2>
+              <p className="mt-1 text-sm leading-6 text-slate-500">
+                Choose which branding should appear on this report.
+              </p>
+
+              <div className="mt-4 grid gap-3">
+                <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-200 bg-white p-4 transition hover:bg-slate-50">
+                  <input
+                    type="radio"
+                    name="brandingMode"
+                    value="account"
+                    checked={brandingMode === "account"}
+                    onChange={() => setBrandingMode("account")}
+                    className="mt-0.5 h-4 w-4 border-slate-300 text-violet-600 focus:ring-violet-500"
+                  />
+                  <span>
+                    <span className="block text-sm font-semibold text-slate-950">
+                      Use my branding
+                    </span>
+                    <span className="mt-1 block text-xs leading-5 text-slate-500">
+                      {brandingName || "Your account report branding"}
+                    </span>
+                  </span>
+                </label>
+
+                {canUseClientBranding && (
+                  <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-200 bg-white p-4 transition hover:bg-slate-50">
+                    <input
+                      type="radio"
+                      name="brandingMode"
+                      value="client"
+                      checked={brandingMode === "client"}
+                      onChange={() => setBrandingMode("client")}
+                      className="mt-0.5 h-4 w-4 border-slate-300 text-violet-600 focus:ring-violet-500"
+                    />
+                    <span>
+                      <span className="block text-sm font-semibold text-slate-950">
+                        Use client branding
+                      </span>
+                      <span className="mt-1 block text-xs leading-5 text-slate-500">
+                        {clientBrandingName || project.client_name || "Client brand assets"}
+                      </span>
+                    </span>
+                  </label>
+                )}
+              </div>
+            </Card>
+          )}
         </div>
 
         <aside className="space-y-6">
@@ -287,7 +362,7 @@ export function ReportBuilderClient({
               <div className="flex justify-between gap-4"><dt className="text-slate-500">Findings</dt><dd className="font-semibold text-slate-950">{counts.findings}</dd></div>
               <div className="flex justify-between gap-4"><dt className="text-slate-500">Journeys</dt><dd className="font-semibold text-slate-950">{counts.journeys}</dd></div>
               <div className="flex justify-between gap-4"><dt className="text-slate-500">Evidence items</dt><dd className="font-semibold text-slate-950">{counts.evidence}</dd></div>
-              <div className="flex justify-between gap-4"><dt className="text-slate-500">Branding</dt><dd className="font-semibold text-slate-950">{isProReport ? brandingName || "Custom" : "AuditFlow"}</dd></div>
+              <div className="flex justify-between gap-4"><dt className="text-slate-500">Branding</dt><dd className="font-semibold text-slate-950">{isProReport ? (brandingMode === "client" ? clientBrandingName || project.client_name || "Client" : brandingName || "Custom") : "AuditFlow"}</dd></div>
             </dl>
           </Card>
 

@@ -5,7 +5,7 @@ import { PageShell } from "@/components/layout/page-shell";
 import { PageHeader } from "@/components/layout/page-header";
 import { ReportBuilderClient } from "@/components/report-builder-client";
 import { getUserSubscription } from "@/lib/subscription";
-import { getReportBranding } from "@/lib/report-branding";
+import { getClientReportBranding, getReportBranding } from "@/lib/report-branding";
 
 export default async function ReportPage({
   params,
@@ -69,7 +69,14 @@ export default async function ReportPage({
 
   const subscription = await getUserSubscription(user.id);
   const isProReport = subscription.isPro || subscription.isStudio;
-  const branding = isProReport ? await getReportBranding(user.id) : null;
+  const [branding, clientBranding] = isProReport
+    ? await Promise.all([
+        getReportBranding(user.id),
+        subscription.isStudio
+          ? getClientReportBranding({ userId: user.id, clientId: project.client_id })
+          : Promise.resolve(null),
+      ])
+    : [null, null];
 
   return (
     <PageShell>
@@ -88,7 +95,9 @@ export default async function ReportPage({
           evidence: evidenceCount ?? 0,
         }}
         isProReport={isProReport}
+        isStudioReport={subscription.isStudio}
         brandingName={branding?.company_name}
+        clientBrandingName={clientBranding?.company_name}
         history={exportHistory ?? []}
       />
     </PageShell>

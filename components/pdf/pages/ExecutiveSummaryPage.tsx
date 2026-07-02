@@ -7,14 +7,6 @@ import { styles } from "../styles";
 import type { ReportTheme } from "../theme";
 import type { ReportStats } from "../types";
 
-function healthLabel(score: number) {
-  if (score >= 90) return "Excellent";
-  if (score >= 75) return "Good";
-  if (score >= 60) return "Fair";
-  if (score >= 40) return "Needs attention";
-  return "Critical";
-}
-
 export function ExecutiveSummaryPage({
   project,
   findings,
@@ -46,16 +38,25 @@ export function ExecutiveSummaryPage({
         This audit reviewed {project.name || "the product experience"} and identified {stats.totalFindings} usability {stats.totalFindings === 1 ? "finding" : "findings"} across {stats.journeys} {stats.journeys === 1 ? "journey" : "journeys"}. The most important next step is to address the {highest} issues that create friction, uncertainty, or risk in the core workflow.
       </Text>
 
-      <View style={{ marginTop: 24, paddingTop: 14, borderTopWidth: 2, borderTopColor: theme.accent }} wrap={false}>
-        <Text style={styles.label}>Audit health</Text>
-        <View style={{ flexDirection: "row", alignItems: "flex-end", marginTop: 6 }}>
-          <Text style={{ fontSize: 32, color: theme.text, fontWeight: "bold" }}>{stats.uxScore}</Text>
-          <Text style={{ fontSize: 11, color: theme.mutedText, marginBottom: 6, marginLeft: 6 }}>/ 100</Text>
-          <Text style={{ fontSize: 11, color: theme.accent, marginBottom: 6, marginLeft: 16, fontWeight: "bold" }}>
-            {healthLabel(stats.uxScore)}
-          </Text>
+      <View
+        style={{
+          marginTop: 24,
+          paddingTop: 14,
+          borderTopWidth: 2,
+          borderTopColor: theme.accent,
+        }}
+        wrap={false}
+      >
+        <Text style={styles.label}>Report summary</Text>
+        <View style={{ marginTop: 10, flexDirection: "row", gap: 28 }}>
+          <SummaryMetric label="Findings" value={stats.totalFindings} theme={theme} />
+          <SummaryMetric label="Journeys" value={stats.journeys} theme={theme} />
+          <SummaryMetric label="Evidence" value={stats.evidence} theme={theme} />
+          <SummaryMetric label="Quick wins" value={stats.quickWins} theme={theme} />
         </View>
-        <Text style={[styles.small, { marginTop: 5, maxWidth: 440 }]}>The score starts at 100 and subtracts weighted points for findings by severity: Critical/P0 -18, High/P1 -10, Medium/P2 -5, and Low/P3 -2. It is a directional planning metric, not a replacement for user testing.</Text>
+        <Text style={[styles.small, { marginTop: 12, maxWidth: 460 }]}>
+          This report summarizes the key usability issues, supporting evidence, and recommended actions identified during the audit.
+        </Text>
       </View>
 
       <View style={{ marginTop: 26, flexDirection: "row", gap: 32 }}>
@@ -110,5 +111,25 @@ export function ExecutiveSummaryPage({
         )}
       </View>
     </ReportPage>
+  );
+}
+function SummaryMetric({
+  label,
+  value,
+  theme,
+}: {
+  label: string;
+  value: number;
+  theme: ReportTheme;
+}) {
+  return (
+    <View style={{ minWidth: 72 }}>
+      <Text style={{ fontSize: 20, fontWeight: "bold", color: theme.text }}>
+        {value}
+      </Text>
+      <Text style={[styles.small, { marginTop: 3, color: theme.mutedText }]}>
+        {label}
+      </Text>
+    </View>
   );
 }
