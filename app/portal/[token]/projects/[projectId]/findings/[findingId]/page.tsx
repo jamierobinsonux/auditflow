@@ -5,6 +5,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { Card } from "@/components/layout/card";
 import { SectionHeader } from "@/components/layout/section-header";
 import { Button } from "@/components/ui/button";
+import { PortalFindingComments } from "@/components/portal-finding-comments";
 import { SeverityBadge } from "@/components/ui/severity-badge";
 import { StatusBadge } from "@/components/ui/status-badge";
 
@@ -47,7 +48,7 @@ export default async function PortalFindingDetailPage({
 
   if (!finding) notFound();
 
-  const [{ data: branding }, { data: images }, { data: annotations }] =
+  const [{ data: branding }, { data: images }, { data: annotations }, { data: comments }] =
     await Promise.all([
       supabaseAdmin
         .from("client_branding")
@@ -67,6 +68,13 @@ export default async function PortalFindingDetailPage({
         .eq("finding_id", finding.id)
         .eq("user_id", client.user_id)
         .order("created_at", { ascending: true }),
+      supabaseAdmin
+        .from("finding_comments")
+        .select("id,author_name,body,created_at")
+        .eq("finding_id", finding.id)
+        .eq("client_id", client.id)
+        .eq("user_id", client.user_id)
+        .order("created_at", { ascending: false }),
     ]);
 
   const linkedRecommendation = await loadLinkedRecommendation({
@@ -197,6 +205,18 @@ export default async function PortalFindingDetailPage({
                 annotations={annotations ?? []}
               />
             )}
+          </Card>
+
+          <Card className="p-6">
+            <SectionHeader
+              title="Comments"
+              description="Leave read-only feedback or questions for the consultant."
+            />
+            <PortalFindingComments
+              token={token}
+              findingId={finding.id}
+              initialComments={comments ?? []}
+            />
           </Card>
         </div>
       </div>

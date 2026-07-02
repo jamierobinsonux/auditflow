@@ -41,7 +41,7 @@ export function Figure({
   );
 
   return (
-    <View style={{ marginTop: 4, marginBottom: 8 }} wrap={false}>
+    <View style={{ marginTop: 2, marginBottom: 5 }} wrap={false}>
       <View style={{ position: "relative", width: "100%" }}>
         <Image src={src} style={styles.figureImage} />
 
@@ -90,8 +90,8 @@ export function Figure({
       {validAnnotations.length > 0 && (
         <View
           style={{
-            marginTop: 5,
-            paddingTop: 5,
+            marginTop: 3,
+            paddingTop: 3,
             borderTopWidth: 1,
             borderTopColor: theme.border,
           }}
@@ -108,7 +108,7 @@ export function Figure({
             return (
               <Text
                 key={annotation.id || `note-${label}-${annotationIndex}`}
-                style={[styles.small, { marginTop: 3, color: theme.mutedText }]}
+                style={[styles.small, { marginTop: 2, color: theme.mutedText }]}
               >
                 {label}. {note}
               </Text>

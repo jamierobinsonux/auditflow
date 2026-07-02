@@ -60,10 +60,10 @@ export const styles = StyleSheet.create({
   },
   divider: { borderTopWidth: 1, borderTopColor: "#E2E8F0" },
   sectionBlock: { marginTop: 24 },
-  figureImage: { width: "100%", maxHeight: 245, objectFit: "contain" },
+  figureImage: { width: "100%", maxHeight: 205, objectFit: "contain" },
   figureCaption: {
-    marginTop: 3,
-    fontSize: 8.1,
+    marginTop: 2,
+    fontSize: 8,
     lineHeight: 1.4,
     color: "#64748B",
   },

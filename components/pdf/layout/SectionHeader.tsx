@@ -20,21 +20,21 @@ export function SectionHeader({
   theme: ReportTheme;
 }) {
   return (
-    <View style={{ marginBottom: 22 }} minPresenceAhead={220} wrap={false}>
-      <Text style={[styles.label, { color: theme.accent, marginBottom: 10 }]}>
+    <View style={{ marginBottom: 14 }} minPresenceAhead={60}>
+      <Text style={[styles.label, { color: theme.accent, marginBottom: 8 }]}>
         {number}
       </Text>
       <Text style={[styles.h1, { fontSize: titleSize(title), maxWidth: 470 }]}>
         {title}
       </Text>
       {kicker && (
-        <Text style={[styles.lead, { marginTop: 12, maxWidth: 450 }]}>
+        <Text style={[styles.lead, { marginTop: 8, maxWidth: 450 }]}>
           {kicker}
         </Text>
       )}
       <View
         style={{
-          marginTop: 18,
+          marginTop: 12,
           width: 54,
           borderTopWidth: 2,
           borderTopColor: theme.accent,

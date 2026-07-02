@@ -157,7 +157,11 @@ const findings = ((findingsData ?? []) as Finding[]).filter((finding) =>
           </section>
 
           <section className="mt-8 grid gap-6 lg:grid-cols-2">
-            <Card title="Prioritization matrix" description="Impact and effort breakdown for scoped findings.">
+            <Card
+              title="Prioritization matrix"
+              description="Impact and effort breakdown for scoped findings."
+              className="h-[420px]"
+            >
               <div className="grid grid-cols-2 gap-3">
                 <MatrixCell title="Quick Wins" subtitle="High impact / Low effort" count={quickWins} />
                 <MatrixCell
@@ -178,7 +182,12 @@ const findings = ((findingsData ?? []) as Finding[]).filter((finding) =>
               </div>
             </Card>
 
-            <Card title="Highest priority findings" description="P0 and P1 findings that need attention first.">
+            <Card
+              title="Highest priority findings"
+              description="P0 and P1 findings that need attention first."
+              className="h-[420px]"
+              bodyClassName="max-h-[292px] overflow-y-auto pr-2"
+            >
               <PriorityList findings={findings} />
             </Card>
           </section>
@@ -285,16 +294,22 @@ function Card({
   title,
   description,
   children,
+  className = "",
+  bodyClassName = "",
 }: {
   title: string;
   description: string;
   children: React.ReactNode;
+  className?: string;
+  bodyClassName?: string;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+    <div
+      className={`rounded-2xl border border-slate-200 bg-white p-6 shadow-sm ${className}`}
+    >
       <h2 className="text-[18px] font-semibold text-slate-950">{title}</h2>
       <p className="mt-1 text-sm text-slate-500">{description}</p>
-      <div className="mt-6">{children}</div>
+      <div className={`mt-6 ${bodyClassName}`}>{children}</div>
     </div>
   );
 }
@@ -441,8 +456,7 @@ function MatrixCell({
 
 function PriorityList({ findings }: { findings: Finding[] }) {
   const topFindings = findings
-    .filter((f) => f.severity === "P0" || f.severity === "P1")
-    .slice(0, 5);
+    .filter((f) => f.severity === "P0" || f.severity === "P1");
 
   if (topFindings.length === 0) {
     return <p className="text-sm text-slate-500">No P0 or P1 findings yet.</p>;

@@ -48,6 +48,13 @@ export default async function FindingViewPage({
     .eq("user_id", user?.id)
     .order("created_at", { ascending: true });
 
+  const { data: comments } = await supabase
+    .from("finding_comments")
+    .select("id,author_name,body,created_at")
+    .eq("finding_id", findingId)
+    .eq("user_id", user?.id)
+    .order("created_at", { ascending: false });
+
   if (!finding) return <PageShell>Finding not found.</PageShell>;
 
   const linkedRecommendation = await loadLinkedRecommendation({
@@ -139,9 +146,51 @@ export default async function FindingViewPage({
             )}
           </div>
         </Card>
+
+        <Card className="p-6">
+          <SectionHeader
+            title="Client comments"
+            description="Feedback clients have added from their portal."
+          />
+
+          {(comments ?? []).length === 0 ? (
+            <p className="mt-3 text-sm leading-6 text-slate-500">
+              No client comments have been added yet.
+            </p>
+          ) : (
+            <div className="mt-5 space-y-3">
+              {(comments ?? []).map((comment: any) => (
+                <div
+                  key={comment.id}
+                  className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-semibold text-slate-950">
+                      {comment.author_name || "Client"}
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {formatDate(comment.created_at)}
+                    </p>
+                  </div>
+                  <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-600">
+                    {comment.body}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
       </div>
     </PageShell>
   );
+}
+
+function formatDate(value: string) {
+  return new Date(value).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 async function loadLinkedRecommendation({

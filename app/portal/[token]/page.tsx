@@ -11,10 +11,14 @@ import { Button } from "@/components/ui/button";
 
 export default async function ClientPortalPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ token: string }>;
+  searchParams: Promise<{ priority?: string }>;
 }) {
   const { token } = await params;
+  const { priority } = await searchParams;
+  const selectedPriority = normalizePriority(priority);
   const { data: client } = await supabaseAdmin
     .from("clients")
     .select("id,user_id,name,website_url,industry,brand_color,logo_url,portal_enabled")
@@ -56,6 +60,9 @@ export default async function ClientPortalPage({
     (report) => report.project?.client_id === client.id || projectIds.has(report.project_id)
   );
   const clientFindings = (findings ?? []).filter((finding: any) => projectIds.has(finding.project_id));
+  const filteredFindings = selectedPriority === "all"
+    ? clientFindings
+    : clientFindings.filter((finding: any) => finding.severity === selectedPriority);
   const logoUrl = branding?.logo_url || client.logo_url;
   const primaryColor = branding?.primary_color || client.brand_color || "#7C3AED";
 
@@ -139,11 +146,44 @@ export default async function ClientPortalPage({
 
         <Card className="mt-8 p-6">
           <SectionHeader title="Findings and recommendations" description="A read-only summary of documented UX findings and recommended improvements." />
+
+          {clientFindings.length > 0 && (
+            <div className="mt-5 flex flex-wrap gap-2">
+              {["all", "P0", "P1", "P2", "P3"].map((item) => {
+                const active = selectedPriority === item;
+                const href = item === "all" ? `/portal/${token}` : `/portal/${token}?priority=${item}`;
+
+                return (
+                  <Link
+                    key={item}
+                    href={href}
+                    className={`rounded-xl border px-3 py-2 text-sm font-semibold transition ${
+                      active
+                        ? "border-violet-600 bg-violet-600 text-white shadow-sm"
+                        : "border-slate-200 bg-white text-slate-600 hover:border-violet-200 hover:text-violet-700"
+                    }`}
+                  >
+                    {item === "all" ? "All priorities" : item}
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+
           {clientFindings.length === 0 ? (
             <EmptyPortalState icon={FileText} title="No findings shared yet" />
+          ) : filteredFindings.length === 0 ? (
+            <div className="mt-5 rounded-2xl border border-dashed border-slate-200 p-8 text-center">
+              <p className="text-sm font-semibold text-slate-700">
+                No {selectedPriority} findings shared yet
+              </p>
+              <p className="mt-1 text-sm text-slate-500">
+                Choose another priority filter to view more findings.
+              </p>
+            </div>
           ) : (
             <div className="mt-5 divide-y divide-slate-100">
-              {clientFindings.slice(0, 20).map((finding: any) => {
+              {filteredFindings.slice(0, 20).map((finding: any) => {
                 const project = clientProjects.find((item: any) => item.id === finding.project_id);
                 return (
                   <Link
@@ -171,6 +211,12 @@ export default async function ClientPortalPage({
       </div>
     </main>
   );
+}
+
+function normalizePriority(priority?: string) {
+  return ["P0", "P1", "P2", "P3"].includes(priority || "")
+    ? (priority as string)
+    : "all";
 }
 
 function Metric({ label, value }: { label: string; value: number }) {
