@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MessageSquare, Send } from "lucide-react";
+import { MessageSquare, Send, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { TextArea } from "@/components/ui/text-area";
@@ -13,6 +13,8 @@ type PortalFindingComment = {
   body: string;
   created_at: string;
 };
+
+const MAX_COMMENT_LENGTH = 2000;
 
 export function PortalFindingComments({
   token,
@@ -39,11 +41,17 @@ export function PortalFindingComments({
 
     setSaving(true);
 
-    const response = await fetch(`/api/portal/${token}/findings/${findingId}/comments`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ authorName: authorName.trim(), body: cleanBody }),
-    });
+    const response = await fetch(
+      `/api/portal/${token}/findings/${findingId}/comments`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          authorName: authorName.trim(),
+          body: cleanBody,
+        }),
+      }
+    );
 
     const payload = await response.json().catch(() => null);
     setSaving(false);
@@ -60,50 +68,113 @@ export function PortalFindingComments({
 
   return (
     <div className="mt-5 space-y-5">
-      <form onSubmit={submitComment} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-        <div className="grid gap-3 md:grid-cols-[220px_1fr]">
-          <TextInput
-            value={authorName}
-            onChange={(event) => setAuthorName(event.target.value)}
-            placeholder="Your name"
-            maxLength={80}
-          />
-          <TextArea
-            value={body}
-            onChange={(event) => setBody(event.target.value)}
-            placeholder="Add a comment for the consultant..."
-            required
-            maxLength={2000}
-          />
+      <form
+        onSubmit={submitComment}
+        className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm"
+      >
+        <div className="border-b border-slate-100 bg-slate-50/70 px-5 py-4">
+          <div className="flex items-start gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-violet-50 text-violet-700">
+              <MessageSquare className="h-5 w-5" />
+            </span>
+            <div>
+              <p className="text-sm font-semibold text-slate-950">
+                Add a comment or question
+              </p>
+              <p className="mt-1 text-sm leading-6 text-slate-500">
+                Your comment will be shared with the consultant, but you cannot edit the finding itself.
+              </p>
+            </div>
+          </div>
         </div>
 
-        <div className="mt-3 flex justify-end">
-          <Button type="submit" disabled={saving}>
-            <Send className="h-4 w-4" />
-            {saving ? "Sending..." : "Add comment"}
-          </Button>
+        <div className="space-y-4 p-5">
+          <label className="block">
+            <span className="mb-2 block text-sm font-semibold text-slate-900">
+              Name <span className="font-normal text-slate-400">optional</span>
+            </span>
+            <TextInput
+              value={authorName}
+              onChange={(event) => setAuthorName(event.target.value)}
+              placeholder="Your name"
+              maxLength={80}
+            />
+          </label>
+
+          <label className="block">
+            <span className="mb-2 block text-sm font-semibold text-slate-900">
+              Comment
+            </span>
+            <TextArea
+              value={body}
+              onChange={(event) => setBody(event.target.value)}
+              placeholder="Add feedback, ask a question, or note anything you want clarified..."
+              required
+              maxLength={MAX_COMMENT_LENGTH}
+              className="min-h-[130px] resize-y"
+            />
+          </label>
+
+          <div className="flex flex-col gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs text-slate-500">
+              {body.length}/{MAX_COMMENT_LENGTH} characters
+            </p>
+            <Button type="submit" disabled={saving || !body.trim()}>
+              <Send className="h-4 w-4" />
+              {saving ? "Sending..." : "Send comment"}
+            </Button>
+          </div>
         </div>
       </form>
 
       {comments.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-slate-200 p-6 text-center">
-          <MessageSquare className="mx-auto h-7 w-7 text-slate-400" />
-          <p className="mt-3 text-sm font-semibold text-slate-700">No comments yet</p>
-          <p className="mt-1 text-sm text-slate-500">Comments you add here are visible to the consultant.</p>
+        <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50/60 p-8 text-center">
+          <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-slate-400 shadow-sm">
+            <MessageSquare className="h-6 w-6" />
+          </span>
+          <p className="mt-4 text-sm font-semibold text-slate-800">
+            No comments yet
+          </p>
+          <p className="mx-auto mt-1 max-w-md text-sm leading-6 text-slate-500">
+            Comments you add here will appear for the consultant in AuditFlow.
+          </p>
         </div>
       ) : (
-        <div className="space-y-3">
-          {comments.map((comment) => (
-            <div key={comment.id} className="rounded-2xl border border-slate-200 bg-white p-4">
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-sm font-semibold text-slate-950">
-                  {comment.author_name || "Client"}
-                </p>
-                <p className="text-xs text-slate-500">{formatDate(comment.created_at)}</p>
-              </div>
-              <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-600">{comment.body}</p>
+        <div className="rounded-3xl border border-slate-200 bg-white shadow-sm">
+          <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-4">
+            <div>
+              <p className="text-sm font-semibold text-slate-950">
+                Comment thread
+              </p>
+              <p className="mt-1 text-xs text-slate-500">
+                {comments.length} {comments.length === 1 ? "comment" : "comments"}
+              </p>
             </div>
-          ))}
+          </div>
+
+          <div className="divide-y divide-slate-100">
+            {comments.map((comment) => (
+              <article key={comment.id} className="flex gap-3 px-5 py-4">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-violet-50 text-violet-700">
+                  <UserRound className="h-4 w-4" />
+                </span>
+
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-sm font-semibold text-slate-950">
+                      {comment.author_name || "Client"}
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {formatDate(comment.created_at)}
+                    </p>
+                  </div>
+                  <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-600">
+                    {comment.body}
+                  </p>
+                </div>
+              </article>
+            ))}
+          </div>
         </div>
       )}
     </div>
@@ -111,9 +182,10 @@ export function PortalFindingComments({
 }
 
 function formatDate(value: string) {
-  return new Date(value).toLocaleDateString("en-US", {
+  return new Intl.DateTimeFormat("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
-  });
+    timeZone: "UTC",
+  }).format(new Date(value));
 }
