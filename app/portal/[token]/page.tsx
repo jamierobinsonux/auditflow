@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { Download, Eye, FileText, FolderKanban } from "lucide-react";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { Card } from "@/components/layout/card";
@@ -145,7 +146,11 @@ export default async function ClientPortalPage({
               {clientFindings.slice(0, 20).map((finding: any) => {
                 const project = clientProjects.find((item: any) => item.id === finding.project_id);
                 return (
-                  <div key={finding.id} className="py-5">
+                  <Link
+                    key={finding.id}
+                    href={`/portal/${token}/projects/${finding.project_id}/findings/${finding.id}`}
+                    className="block py-5 transition hover:bg-slate-50"
+                  >
                     <div className="flex flex-wrap items-center gap-2">
                       <SeverityBadge severity={finding.severity} />
                       <StatusBadge status={finding.status} />
@@ -154,9 +159,10 @@ export default async function ClientPortalPage({
                     <h2 className="mt-3 text-lg font-semibold text-slate-950">{finding.title}</h2>
                     <p className="mt-1 text-sm text-slate-500">{project?.name || "Client project"}</p>
                     {finding.recommendation && (
-                      <p className="mt-3 text-sm leading-6 text-slate-600">{finding.recommendation}</p>
+                      <p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-600">{finding.recommendation}</p>
                     )}
-                  </div>
+                    <p className="mt-3 text-xs font-semibold text-violet-700">View finding details →</p>
+                  </Link>
                 );
               })}
             </div>

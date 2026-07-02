@@ -16,7 +16,7 @@ export function FindingsPage({ findings, journeys, images, annotations, theme, s
         const journey = journeys.find((j) => j.id === finding.journey_id);
         const findingImages = images.filter((image) => image.finding_id === finding.id);
         return (
-          <View key={finding.id || index} style={{ marginBottom: 34 }} minPresenceAhead={240}>
+          <View key={finding.id || index} style={{ marginBottom: 24 }} minPresenceAhead={210}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }} wrap={false}>
               <View style={{ maxWidth: "78%" }}>
                 <Text style={{ fontSize: 9, color: theme.accent, letterSpacing: 1.2, marginBottom: 8 }}>Finding {String(index + 1).padStart(2, "0")}</Text>
@@ -24,7 +24,7 @@ export function FindingsPage({ findings, journeys, images, annotations, theme, s
               </View>
               <Text style={{ fontSize: 8, color: theme.accent, borderWidth: 1, borderColor: theme.border, paddingVertical: 5, paddingHorizontal: 8 }}>{finding.severity || "-"}</Text>
             </View>
-            <View style={{ flexDirection: "row", gap: 18, marginTop: 12, marginBottom: 18 }} wrap={false}>
+            <View style={{ flexDirection: "row", gap: 18, marginTop: 10, marginBottom: 14 }} wrap={false}>
               <Meta label="Status" value={finding.status || "Open"} theme={theme} />
               <Meta label="Journey" value={journey?.name || "Unassigned"} theme={theme} />
               <Meta label="Impact" value={finding.impact || "-"} theme={theme} />
@@ -37,8 +37,8 @@ export function FindingsPage({ findings, journeys, images, annotations, theme, s
             )}
             <TextSection title="Recommendation">{finding.recommendation || "No recommendation has been added yet."}</TextSection>
             {findingImages.length > 0 && (
-              <View style={{ marginTop: 14 }} minPresenceAhead={220}>
-                <Text style={styles.h3}>Evidence</Text>
+              <View style={{ marginTop: 8 }} minPresenceAhead={190} wrap={false}>
+                <Text style={[styles.h3, { marginBottom: 2 }]}>Evidence</Text>
                 {findingImages.map((image) => {
                   const notes = annotations.filter((annotation) => annotation.evidence_image_id === image.id || annotation.image_id === image.id);
                   const currentFigure = figureIndex++;
@@ -56,7 +56,7 @@ export function FindingsPage({ findings, journeys, images, annotations, theme, s
                 })}
               </View>
             )}
-            <View style={{ marginTop: 22, borderTopWidth: 1, borderTopColor: theme.border }} />
+            <View style={{ marginTop: 14, borderTopWidth: 1, borderTopColor: theme.border }} />
           </View>
         );
       })}

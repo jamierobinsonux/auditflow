@@ -41,7 +41,7 @@ export function Figure({
   );
 
   return (
-    <View style={{ marginTop: 8, marginBottom: 12 }} wrap={false}>
+    <View style={{ marginTop: 4, marginBottom: 7 }} wrap={false}>
       <View style={{ position: "relative", width: "100%" }}>
         <Image src={src} style={styles.figureImage} />
 
@@ -55,11 +55,11 @@ export function Figure({
                 position: "absolute",
                 left: `${annotation.x_position}%`,
                 top: `${annotation.y_position}%`,
-                width: 18,
-                height: 18,
-                marginLeft: -9,
-                marginTop: -9,
-                borderRadius: 9,
+                width: 16,
+                height: 16,
+                marginLeft: -8,
+                marginTop: -8,
+                borderRadius: 8,
                 backgroundColor: theme.accent,
                 borderWidth: 1.5,
                 borderColor: "#FFFFFF",
@@ -70,7 +70,7 @@ export function Figure({
               <Text
                 style={{
                   color: "#FFFFFF",
-                  fontSize: 8,
+                  fontSize: 7.5,
                   fontWeight: "bold",
                   lineHeight: 1,
                 }}
@@ -90,8 +90,8 @@ export function Figure({
       {validAnnotations.length > 0 && (
         <View
           style={{
-            marginTop: 8,
-            paddingTop: 8,
+            marginTop: 5,
+            paddingTop: 5,
             borderTopWidth: 1,
             borderTopColor: theme.border,
           }}
@@ -108,7 +108,7 @@ export function Figure({
             return (
               <Text
                 key={annotation.id || `note-${label}-${annotationIndex}`}
-                style={[styles.small, { marginTop: 4, color: theme.mutedText }]}
+                style={[styles.small, { marginTop: 2.5, color: theme.mutedText }]}
               >
                 {label}. {note}
               </Text>
