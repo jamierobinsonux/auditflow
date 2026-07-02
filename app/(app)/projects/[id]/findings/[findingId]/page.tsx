@@ -50,7 +50,7 @@ export default async function FindingViewPage({
 
   const { data: comments } = await supabase
     .from("finding_comments")
-    .select("id,author_name,body,created_at")
+    .select("id,author_name,body,created_at,author_type")
     .eq("finding_id", findingId)
     .eq("user_id", user?.id)
     .order("created_at", { ascending: false });

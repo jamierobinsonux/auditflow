@@ -1,4 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { hydrateFindingRecommendation, uniqueRecommendationIds, type LinkedRecommendation } from "@/lib/recommendations";
+
 
 export default async function PublicReportPage({
   params,
@@ -24,15 +26,58 @@ export default async function PublicReportPage({
     .eq("id", publicReport.project_id)
     .maybeSingle();
 
+  if (!project) {
+    return <main className="p-10">Project not found.</main>;
+  }
+
   const { data: findings } = await supabaseAdmin
     .from("findings")
     .select("*")
     .eq("project_id", publicReport.project_id)
     .order("severity", { ascending: true });
 
-  if (!project) {
-    return <main className="p-10">Project not found.</main>;
-  }
+  const rawFindings = findings ?? [];
+  const savedRecommendationIds = uniqueRecommendationIds(rawFindings.map((finding: any) => finding.saved_recommendation_id));
+  const frameworkRecommendationIds = uniqueRecommendationIds(rawFindings.map((finding: any) => finding.framework_recommendation_id));
+
+  const [{ data: savedRecommendations }, { data: frameworkRecommendations }] =
+    await Promise.all([
+      savedRecommendationIds.length
+        ? supabaseAdmin
+            .from("studio_recommendations")
+            .select("id,title,recommendation,category,impact")
+            .in("id", savedRecommendationIds)
+            .eq("user_id", publicReport.user_id)
+        : Promise.resolve({ data: [] as LinkedRecommendation[] }),
+      frameworkRecommendationIds.length
+        ? supabaseAdmin
+            .from("studio_framework_recommendations")
+            .select("id,title,recommendation,category,impact")
+            .in("id", frameworkRecommendationIds)
+            .eq("user_id", publicReport.user_id)
+        : Promise.resolve({ data: [] as LinkedRecommendation[] }),
+    ]);
+
+  const savedRecommendationById = new Map<string, LinkedRecommendation>(
+    ((savedRecommendations ?? []) as LinkedRecommendation[]).map((item) => [
+      item.id,
+      item,
+    ])
+  );
+  const frameworkRecommendationById = new Map<string, LinkedRecommendation>(
+    ((frameworkRecommendations ?? []) as LinkedRecommendation[]).map((item) => [
+      item.id,
+      item,
+    ])
+  );
+
+  const hydratedFindings = rawFindings.map((finding: any) =>
+    hydrateFindingRecommendation({
+      finding,
+      savedRecommendations: savedRecommendationById,
+      frameworkRecommendations: frameworkRecommendationById,
+    })
+  );
 
   return (
     <main className="min-h-screen bg-[#F1F5F9] p-10">
@@ -51,7 +96,7 @@ export default async function PublicReportPage({
           <h2 className="text-[18px] font-semibold">Findings</h2>
 
           <div className="mt-5 space-y-4">
-            {(findings ?? []).map((finding) => (
+            {hydratedFindings.map((finding) => (
               <div
                 key={finding.id}
                 className="rounded-xl border border-slate-200 p-5"
@@ -77,10 +122,16 @@ export default async function PublicReportPage({
                   <strong>Recommendation:</strong>{" "}
                   {finding.recommendation || "No recommendation added."}
                 </p>
+
+                {finding.linked_recommendation_title && (
+                  <p className="mt-2 text-xs font-medium text-violet-700">
+                    Linked recommendation: {finding.linked_recommendation_title}
+                  </p>
+                )}
               </div>
             ))}
 
-            {(findings ?? []).length === 0 && (
+            {hydratedFindings.length === 0 && (
               <p className="text-sm text-slate-500">No findings available.</p>
             )}
           </div>

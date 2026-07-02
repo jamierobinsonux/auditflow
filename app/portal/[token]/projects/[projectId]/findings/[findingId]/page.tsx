@@ -70,7 +70,7 @@ export default async function PortalFindingDetailPage({
         .order("created_at", { ascending: true }),
       supabaseAdmin
         .from("finding_comments")
-        .select("id,author_name,body,created_at")
+        .select("id,author_name,body,created_at,author_type")
         .eq("finding_id", finding.id)
         .eq("client_id", client.id)
         .eq("user_id", client.user_id)

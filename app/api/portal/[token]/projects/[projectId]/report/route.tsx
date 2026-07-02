@@ -2,11 +2,11 @@ import { renderToStream } from "@react-pdf/renderer";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { AuditReport } from "@/components/pdf/AuditReport";
 import type { ReportOptions, ReportSectionId, ReportTemplateId } from "@/components/pdf/types";
+import { buildRecommendationMap, hydrateFindingRecommendation, uniqueRecommendationIdsFromFindings, type LinkedRecommendation } from "@/lib/recommendations";
 
 const VALID_SECTIONS: ReportSectionId[] = ["cover", "contents", "executive", "scope", "risks", "findings", "journeys", "prioritization", "recommendations", "appendix", "conclusion"];
 const VALID_TEMPLATES: ReportTemplateId[] = ["professional", "executive", "minimal", "findings", "evidence", "accessibility"];
 
-type LinkedRecommendation = { id: string; title: string | null; recommendation: string | null; category: string | null; impact: string | null };
 
 export async function GET(request: Request, { params }: { params: Promise<{ token: string; projectId: string }> }) {
   const { token, projectId } = await params;
@@ -42,8 +42,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ toke
   ]);
 
   const findingIds = (findings ?? []).map((finding: any) => finding.id);
-  const savedRecommendationIds = (findings ?? []).map((finding: any) => finding.saved_recommendation_id).filter(Boolean);
-  const frameworkRecommendationIds = (findings ?? []).map((finding: any) => finding.framework_recommendation_id).filter(Boolean);
+  const savedRecommendationIds = uniqueRecommendationIdsFromFindings(findings ?? [], "library");
+  const frameworkRecommendationIds = uniqueRecommendationIdsFromFindings(findings ?? [], "framework");
 
   const [{ data: savedRecommendations }, { data: frameworkRecommendations }, { data: images }, { data: annotations }, { data: clientBranding }] = await Promise.all([
     savedRecommendationIds.length ? supabaseAdmin.from("studio_recommendations").select("id,title,recommendation,category,impact").in("id", savedRecommendationIds).eq("user_id", client.user_id) : Promise.resolve({ data: [] as LinkedRecommendation[] }),
@@ -53,18 +53,15 @@ export async function GET(request: Request, { params }: { params: Promise<{ toke
     supabaseAdmin.from("client_branding").select("*").eq("user_id", client.user_id).eq("client_id", client.id).maybeSingle(),
   ]);
 
-  const savedById = new Map<string, LinkedRecommendation>(((savedRecommendations ?? []) as LinkedRecommendation[]).map((item) => [item.id, item]));
-  const frameworkById = new Map<string, LinkedRecommendation>(((frameworkRecommendations ?? []) as LinkedRecommendation[]).map((item) => [item.id, item]));
-  const hydratedFindings = (findings ?? []).map((finding: any) => {
-    const linked = finding.saved_recommendation_id ? savedById.get(finding.saved_recommendation_id) : finding.framework_recommendation_id ? frameworkById.get(finding.framework_recommendation_id) : undefined;
-    return {
-      ...finding,
-      category: finding.category ?? linked?.category ?? null,
-      impact: finding.impact ?? linked?.impact ?? null,
-      recommendation: finding.recommendation || linked?.recommendation || null,
-      linked_recommendation_title: linked?.title ?? null,
-    };
-  });
+  const savedById = buildRecommendationMap((savedRecommendations ?? []) as LinkedRecommendation[], "library");
+  const frameworkById = buildRecommendationMap((frameworkRecommendations ?? []) as LinkedRecommendation[], "framework");
+  const hydratedFindings = (findings ?? []).map((finding: any) =>
+    hydrateFindingRecommendation({
+      finding,
+      savedRecommendations: savedById,
+      frameworkRecommendations: frameworkById,
+    })
+  );
 
   const branding = {
     user_id: client.user_id,

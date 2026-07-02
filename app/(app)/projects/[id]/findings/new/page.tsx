@@ -16,6 +16,7 @@ import { TextArea } from "@/components/ui/text-area";
 import { SelectInput } from "@/components/ui/select-input";
 import { Button } from "@/components/ui/button";
 import { RecommendationPicker, type RecommendationOption } from "@/components/recommendation-picker";
+import { normalizeRecommendationId } from "@/lib/recommendations";
 
 type Journey = { id: string; name: string };
 type JourneyStep = { id: string; journey_id: string; title: string };
@@ -184,9 +185,9 @@ export default function NewFindingPage() {
         recommendation,
         recommendation_source: selectedRecommendation?.source ?? null,
         saved_recommendation_id:
-          selectedRecommendation?.source === "library" ? selectedRecommendation.id : null,
+          selectedRecommendation?.source === "library" ? normalizeRecommendationId(selectedRecommendation.id) : null,
         framework_recommendation_id:
-          selectedRecommendation?.source === "framework" ? selectedRecommendation.id : null,
+          selectedRecommendation?.source === "framework" ? normalizeRecommendationId(selectedRecommendation.id) : null,
         impact,
         effort,
         journey_id: journeyId || null,

@@ -4,6 +4,7 @@ import { ReportPage } from "../layout/ReportPage";
 import { SectionHeader } from "../layout/SectionHeader";
 import { styles } from "../styles";
 import type { ReportTheme } from "../theme";
+import { getFindingRecommendationReportText } from "@/lib/recommendations";
 
 function severityLabel(value: unknown) {
   const severity = String(value || "").toLowerCase();
@@ -16,7 +17,7 @@ function severityLabel(value: unknown) {
 
 function riskReason(finding: any) {
   const title = String(finding.title || "this issue").toLowerCase();
-  const text = `${finding.title || ""} ${finding.description || ""} ${finding.recommendation || ""}`.toLowerCase();
+  const text = `${finding.title || ""} ${finding.description || ""} ${getFindingRecommendationReportText(finding) || ""}`.toLowerCase();
   if (text.includes("checkout") || text.includes("payment") || text.includes("purchase")) {
     return "Could reduce conversion or prevent users from completing a core task.";
   }

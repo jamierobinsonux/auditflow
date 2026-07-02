@@ -16,6 +16,7 @@ type PlanCardProps = {
 
 export function PlanCard({ plan, currentPlan }: PlanCardProps) {
   const isCurrent = currentPlan === plan.id;
+  const showRecommended = Boolean(plan.recommended && currentPlan !== "Studio");
 
   const priceId =
     plan.id === "Pro"
@@ -27,10 +28,10 @@ export function PlanCard({ plan, currentPlan }: PlanCardProps) {
   return (
     <div
       className={`relative rounded-3xl border bg-white p-6 shadow-sm ${
-        plan.recommended ? "border-violet-300" : "border-slate-200"
+        showRecommended ? "border-violet-300" : "border-slate-200"
       }`}
     >
-      {plan.recommended && (
+      {showRecommended && (
         <div className="absolute right-5 top-5 rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-700">
           Recommended
         </div>

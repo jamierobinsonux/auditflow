@@ -20,11 +20,11 @@ export function RecommendationPicker({
   recommendations: RecommendationOption[];
   onApply: (recommendation: RecommendationOption) => void;
 }) {
-  const [selectedId, setSelectedId] = useState("");
+  const [selectedKey, setSelectedKey] = useState("");
 
   const selected = useMemo(
-    () => recommendations.find((item) => item.id === selectedId),
-    [recommendations, selectedId]
+    () => recommendations.find((item) => getRecommendationKey(item) === selectedKey),
+    [recommendations, selectedKey]
   );
 
   if (recommendations.length === 0) return null;
@@ -36,12 +36,12 @@ export function RecommendationPicker({
           <span className="text-sm font-semibold text-violet-900">Use saved recommendation</span>
           <SelectInput
             className="mt-2 bg-white"
-            value={selectedId}
-            onChange={(e) => setSelectedId(e.target.value)}
+            value={selectedKey}
+            onChange={(e) => setSelectedKey(e.target.value)}
           >
             <option value="">Select a recommendation</option>
             {recommendations.map((item) => (
-              <option key={item.id} value={item.id}>
+              <option key={getRecommendationKey(item)} value={getRecommendationKey(item)}>
                 {item.title} {item.source === "framework" ? "(Framework)" : "(Library)"}
               </option>
             ))}
@@ -65,6 +65,10 @@ export function RecommendationPicker({
       )}
     </div>
   );
+}
+
+function getRecommendationKey(item: RecommendationOption) {
+  return `${item.source}:${item.id}`;
 }
 
 export type { RecommendationOption };

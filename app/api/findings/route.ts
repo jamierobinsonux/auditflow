@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { normalizeRecommendationId } from "@/lib/recommendations";
 import {
   canCreateFinding,
   getUsage,
@@ -79,8 +80,8 @@ export async function POST(request: Request) {
       category: body.category || null,
       recommendation: body.recommendation || null,
       recommendation_source: body.recommendation_source || null,
-      saved_recommendation_id: body.saved_recommendation_id || null,
-      framework_recommendation_id: body.framework_recommendation_id || null,
+      saved_recommendation_id: normalizeRecommendationId(body.saved_recommendation_id),
+      framework_recommendation_id: normalizeRecommendationId(body.framework_recommendation_id),
       impact: body.impact || null,
       effort: body.effort || null,
       journey_id: body.journey_id || null,

@@ -57,6 +57,7 @@ export const subscriptionPlans = [
     features: [
       "Everything in Pro",
       "Client workspaces and client-aware projects",
+      "Client portal for shared project access and comments",
       "Client brand assets applied to reports",
       "Reusable Studio frameworks",
       "Recommendation library and report history",

@@ -21,6 +21,7 @@ import { TextArea } from "@/components/ui/text-area";
 import { SelectInput } from "@/components/ui/select-input";
 import { Button } from "@/components/ui/button";
 import { RecommendationPicker, type RecommendationOption } from "@/components/recommendation-picker";
+import { normalizeRecommendationId } from "@/lib/recommendations";
 
 type ExistingImage = {
   id: string;
@@ -227,12 +228,12 @@ export default function EditFindingPage() {
     const recommendationSource = selectedRecommendation?.source ?? currentRecommendationSource;
     const savedRecommendationId = selectedRecommendation
       ? selectedRecommendation.source === "library"
-        ? selectedRecommendation.id
+        ? normalizeRecommendationId(selectedRecommendation.id)
         : null
       : currentSavedRecommendationId;
     const frameworkRecommendationId = selectedRecommendation
       ? selectedRecommendation.source === "framework"
-        ? selectedRecommendation.id
+        ? normalizeRecommendationId(selectedRecommendation.id)
         : null
       : currentFrameworkRecommendationId;
 
@@ -330,8 +331,8 @@ export default function EditFindingPage() {
     setCategory(item.category ?? category);
     setSelectedRecommendation(item);
     setCurrentRecommendationSource(item.source);
-    setCurrentSavedRecommendationId(item.source === "library" ? item.id : null);
-    setCurrentFrameworkRecommendationId(item.source === "framework" ? item.id : null);
+    setCurrentSavedRecommendationId(item.source === "library" ? normalizeRecommendationId(item.id) : null);
+    setCurrentFrameworkRecommendationId(item.source === "framework" ? normalizeRecommendationId(item.id) : null);
   }
 
   return (

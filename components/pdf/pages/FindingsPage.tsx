@@ -5,6 +5,7 @@ import { SectionHeader } from "../layout/SectionHeader";
 import { TextSection } from "../layout/TextSection";
 import { styles } from "../styles";
 import type { ReportTheme } from "../theme";
+import { getFindingRecommendationReportText } from "@/lib/recommendations";
 
 export function FindingsPage({ findings, journeys, images, annotations, theme, sectionNumber = "03" }: { findings: any[]; journeys: any[]; images: any[]; annotations: any[]; theme: ReportTheme; sectionNumber?: string }) {
   let figureIndex = 1;
@@ -14,6 +15,7 @@ export function FindingsPage({ findings, journeys, images, annotations, theme, s
       {findings.length === 0 && <Text style={styles.body}>No findings have been added yet.</Text>}
       {findings.map((finding, index) => {
         const journey = journeys.find((j) => j.id === finding.journey_id);
+        const recommendationText = getFindingRecommendationReportText(finding);
         const findingImages = images.filter((image) => image.finding_id === finding.id);
         return (
           <View key={finding.id || index} style={{ marginBottom: 16 }}>
@@ -35,7 +37,7 @@ export function FindingsPage({ findings, journeys, images, annotations, theme, s
             {finding.linked_recommendation_title && (
               <Text style={[styles.small, { marginBottom: 6 }]}>Linked recommendation: {finding.linked_recommendation_title}</Text>
             )}
-            <TextSection title="Recommendation">{finding.recommendation || "No recommendation has been added yet."}</TextSection>
+            <TextSection title="Recommendation">{recommendationText || "No recommendation has been added yet."}</TextSection>
             {findingImages.length > 0 && (
               <View style={{ marginTop: 5 }}>
                 <Text style={[styles.h3, { marginBottom: 0 }]}>Evidence</Text>

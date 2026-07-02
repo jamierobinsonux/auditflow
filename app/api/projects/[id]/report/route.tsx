@@ -9,14 +9,8 @@ import type {
   ReportSectionId,
   ReportTemplateId,
 } from "@/components/pdf/types";
+import { buildRecommendationMap, hydrateFindingRecommendation, uniqueRecommendationIdsFromFindings, type LinkedRecommendation } from "@/lib/recommendations";
 
-type LinkedRecommendation = {
-  id: string;
-  title: string | null;
-  recommendation: string | null;
-  category: string | null;
-  impact: string | null;
-};
 
 const VALID_SECTIONS: ReportSectionId[] = [
   "cover",
@@ -108,13 +102,8 @@ export async function GET(
 
   const findingIds = (findings ?? []).map((finding) => finding.id);
 
-  const savedRecommendationIds = (findings ?? [])
-    .map((finding: any) => finding.saved_recommendation_id)
-    .filter(Boolean);
-
-  const frameworkRecommendationIds = (findings ?? [])
-    .map((finding: any) => finding.framework_recommendation_id)
-    .filter(Boolean);
+  const savedRecommendationIds = uniqueRecommendationIdsFromFindings(findings ?? [], "library");
+  const frameworkRecommendationIds = uniqueRecommendationIdsFromFindings(findings ?? [], "framework");
 
   const [{ data: savedRecommendations }, { data: frameworkRecommendations }] =
     await Promise.all([
@@ -134,37 +123,17 @@ export async function GET(
         : Promise.resolve({ data: [] as LinkedRecommendation[] }),
     ]);
 
-  const savedRecommendationById = new Map<string, LinkedRecommendation>(
-    ((savedRecommendations ?? []) as LinkedRecommendation[]).map((item) => [
-      item.id,
-      item,
-    ])
+  const savedRecommendationById = buildRecommendationMap((savedRecommendations ?? []) as LinkedRecommendation[], "library");
+
+  const frameworkRecommendationById = buildRecommendationMap((frameworkRecommendations ?? []) as LinkedRecommendation[], "framework");
+
+  const hydratedFindings = (findings ?? []).map((finding: any) =>
+    hydrateFindingRecommendation({
+      finding,
+      savedRecommendations: savedRecommendationById,
+      frameworkRecommendations: frameworkRecommendationById,
+    })
   );
-
-  const frameworkRecommendationById = new Map<string, LinkedRecommendation>(
-    ((frameworkRecommendations ?? []) as LinkedRecommendation[]).map((item) => [
-      item.id,
-      item,
-    ])
-  );
-
-  const hydratedFindings = (findings ?? []).map((finding: any) => {
-    const linkedRecommendation: LinkedRecommendation | undefined =
-      finding.saved_recommendation_id
-        ? savedRecommendationById.get(finding.saved_recommendation_id)
-        : finding.framework_recommendation_id
-          ? frameworkRecommendationById.get(finding.framework_recommendation_id)
-          : undefined;
-
-    return {
-      ...finding,
-      category: finding.category ?? linkedRecommendation?.category ?? null,
-      impact: finding.impact ?? linkedRecommendation?.impact ?? null,
-      recommendation:
-        finding.recommendation || linkedRecommendation?.recommendation || null,
-      linked_recommendation_title: linkedRecommendation?.title ?? null,
-    };
-  });
 
   const { data: images } = findingIds.length
     ? await supabase

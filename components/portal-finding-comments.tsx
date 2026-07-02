@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MessageSquare, Send, UserRound } from "lucide-react";
+import { MessageSquare, Pencil, Send, Trash2, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { TextArea } from "@/components/ui/text-area";
@@ -12,6 +12,7 @@ type PortalFindingComment = {
   author_name: string | null;
   body: string;
   created_at: string;
+  author_type?: string | null;
 };
 
 const MAX_COMMENT_LENGTH = 2000;
@@ -29,6 +30,9 @@ export function PortalFindingComments({
   const [authorName, setAuthorName] = useState("");
   const [body, setBody] = useState("");
   const [saving, setSaving] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingBody, setEditingBody] = useState("");
+  const [busyCommentId, setBusyCommentId] = useState<string | null>(null);
 
   async function submitComment(event: React.FormEvent) {
     event.preventDefault();
@@ -64,6 +68,77 @@ export function PortalFindingComments({
     setComments((current) => [payload.comment, ...current]);
     setBody("");
     toast.success("Comment added.");
+  }
+
+  function startEditing(comment: PortalFindingComment) {
+    setEditingId(comment.id);
+    setEditingBody(comment.body);
+  }
+
+  function cancelEditing() {
+    setEditingId(null);
+    setEditingBody("");
+  }
+
+  async function saveComment(commentId: string) {
+    const cleanBody = editingBody.trim();
+
+    if (!cleanBody) {
+      toast.error("Comment cannot be empty.");
+      return;
+    }
+
+    setBusyCommentId(commentId);
+
+    const response = await fetch(
+      `/api/portal/${token}/findings/${findingId}/comments`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ commentId, body: cleanBody }),
+      }
+    );
+
+    const payload = await response.json().catch(() => null);
+    setBusyCommentId(null);
+
+    if (!response.ok) {
+      toast.error(payload?.error || "Unable to update comment.");
+      return;
+    }
+
+    setComments((current) =>
+      current.map((comment) =>
+        comment.id === commentId ? { ...comment, ...payload.comment } : comment
+      )
+    );
+    cancelEditing();
+    toast.success("Comment updated.");
+  }
+
+  async function deleteComment(commentId: string) {
+    setBusyCommentId(commentId);
+
+    const response = await fetch(
+      `/api/portal/${token}/findings/${findingId}/comments`,
+      {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ commentId }),
+      }
+    );
+
+    const payload = await response.json().catch(() => null);
+    setBusyCommentId(null);
+
+    if (!response.ok) {
+      toast.error(payload?.error || "Unable to delete comment.");
+      return;
+    }
+
+    setComments((current) => current.filter((comment) => comment.id !== commentId));
+    if (editingId === commentId) cancelEditing();
+    toast.success("Comment deleted.");
   }
 
   return (
@@ -153,27 +228,82 @@ export function PortalFindingComments({
           </div>
 
           <div className="divide-y divide-slate-100">
-            {comments.map((comment) => (
-              <article key={comment.id} className="flex gap-3 px-5 py-4">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-violet-50 text-violet-700">
-                  <UserRound className="h-4 w-4" />
-                </span>
+            {comments.map((comment) => {
+              const isEditing = editingId === comment.id;
+              const isBusy = busyCommentId === comment.id;
+              const canManage = !comment.author_type || comment.author_type === "client";
 
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                    <p className="text-sm font-semibold text-slate-950">
-                      {comment.author_name || "Client"}
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      {formatDate(comment.created_at)}
-                    </p>
+              return (
+                <article key={comment.id} className="flex gap-3 px-5 py-4">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-violet-50 text-violet-700">
+                    <UserRound className="h-4 w-4" />
+                  </span>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-slate-950">
+                          {comment.author_name || "Client"}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          {formatDate(comment.created_at)}
+                        </p>
+                      </div>
+
+                      {canManage && !isEditing && (
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => startEditing(comment)}
+                            className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => deleteComment(comment.id)}
+                            disabled={isBusy}
+                            className="inline-flex items-center gap-1 rounded-full border border-rose-100 px-2.5 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50 disabled:opacity-60"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            {isBusy ? "Deleting..." : "Delete"}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {isEditing ? (
+                      <div className="mt-3 space-y-3">
+                        <TextArea
+                          value={editingBody}
+                          onChange={(event) => setEditingBody(event.target.value)}
+                          maxLength={MAX_COMMENT_LENGTH}
+                          className="min-h-[110px] resize-y"
+                        />
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                          <p className="text-xs text-slate-500">
+                            {editingBody.length}/{MAX_COMMENT_LENGTH} characters
+                          </p>
+                          <div className="flex gap-2">
+                            <Button type="button" variant="outline" onClick={cancelEditing} disabled={isBusy}>
+                              Cancel
+                            </Button>
+                            <Button type="button" onClick={() => saveComment(comment.id)} disabled={isBusy || !editingBody.trim()}>
+                              {isBusy ? "Saving..." : "Save"}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-600">
+                        {comment.body}
+                      </p>
+                    )}
                   </div>
-                  <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-600">
-                    {comment.body}
-                  </p>
-                </div>
-              </article>
-            ))}
+                </article>
+              );
+            })}
           </div>
         </div>
       )}

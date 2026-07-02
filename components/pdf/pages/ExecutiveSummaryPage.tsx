@@ -6,6 +6,7 @@ import { SectionHeader } from "../layout/SectionHeader";
 import { styles } from "../styles";
 import type { ReportTheme } from "../theme";
 import type { ReportStats } from "../types";
+import { getFindingRecommendationReportText } from "@/lib/recommendations";
 
 export function ExecutiveSummaryPage({
   project,
@@ -105,7 +106,7 @@ export function ExecutiveSummaryPage({
             >
               <Text style={{ fontSize: 8.4, color: theme.accent, marginBottom: 4 }}>Priority {index + 1}</Text>
               <Text style={styles.h3}>{finding.title || "Untitled finding"}</Text>
-              <Text style={[styles.body, { marginTop: 4 }]}>{finding.recommendation || finding.description || "Recommendation details have not been added yet."}</Text>
+              <Text style={[styles.body, { marginTop: 4 }]}>{getFindingRecommendationReportText(finding) || finding.description || "Recommendation details have not been added yet."}</Text>
             </View>
           ))
         )}

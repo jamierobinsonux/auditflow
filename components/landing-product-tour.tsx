@@ -5,10 +5,12 @@ import type { ElementType, ReactNode } from "react";
 import {
   BarChart3,
   Building2,
+  CloudUpload,
   CreditCard,
   FileText,
   FolderKanban,
   LayoutDashboard,
+  LifeBuoy,
   Lightbulb,
   LogOut,
   Settings,
@@ -31,18 +33,27 @@ type ScreenId =
   | "projects"
   | "projectsForFramework"
   | "createProject"
+  | "createProjectSubmit"
   | "frameworks"
   | "projectOverview"
   | "createdProjectOverview"
   | "frameworkApplied"
   | "newFinding"
+  | "newFindingSubmit"
   | "evidence"
   | "journeys"
   | "recommendations"
   | "reports"
   | "reportExported";
 
-type SidebarItemId = "dashboard" | "analytics" | "projects" | "clients" | "reports" | "recommendations" | "frameworks";
+type SidebarItemId =
+  | "dashboard"
+  | "analytics"
+  | "projects"
+  | "clients"
+  | "reports"
+  | "recommendations"
+  | "frameworks";
 
 type TourAction = {
   id: ScreenId;
@@ -127,6 +138,15 @@ const tourActions: TourAction[] = [
     targetKey: "new-project-button",
   },
   {
+    id: "createProjectSubmit",
+    workflow: "frameworks",
+    sidebar: "projects",
+    label: "Create the project",
+    description:
+      "Scroll to the bottom of the project form and submit the project setup.",
+    targetKey: "create-project-submit",
+  },
+  {
     id: "frameworks",
     workflow: "frameworks",
     sidebar: "frameworks",
@@ -160,7 +180,16 @@ const tourActions: TourAction[] = [
     label: "Add findings",
     description:
       "Capture severity, impact, effort, journey context, and a recommended next step while the issue is fresh.",
-    targetKey: "add-evidence-button",
+    targetKey: "new-finding-button",
+  },
+  {
+    id: "newFindingSubmit",
+    workflow: "manageProject",
+    sidebar: "projects",
+    label: "Save the finding",
+    description:
+      "Scroll through the creation form to the evidence section and submit the new finding.",
+    targetKey: "add-finding-submit",
   },
   {
     id: "evidence",
@@ -192,16 +221,16 @@ const tourActions: TourAction[] = [
   {
     id: "reports",
     workflow: "exportReport",
-    sidebar: "reports",
-    label: "Build reports",
+    sidebar: "projects",
+    label: "Open project reports",
     description:
-      "Choose the right report template, preview sections, and apply client branding before export.",
+      "Start from the project workspace and click the Reports tab to build the client-ready export.",
     targetKey: "tab-reports",
   },
   {
     id: "reportExported",
     workflow: "exportReport",
-    sidebar: "reports",
+    sidebar: "projects",
     label: "Export and save history",
     description:
       "Export a polished PDF and keep the report available in project and client history.",
@@ -337,7 +366,9 @@ export function LandingProductTour() {
           See the AuditFlow workflow in action.
         </h2>
         <p className="mt-4 text-base leading-7 text-slate-600">
-          Follow the current AuditFlow workflow from portfolio analytics to client workspaces, reusable frameworks, findings, evidence, journeys, recommendations, and report history.
+          Follow the current AuditFlow workflow from portfolio analytics to
+          client workspaces, reusable frameworks, findings, evidence, journeys,
+          recommendations, and report history.
         </p>
       </div>
 
@@ -460,7 +491,11 @@ function AppSidebar({ active }: { active: SidebarItemId }) {
     { id: "projects" as const, label: "Projects", icon: FolderKanban },
     { id: "clients" as const, label: "Clients", icon: Building2 },
     { id: "reports" as const, label: "Reports", icon: FileText },
-    { id: "recommendations" as const, label: "Recommendations", icon: Lightbulb },
+    {
+      id: "recommendations" as const,
+      label: "Recommendations",
+      icon: Lightbulb,
+    },
     { id: "frameworks" as const, label: "Frameworks", icon: Shapes },
   ];
 
@@ -501,6 +536,7 @@ function AppSidebar({ active }: { active: SidebarItemId }) {
       <div className="border-t border-slate-200 p-4">
         <SidebarUtility icon={Settings} label="Settings" />
         <SidebarUtility icon={CreditCard} label="Billing" />
+        <SidebarUtility icon={LifeBuoy} label="Help" />
 
         <div className="mt-4 rounded-2xl bg-slate-50 p-4">
           <div className="flex items-center gap-3">
@@ -512,13 +548,13 @@ function AppSidebar({ active }: { active: SidebarItemId }) {
                 Jamie Robinson
               </p>
               <p className="truncate text-xs text-slate-500">
-                jamie@auditflow.app
+                jamie.l.robinson21@gmail.com
               </p>
             </div>
           </div>
-          <div className="mt-4 flex items-center gap-2 text-xs font-medium text-slate-500">
+          <div className="mt-4 flex items-center gap-2 text-slate-500">
             <LogOut size={14} />
-            Sign out
+            <span className="text-sm">Sign out</span>
           </div>
         </div>
       </div>
@@ -566,32 +602,35 @@ function SidebarUtility({
 function ProductScreen({ screen }: { screen: ScreenId }) {
   if (screen === "analytics") return <AnalyticsScreen />;
   if (screen === "clients") return <ClientsScreen />;
-  if (screen === "projects" || screen === "projectsForFramework") return <ProjectsScreen />;
-  if (screen === "createProject") return <CreateProjectScreen />;
+  if (screen === "projects" || screen === "projectsForFramework")
+    return <ProjectsScreen />;
+  if (screen === "createProject" || screen === "createProjectSubmit")
+    return <CreateProjectScreen scrolled={screen === "createProjectSubmit"} />;
   if (screen === "frameworks") return <FrameworksScreen />;
   if (screen === "projectOverview")
     return (
       <ProjectOverviewScreen
-        projectName="Checkout Optimization Audit"
-        projectUrl="shopdemo.io/checkout"
+        projectName="Demo Product Audit"
+        projectUrl="demo-product.example"
         existing
       />
     );
   if (screen === "frameworkApplied")
     return (
       <ProjectOverviewScreen
-        projectName="SaaS Onboarding Audit"
-        projectUrl="acme.io/onboarding"
+        projectName="Demo Product Audit"
+        projectUrl="demo-product.example"
       />
     );
   if (screen === "createdProjectOverview")
     return (
       <ProjectOverviewScreen
-        projectName="Mobile App Onboarding Audit"
-        projectUrl="mobileapp.example"
+        projectName="Demo Product Audit"
+        projectUrl="demo-product.example"
       />
     );
-  if (screen === "newFinding") return <NewFindingScreen />;
+  if (screen === "newFinding" || screen === "newFindingSubmit")
+    return <NewFindingScreen scrolled={screen === "newFindingSubmit"} />;
   if (screen === "evidence") return <EvidenceScreen />;
   if (screen === "journeys") return <JourneyMapsScreen />;
   if (screen === "recommendations") return <RecommendationLibraryScreen />;
@@ -609,7 +648,8 @@ function DashboardScreen() {
             Welcome, Jamie Robinson
           </h3>
           <p className="mt-3 text-base text-slate-500">
-            You have 4 projects, 16 findings, 11 recommendations, and 13 open findings.
+            You have 4 projects, 16 findings, 11 recommendations, and 13 open
+            findings.
           </p>
         </div>
         <span
@@ -655,8 +695,8 @@ function DashboardScreen() {
             <span>Status</span>
           </div>
           <ProjectTableRow
-            name="Checkout Optimization Audit"
-            url="shopdemo.io/checkout"
+            name="Demo Product Audit"
+            url="demo-product.example"
             type="Ecommerce"
             findings="8"
             status="In Progress"
@@ -670,7 +710,7 @@ function DashboardScreen() {
           />
           <ProjectTableRow
             name="Pricing Page Conversion Review"
-            url="acme.io/pricing"
+            url="demo-product.example/pricing"
             type="SaaS"
             findings="3"
             status="Completed"
@@ -766,7 +806,7 @@ function AnalyticsScreen() {
           </p>
           <div className="mt-8 space-y-5">
             <BarRow
-              title="Checkout Optimization Audit"
+              title="Demo Product Audit"
               subtitle="8 open findings"
               value="8 findings"
               width="100%"
@@ -790,91 +830,63 @@ function AnalyticsScreen() {
   );
 }
 
-function CreateProjectScreen() {
+function CreateProjectScreen({ scrolled = false }: { scrolled?: boolean }) {
   return (
-    <div className="h-full">
-      <div className="flex items-start justify-between gap-6">
-        <div>
-          <h3 className="text-[28px] font-semibold tracking-[-0.04em] text-slate-950">
-            Create Project
-          </h3>
-          <p className="mt-2 text-base text-slate-500">
-            Start from scratch or use a framework when you want a guided audit
-            structure.
-          </p>
-        </div>
-        <span className="rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-md shadow-violet-200">
-          Create Project
-        </span>
-      </div>
+    <div className="relative h-full overflow-hidden">
+      <div
+        className={`mx-auto max-w-3xl rounded-3xl border border-slate-200 bg-white p-7 shadow-sm transition-transform duration-700 ease-in-out ${
+          scrolled ? "-translate-y-32" : "translate-y-0"
+        }`}
+      >
+        <FieldBlock label="Start from">
+          <SelectBox targetKey="use-framework-button" value="Blank project" />
+        </FieldBlock>
+        <FieldBlock
+          label="Client workspace"
+          help="Optional. Connect this project to a Studio client workspace."
+        >
+          <SelectBox value="No client / personal project" />
+        </FieldBlock>
+        <FieldBlock label="Project name">
+          <InputBox value="e.g. SaaS onboarding audit" muted />
+        </FieldBlock>
+        <FieldBlock label="Client name" help="Optional">
+          <InputBox value="e.g. Acme" muted />
+        </FieldBlock>
+        <FieldBlock label="Website URL" help="Optional">
+          <InputBox value="https://example.com" muted />
+        </FieldBlock>
+        <FieldBlock label="Audit type">
+          <SelectBox value="Onboarding" />
+        </FieldBlock>
 
-      <div className="mx-auto mt-8 max-w-3xl rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="flex items-start justify-between gap-5 border-b border-slate-100 pb-5">
-          <div>
-            <h4 className="text-xl font-semibold text-slate-950">
-              New audit project
-            </h4>
-            <p className="mt-2 text-sm leading-6 text-slate-500">
-              Choose how you want to begin. Templates are optional.
-            </p>
-          </div>
-          <span className="rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700">
-            Flexible setup
+        <div className="mt-7 grid gap-4 sm:grid-cols-2">
+          <span className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-center text-sm font-semibold text-slate-800 shadow-sm">
+            Cancel
           </span>
-        </div>
-
-        <div className="mt-6 grid gap-4 sm:grid-cols-2">
-          <div className="rounded-2xl border-2 border-violet-200 bg-violet-50 p-5">
-            <p className="text-sm font-semibold text-violet-800">
-              Blank project
-            </p>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              Start with an empty workspace and define your own audit structure.
-            </p>
-            <div
-              data-tour-target="start-blank-button"
-              className="mt-5 inline-flex rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white"
-            >
-              Start blank
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-5">
-            <p className="text-sm font-semibold text-slate-950">
-              Use a framework
-            </p>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              Pick SaaS, mobile, ecommerce, or accessibility when you want a
-              head start.
-            </p>
-            <div data-tour-target="use-framework-button" className="mt-5 inline-flex rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700">
-              Browse frameworks
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-5">
-          <FormLabel>Project name</FormLabel>
-          <div className="mt-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900">
-            Mobile App Audit
-          </div>
+          <span
+            data-tour-target="create-project-submit"
+            className="rounded-2xl bg-violet-600 px-5 py-3 text-center text-sm font-semibold text-white shadow-md shadow-violet-200"
+          >
+            Create Project
+          </span>
         </div>
       </div>
     </div>
   );
 }
 
-
 function ClientsScreen() {
   return (
     <div className="h-full">
       <div className="flex items-start justify-between gap-6">
         <div>
-          <h3 className="text-[28px] font-semibold tracking-[-0.04em] text-slate-950">
+          <h3 className="text-[30px] font-semibold tracking-[-0.04em] text-slate-950">
             Clients
           </h3>
-          <p className="mt-2 text-base text-slate-500">
-            Manage client workspaces, brand assets, projects, reports, and activity.
+          <p className="mt-3 text-base text-slate-500">
+            Manage client workspaces, projects, reports, and brand context in
+            one place.
           </p>
         </div>
         <span className="rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-md shadow-violet-200">
@@ -882,25 +894,45 @@ function ClientsScreen() {
         </span>
       </div>
 
-      <div className="mt-7 grid grid-cols-4 gap-4">
-        <DashboardStat value="6" label="Clients" description="Across your studio" />
-        <DashboardStat value="18" label="Projects" description="Client and internal audits" />
-        <DashboardStat value="41" label="Reports" description="Generated deliverables" />
-        <DashboardStat value="86" label="Avg. health" description="Across active clients" />
+      <div className="mt-8 grid grid-cols-[1fr_150px] gap-4">
+        <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-400 shadow-sm">
+          <span className="text-lg leading-none">⌕</span>
+          <span>Search clients...</span>
+        </div>
+        <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 shadow-sm">
+          <span>All Status</span>
+          <span className="text-slate-400">⌄</span>
+        </div>
       </div>
 
-      <div className="mt-7 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="grid grid-cols-[1.2fr_0.7fr_0.8fr_0.8fr_0.8fr] bg-slate-50 px-6 py-4 text-xs font-semibold uppercase tracking-wide text-slate-500">
+      <div className="mt-7 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+        <div className="grid grid-cols-[1.35fr_0.65fr_0.75fr_0.75fr_0.9fr_0.75fr_32px] bg-slate-50 px-6 py-4 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
           <span>Client</span>
-          <span>Status</span>
           <span>Projects</span>
-          <span>Reports</span>
-          <span>Health</span>
+          <span>Draft Reports</span>
+          <span>Open Findings</span>
+          <span>Last Activity</span>
+          <span>Status</span>
+          <span />
         </div>
-        <ClientTableRow name="Acme Retail" url="acmeretail.com" status="Active" projects="8" reports="12" health="88" />
-        <ClientTableRow name="FinBank" url="finbank.com" status="Active" projects="6" reports="9" health="85" />
-        <ClientTableRow name="HealthPlus" url="healthplus.com" status="Active" projects="4" reports="6" health="72" />
-        <ClientTableRow name="Northpeak" url="northpeak.io" status="Active" projects="5" reports="8" health="79" />
+        <ClientDirectoryRow
+          name="Sample Client"
+          industry="SaaS"
+          projects="2"
+          drafts="1"
+          findings="12"
+          activity="Today"
+          status="On Track"
+        />
+        <ClientDirectoryRow
+          name="Cedar & Co."
+          industry="Education"
+          projects="1"
+          drafts="1"
+          findings="3"
+          activity="Today"
+          status="Healthy"
+        />
       </div>
     </div>
   );
@@ -915,7 +947,8 @@ function FrameworksScreen() {
             Frameworks
           </h3>
           <p className="mt-2 text-base text-slate-500">
-            Start with a reusable audit methodology or customize your own Studio framework.
+            Start with a reusable audit methodology or customize your own Studio
+            framework.
           </p>
         </div>
         <span className="rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-md shadow-violet-200">
@@ -926,7 +959,7 @@ function FrameworksScreen() {
       <div className="mt-7 grid gap-5 lg:grid-cols-2">
         <FrameworkCard
           targetKey="framework-card-saas"
-          title="SaaS Onboarding Audit"
+          title="Demo Product Audit"
           label="Studio"
           description="Categories, journey stages, recommendations, and report defaults for product onboarding reviews."
           items={["Activation", "Empty states", "Forms", "Trust"]}
@@ -944,7 +977,7 @@ function FrameworksScreen() {
           items={["Keyboard", "Contrast", "Labels", "Semantics"]}
         />
         <FrameworkCard
-          title="Ecommerce Checkout Audit"
+          title="Demo Product Audit"
           label="Built-in"
           description="Review product detail, cart, checkout, trust, error recovery, and purchase confidence."
           items={["Cart", "Payment", "Validation", "Confirmation"]}
@@ -956,28 +989,52 @@ function FrameworksScreen() {
 
 function RecommendationLibraryScreen() {
   return (
-    <ProjectWorkspaceShell activeTab="recommendations">
+    <div className="h-full">
       <div className="flex items-start justify-between gap-6">
         <div>
-          <h3 className="text-[28px] font-semibold tracking-[-0.04em] text-slate-950">
-            Recommendations
+          <h3 className="text-[30px] font-semibold tracking-[-0.04em] text-slate-950">
+            Recommendation Library
           </h3>
-          <p className="mt-2 text-base text-slate-500">
-            Save reusable guidance and insert it into findings across client projects.
+          <p className="mt-3 text-base text-slate-500">
+            Save reusable UX recommendations for recurring patterns across client
+            work.
           </p>
         </div>
-        <span className="rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-md shadow-violet-200">
+        <span className="mt-24 rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-md shadow-violet-200">
           + New Recommendation
         </span>
       </div>
 
-      <div className="mt-7 grid gap-4 lg:grid-cols-2">
-        <RecommendationCard title="Improve form validation" category="Forms" used="Used 24 times" />
-        <RecommendationCard title="Clarify empty states" category="UX Writing" used="Used 18 times" />
-        <RecommendationCard title="Increase button contrast" category="Accessibility" used="Used 31 times" />
-        <RecommendationCard title="Preserve progress after errors" category="Checkout" used="Used 12 times" />
+      <div className="mt-8 max-w-[420px] rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-400 shadow-sm">
+        <span className="mr-3 text-lg leading-none">⌕</span>
+        <span>Search recommendations...</span>
       </div>
-    </ProjectWorkspaceShell>
+
+      <div className="mt-7 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+        <div className="grid grid-cols-[1.6fr_0.45fr_0.4fr_0.35fr] bg-slate-50 px-5 py-4 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+          <span>Recommendation</span>
+          <span>Category</span>
+          <span>Impact</span>
+          <span className="text-right">Actions</span>
+        </div>
+        <div className="grid grid-cols-[1.6fr_0.45fr_0.4fr_0.35fr] items-center gap-4 border-t border-slate-100 px-5 py-5 text-sm">
+          <div>
+            <p className="font-semibold text-slate-950">Increase visual contrast</p>
+            <p className="mt-2 text-slate-500">
+              This will ensure that important text won't be missed by users.
+            </p>
+          </div>
+          <span className="text-slate-700">Forms</span>
+          <span className="text-slate-700">Medium</span>
+          <div className="flex items-center justify-end gap-4">
+            <span className="rounded-xl border border-slate-200 bg-white px-3 py-2 font-semibold text-slate-700 shadow-sm">
+              Edit
+            </span>
+            <span className="text-red-600">Delete</span>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -986,11 +1043,11 @@ function ProjectsScreen() {
     <div className="h-full">
       <div className="flex items-start justify-between gap-6">
         <div>
-          <h3 className="text-[28px] font-semibold tracking-[-0.04em] text-slate-950">
+          <h3 className="text-[30px] font-semibold tracking-[-0.04em] text-slate-950">
             Projects
           </h3>
-          <p className="mt-2 text-base text-slate-500">
-            View existing audits, reopen active work, or create a new project.
+          <p className="mt-3 text-base text-slate-500">
+            Manage active and archived UX audit projects.
           </p>
         </div>
         <span
@@ -1001,7 +1058,7 @@ function ProjectsScreen() {
         </span>
       </div>
 
-      <div className="mt-7 flex gap-2">
+      <div className="mt-8 flex gap-2">
         <span className="rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-md shadow-violet-100">
           Active
         </span>
@@ -1010,35 +1067,23 @@ function ProjectsScreen() {
         </span>
       </div>
 
-      <div className="mt-7 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <ProjectListRow
+      <div className="mt-8 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+        <ProjectDirectoryRow
           targetKey="project-row-checkout"
-          name="Checkout Optimization Audit"
-          url="shopdemo.io/checkout"
+          name="Demo Product Audit"
+          type="SaaS"
+          client="Sample Client"
+          url="demo-product.example"
           status="In Progress"
-          date="Updated today"
-          meta="Ecommerce • 8 findings • 2 journeys"
+          date="7/2/2026"
         />
-        <ProjectListRow
-          name="Mobile App Onboarding Audit"
-          url="mobileapp.example"
-          status="In Progress"
-          date="Updated yesterday"
-          meta="Mobile App • 5 findings • 1 journey"
-        />
-        <ProjectListRow
-          name="Pricing Page Conversion Review"
-          url="acme.io/pricing"
+        <ProjectDirectoryRow
+          name="Demo Mobile App Audit"
+          type="Mobile App"
+          client="Sample Client"
+          url="https://example.com"
           status="Completed"
-          date="Completed Jun 26"
-          meta="SaaS • 3 findings • Report exported"
-        />
-        <ProjectListRow
-          name="Accessibility Baseline Review"
-          url="portal.acme.io"
-          status="Archived"
-          date="Archived Jun 20"
-          meta="Accessibility • WCAG 2.2 checklist"
+          date="7/1/2026"
         />
       </div>
     </div>
@@ -1046,8 +1091,8 @@ function ProjectsScreen() {
 }
 
 function ProjectOverviewScreen({
-  projectName = "Mobile App Onboarding Audit",
-  projectUrl = "mobileapp.example",
+  projectName = "Demo Product Audit",
+  projectUrl = "demo-product.example",
   existing = false,
 }: {
   projectName?: string;
@@ -1055,285 +1100,481 @@ function ProjectOverviewScreen({
   existing?: boolean;
 }) {
   return (
-    <ProjectWorkspaceShell activeTab="overview">
+    <div className="h-full overflow-hidden">
       <div className="flex items-start justify-between gap-6">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-violet-600">
-            Project workspace
-          </p>
-          <h3 className="mt-2 text-[28px] font-semibold tracking-[-0.04em] text-slate-950">
+          <h3 className="text-[30px] font-semibold tracking-[-0.04em] text-slate-950">
             {projectName}
           </h3>
-          <p className="mt-2 text-base text-slate-500">
-            {existing
-              ? `${projectUrl} • Existing audit workspace with findings, journeys, evidence, and report progress.`
-              : `${projectUrl} • New blank project workspace ready for findings, journeys, evidence, and reports.`}
+          <p className="mt-3 text-base text-slate-500">{projectUrl}</p>
+        </div>
+        <div className="flex gap-3">
+          <span className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-800 shadow-sm">
+            Edit Project
+          </span>
+          <span className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-800 shadow-sm">
+            Archive Project
+          </span>
+          <span className="rounded-xl bg-red-600 px-5 py-3 text-sm font-semibold text-white shadow-sm">
+            Delete Project
+          </span>
+        </div>
+      </div>
+
+      <ProjectTabs activeTab="overview" />
+
+      <div className="mt-7 grid gap-5 lg:grid-cols-3">
+        <InfoCard label="Audit Type" value="SaaS" />
+        <InfoCard label="Status" value="In Progress" />
+        <InfoCard label="Client" value="Sample Client" accent />
+      </div>
+
+      <div className="mt-8 flex items-end justify-between gap-6">
+        <div>
+          <h4 className="text-xl font-semibold text-slate-950">Findings</h4>
+          <p className="mt-3 text-base text-slate-500">
+            Review, prioritize, and annotate issues found during the audit.
           </p>
         </div>
         <span
           data-tour-target="new-finding-button"
           className="rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-md shadow-violet-200"
         >
-          + New Finding
+          + Add Finding
         </span>
       </div>
 
-      <div className="mt-7 grid gap-4 lg:grid-cols-3">
-        <DashboardStat
-          value={existing ? "8" : "0"}
-          label="Open findings"
-          description={
-            existing ? "Already documented" : "Start documenting issues"
-          }
+      <div className="mt-6 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+        <div className="grid grid-cols-[1.4fr_0.7fr_0.7fr_1.25fr] bg-slate-50 px-5 py-4 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+          <span>Finding</span>
+          <span>Severity</span>
+          <span>Status</span>
+          <span>Recommendation</span>
+        </div>
+        <FindingSummaryRow
+          title="Campaign Manager Page Issue"
+          severity="P2"
+          recommendation="Use a clearer layout and reduce competing actions..."
         />
-        <DashboardStat
-          value={existing ? "6" : "4"}
-          label="Audit areas"
-          description={existing ? "In review" : "Ready to review"}
+        <FindingSummaryRow
+          title="Side Navigation Polish"
+          severity="P3"
+          recommendation="Move overflow controls so navigation stays readable..."
         />
-        <DashboardStat
-          value={existing ? "2" : "1"}
-          label="Journey maps"
-          description={
-            existing ? "Connected to findings" : "Ready to customize"
-          }
+        <FindingSummaryRow
+          title="Account Settings Mislabeled"
+          severity="P2"
+          recommendation="Rename the area so the destination matches user expectations..."
+        />
+        <FindingSummaryRow
+          title="Continue Session UI Polish"
+          severity="P3"
+          recommendation="Decrease card size and increase hierarchy around the next action."
         />
       </div>
-
-      <div className="mt-7 grid gap-5 lg:grid-cols-[1fr_0.9fr]">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h4 className="text-xl font-semibold text-slate-950">
-            Audit checklist
-          </h4>
-          <div className="mt-5 space-y-3 text-sm font-medium text-slate-600">
-            <p>✓ First launch and permissions</p>
-            <p>✓ Core navigation</p>
-            <p>✓ Primary task flow</p>
-            <p>✓ Error recovery and feedback</p>
-          </div>
-        </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h4 className="text-xl font-semibold text-slate-950">
-            Primary journey
-          </h4>
-          <p className="mt-2 text-sm text-slate-500">
-            First launch → Browse → Complete task
-          </p>
-          <div className="mt-5 flex items-center gap-2 text-xs font-semibold text-slate-500">
-            <span className="rounded-full bg-violet-50 px-3 py-1 text-violet-700">
-              First launch
-            </span>
-            <span>→</span>
-            <span className="rounded-full bg-slate-100 px-3 py-1">Browse</span>
-            <span>→</span>
-            <span className="rounded-full bg-slate-100 px-3 py-1">
-              Task completion
-            </span>
-          </div>
-        </div>
-      </div>
-    </ProjectWorkspaceShell>
+    </div>
   );
 }
-
-function NewFindingScreen() {
+function NewFindingScreen({ scrolled = false }: { scrolled?: boolean }) {
   return (
-    <ProjectWorkspaceShell activeTab="findings">
-      <div className="flex items-start justify-between gap-6">
-        <div>
-          <h3 className="text-[28px] font-semibold tracking-[-0.04em] text-slate-950">
-            New finding
-          </h3>
-          <p className="mt-2 text-base text-slate-500">
-            Capture the issue, impact, and recommendation.
-          </p>
+    <div className="relative h-full overflow-hidden">
+      <div
+        className={`mx-auto max-w-3xl rounded-3xl border border-slate-200 bg-white p-7 shadow-sm transition-transform duration-700 ease-in-out ${
+          scrolled ? "-translate-y-80" : "translate-y-0"
+        }`}
+      >
+        <FieldBlock label="Finding title">
+          <InputBox
+            value="Users cannot recover after payment validation fails"
+            muted
+          />
+        </FieldBlock>
+        <div className="grid gap-5 sm:grid-cols-2">
+          <FieldBlock label="Journey" help="Optional">
+            <SelectBox value="No journey" />
+          </FieldBlock>
+          <FieldBlock label="Journey step" help="Optional">
+            <SelectBox value="No step" muted />
+          </FieldBlock>
         </div>
-        <span
+        <FieldBlock label="Description">
+          <div className="mt-2 min-h-[88px] rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-400">
+            What did you observe?
+          </div>
+        </FieldBlock>
+
+        <div
           data-tour-target="add-evidence-button"
-          className="rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-md shadow-violet-200"
+          className="mt-5 rounded-3xl border border-slate-200 bg-slate-50 p-5"
         >
-          Add Evidence
-        </span>
-      </div>
+          <p className="text-base font-semibold text-slate-950">
+            Evidence images
+          </p>
+          <p className="mt-2 text-sm text-slate-500">
+            Upload screenshots or supporting visuals for this finding.
+          </p>
 
-      <div className="mt-7 grid gap-5 lg:grid-cols-[1fr_0.9fr]">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <FormLabel>Finding title</FormLabel>
-          <div className="mt-2 rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-900">
-            Checkout error recovery is unclear
+          <div className="mt-5 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+            <p className="text-base font-semibold text-slate-900">Image 1</p>
+            <div className="mt-4 flex min-h-[132px] flex-col items-center justify-center rounded-3xl border-2 border-dashed border-slate-300 bg-slate-50 text-center">
+              <CloudUpload size={42} strokeWidth={2.25} className="text-violet-600" />
+              <p className="mt-3 text-base font-semibold text-slate-950">
+                Drag and drop an image here
+              </p>
+              <p className="mt-1 text-sm text-slate-500">
+                or click to browse PNG, JPG, JPEG, or WebP files
+              </p>
+            </div>
+            <FieldBlock label="Evidence name">
+              <InputBox value="Product Page Screenshot" muted />
+            </FieldBlock>
+            <div className="mt-2 min-h-[72px] rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-400">
+              Image caption, e.g. checkout screen showing unclear payment error
+            </div>
           </div>
 
-          <div className="mt-5 grid gap-4 sm:grid-cols-2">
-            <FormField label="Severity" value="High" />
-            <FormField label="Journey" value="Primary Task Flow" />
-            <FormField label="Impact" value="High" />
-            <FormField label="Effort" value="Medium" />
-          </div>
+          <span className="mt-5 inline-flex rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm">
+            Add another image
+          </span>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <FormLabel>Recommendation</FormLabel>
-          <div className="mt-2 min-h-[142px] rounded-xl border border-slate-200 p-4 text-sm leading-6 text-slate-600">
-            Make the recovery action more visible and preserve user progress
-            when an error occurs.
-          </div>
+        <div className="mt-7 grid gap-4 sm:grid-cols-2">
+          <span className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-center text-sm font-semibold text-slate-800 shadow-sm">
+            Cancel
+          </span>
+          <span
+            data-tour-target="add-finding-submit"
+            className="rounded-2xl bg-violet-600 px-5 py-3 text-center text-sm font-semibold text-white shadow-md shadow-violet-200"
+          >
+            Add Finding
+          </span>
         </div>
       </div>
-    </ProjectWorkspaceShell>
+    </div>
   );
 }
 
 function EvidenceScreen() {
   return (
-    <ProjectWorkspaceShell activeTab="findings">
-      <div className="flex items-start justify-between gap-6">
-        <div>
-          <h3 className="text-[28px] font-semibold tracking-[-0.04em] text-slate-950">
-            Checkout error recovery is unclear
-          </h3>
-          <p className="mt-2 text-base text-slate-500">
-            Add evidence so the issue is clear to stakeholders.
-          </p>
+    <div className="h-full overflow-hidden">
+      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex items-start justify-between gap-6">
+          <div>
+            <h3 className="text-[24px] font-semibold tracking-[-0.03em] text-slate-950">
+              Annotated Evidence
+            </h3>
+            <p className="mt-3 text-base text-slate-500">
+              Add screenshots, then click anywhere on an image to add numbered
+              annotations.
+            </p>
+          </div>
+          <span
+            data-tour-target="save-finding-button"
+            className="rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-md shadow-violet-200"
+          >
+            + Add Evidence
+          </span>
         </div>
-        <span data-tour-target="save-finding-button" className="rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-md shadow-violet-200">
-          Save Finding
-        </span>
-      </div>
 
-      <div className="mt-7 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h4 className="text-xl font-semibold text-slate-950">
-          Evidence images
-        </h4>
-        <div className="mt-5 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-            <p className="text-sm font-semibold text-slate-900">Image 1</p>
-            <div className="mt-4 rounded-2xl border-2 border-dashed border-violet-200 bg-white px-5 py-10 text-center">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-50 text-lg font-semibold text-violet-700">
-                +
+        <div className="mt-7 overflow-hidden rounded-3xl border border-slate-200 bg-white">
+          <div className="flex items-start justify-between border-b border-slate-100 bg-slate-50 px-6 py-5">
+            <div>
+              <h4 className="text-base font-semibold text-slate-950">
+                Product Page Screenshot
+              </h4>
+              <p className="mt-2 text-sm text-slate-500">1 annotation</p>
+            </div>
+            <div className="flex items-center gap-4 text-sm font-semibold">
+              <span className="text-slate-600">Edit</span>
+              <span className="text-red-600">Delete</span>
+              <span className="text-slate-500">⌄</span>
+            </div>
+          </div>
+
+          <div className="p-6">
+            <div className="grid gap-6 rounded-3xl border border-slate-200 bg-white p-6 lg:grid-cols-[1fr_320px]">
+              <div className="rounded-3xl bg-slate-50 p-5">
+                <div className="relative mx-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                  <div className="relative mx-auto aspect-[16/9] max-w-[520px] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                    <div className="border-b border-slate-200 bg-slate-50 px-5 py-4">
+                      <div className="h-3 w-36 rounded-full bg-slate-300" />
+                      <div className="mt-3 h-2 w-56 rounded-full bg-slate-200" />
+                    </div>
+                    <div className="grid h-[calc(100%-56px)] grid-cols-[120px_1fr] gap-4 p-5">
+                      <div className="space-y-3 rounded-2xl bg-slate-50 p-4">
+                        <div className="h-3 w-16 rounded-full bg-slate-300" />
+                        <div className="h-8 rounded-xl bg-violet-100" />
+                        <div className="h-8 rounded-xl bg-slate-200" />
+                        <div className="h-8 rounded-xl bg-slate-200" />
+                      </div>
+                      <div className="space-y-4">
+                        <div className="h-10 rounded-2xl bg-slate-100" />
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="h-24 rounded-2xl bg-slate-100" />
+                          <div className="h-24 rounded-2xl bg-slate-100" />
+                        </div>
+                        <div className="h-16 rounded-2xl bg-slate-100" />
+                      </div>
+                    </div>
+                    <div className="absolute right-[30%] top-[28%] flex h-8 w-8 items-center justify-center rounded-full bg-violet-600 text-sm font-semibold text-white shadow-lg">
+                      1
+                    </div>
+                  </div>
+                </div>
               </div>
-              <p className="mt-3 text-sm font-semibold text-slate-800">
-                Drag and drop evidence
-              </p>
-              <p className="mt-1 text-xs text-slate-500">PNG, JPG, or WebP</p>
-            </div>
-          </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5">
-            <FormLabel>Image caption</FormLabel>
-            <div className="mt-2 min-h-[154px] rounded-xl border border-slate-200 p-4 text-sm leading-6 text-slate-500">
-              Checkout screen showing the error state after validation fails.
+              <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+                <h4 className="text-base font-semibold text-slate-950">
+                  Annotations
+                </h4>
+                <p className="mt-2 text-sm leading-6 text-slate-500">
+                  Click the screenshot to add a note, or select a marker to
+                  review it.
+                </p>
+                <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4">
+                  <div className="flex items-start gap-4">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-600 text-sm font-semibold text-white">
+                      1
+                    </span>
+                    <div>
+                      <p className="text-base leading-7 text-slate-700">
+                        The key action is competing with secondary content and
+                        needs clearer hierarchy.
+                      </p>
+                      <div className="mt-4 flex gap-4 text-sm font-semibold">
+                        <span className="text-violet-700">Edit</span>
+                        <span className="text-red-600">Delete</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </ProjectWorkspaceShell>
+    </div>
   );
 }
 
 function JourneyMapsScreen() {
   return (
-    <ProjectWorkspaceShell activeTab="journeys">
+    <div className="h-full overflow-hidden">
       <div className="flex items-start justify-between gap-6">
         <div>
-          <h3 className="text-[28px] font-semibold tracking-[-0.04em] text-slate-950">
-            Journey Maps
+          <h3 className="text-[30px] font-semibold tracking-[-0.04em] text-slate-950">
+            Journeys
           </h3>
-          <p className="mt-2 text-base text-slate-500">
-            Connect findings to steps in the user journey.
+          <p className="mt-3 text-base text-slate-500">
+            Demo Product Audit
           </p>
         </div>
         <span className="rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-md shadow-violet-200">
-          + Add Step
+          + New Journey
         </span>
       </div>
 
-      <div className="mt-7 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h4 className="text-xl font-semibold text-slate-950">
-          Primary Task Flow
-        </h4>
-        <div className="mt-6 grid gap-4 lg:grid-cols-3">
-          <JourneyStep title="First launch" status="Clear" />
-          <JourneyStep title="Browse options" status="Needs review" />
-          <JourneyStep
-            title="Task completion"
-            status="High-priority finding"
-            active
-          />
-        </div>
-        <div className="mt-6 rounded-2xl bg-violet-50 p-5">
-          <p className="text-sm font-semibold text-violet-800">
-            Linked finding
-          </p>
-          <p className="mt-2 text-sm text-slate-700">
-            Checkout error recovery is unclear
-          </p>
-        </div>
+      <ProjectTabs activeTab="journeys" />
+
+      <div className="mt-7 space-y-4">
+        <JourneyListCard
+          title="Landing Page"
+          description="Evaluate clarity, trust, CTA hierarchy, and conversion path."
+          steps="5 steps"
+          findings="1 finding"
+        />
+        <JourneyListCard
+          title="Signup Flow"
+          description="Review form friction, account creation, and validation states."
+          steps="4 steps"
+          findings="2 findings"
+        />
+        <JourneyListCard
+          title="Onboarding"
+          description="Evaluate guidance, setup steps, and time to first value."
+          steps="4 steps"
+          findings="1 finding"
+        />
+        <JourneyListCard
+          title="First Dashboard Experience"
+          description="Review empty states, hierarchy, and next-step guidance."
+          steps="4 steps"
+          findings="1 finding"
+        />
+        <JourneyListCard
+          title="Core Feature Workflow"
+          description="Analyze task completion flow and efficiency."
+          steps="6 steps"
+          findings="3 findings"
+        />
       </div>
-    </ProjectWorkspaceShell>
+    </div>
   );
 }
 
 function ReportsScreen({ exported = false }: { exported?: boolean }) {
   return (
-    <ProjectWorkspaceShell activeTab="reports">
-      <div className="flex items-start justify-between gap-6">
-        <div>
-          <h3 className="text-[28px] font-semibold tracking-[-0.04em] text-slate-950">
-            Report Builder
-          </h3>
-          <p className="mt-2 text-base text-slate-500">
-            Configure and export a client-ready UX audit report.
-          </p>
-        </div>
-        <div className="flex gap-3">
-          <span className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-900 shadow-sm">
-            Preview
-          </span>
-          <span
-            data-tour-target="export-pdf-button"
-            className="rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-md shadow-violet-200"
-          >
-            Export PDF
-          </span>
+    <div className="h-full overflow-hidden">
+      <div>
+        <h3 className="text-[30px] font-semibold tracking-[-0.04em] text-slate-950">
+          Reports
+        </h3>
+        <p className="mt-3 text-base text-slate-500">
+          Demo Product Audit
+        </p>
+      </div>
+
+      <ProjectTabs activeTab="reports" />
+
+      <div className="mt-7 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="flex items-center justify-between gap-6">
+          <div>
+            <h4 className="text-base font-semibold text-slate-950">
+              Report builder
+            </h4>
+            <p className="mt-2 text-base text-slate-500">
+              Configure the report, preview it inline, or export a downloadable
+              PDF.
+            </p>
+          </div>
+          <div className="flex gap-3">
+            <span className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-800 shadow-sm">
+              Preview PDF
+            </span>
+            <span
+              data-tour-target="export-pdf-button"
+              className="rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-md shadow-violet-200"
+            >
+              Export PDF
+            </span>
+          </div>
         </div>
       </div>
 
       {exported && (
-        <div className="mt-6 rounded-2xl border border-green-200 bg-green-50 px-5 py-4 text-sm font-semibold text-green-700">
+        <div className="mt-5 rounded-2xl border border-green-200 bg-green-50 px-5 py-4 text-sm font-semibold text-green-700">
           Report exported successfully.
         </div>
       )}
 
-      <div className="mt-7 grid gap-5 lg:grid-cols-[0.85fr_1.15fr]">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h4 className="text-xl font-semibold text-slate-950">Template</h4>
-          <div className="mt-5 space-y-3">
-            <TemplateOption active label="Professional" />
-            <TemplateOption label="Executive" />
-            <TemplateOption label="Accessibility" />
+      <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_330px]">
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex items-start gap-4">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-violet-50 text-violet-700">
+              <span className="grid h-5 w-5 grid-cols-2 gap-0.5 rounded-sm">
+                <span className="col-span-2 rounded-[3px] border-2 border-violet-600" />
+                <span className="rounded-[3px] border-2 border-violet-600" />
+                <span className="rounded-[3px] border-2 border-violet-600" />
+              </span>
+            </div>
+            <div>
+              <h4 className="text-xl font-semibold text-slate-950">
+                Report template
+              </h4>
+              <p className="mt-2 text-base text-slate-500">
+                Choose the structure that best fits the audience before
+                exporting.
+              </p>
+            </div>
           </div>
 
-          <h4 className="mt-7 text-xl font-semibold text-slate-950">
-            Sections
-          </h4>
-          <div className="mt-4 space-y-3 text-sm font-medium text-slate-600">
-            <p>✓ Executive summary</p>
-            <p>✓ Findings</p>
-            <p>✓ Journey analysis</p>
-            <p>✓ Recommendations</p>
+          <div className="mt-7 grid gap-4 md:grid-cols-2">
+            <ReportTemplateCard
+              active
+              title="Professional"
+              description="Complete client-ready report with risks, findings, prioritization, recommendations, and appendix."
+            />
+            <ReportTemplateCard
+              title="Executive"
+              description="Stakeholder version focused on summary, top risks, prioritization, and decisions."
+            />
+            <ReportTemplateCard
+              title="Minimal"
+              description="Lean report with only the essentials."
+            />
+            <ReportTemplateCard
+              title="Findings Only"
+              description="Detailed findings, prioritization, and recommendations without broader report narrative."
+            />
+            <ReportTemplateCard
+              title="Evidence Appendix"
+              description="Finding evidence and appendix-focused export for documentation review."
+            />
+            <ReportTemplateCard
+              title="Accessibility"
+              description="Structured version for accessibility and heuristic review documentation."
+            />
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h4 className="text-xl font-semibold text-slate-950">Preview</h4>
-          <div className="mt-6 grid grid-cols-3 gap-4">
-            <MiniReportPage title="Cover" />
-            <MiniReportPage title="Summary" />
-            <MiniReportPage title="Finding" />
+        <div className="space-y-6">
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h4 className="text-xl font-semibold text-slate-950">
+              Audit snapshot
+            </h4>
+            <div className="mt-5 space-y-4 text-base">
+              <SnapshotRow label="Findings" value="17" />
+              <SnapshotRow label="Journeys" value="5" />
+              <SnapshotRow label="Evidence items" value="17" />
+              <SnapshotRow label="Branding" value="Sample Client" />
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h4 className="text-xl font-semibold text-slate-950">
+              Recent exports
+            </h4>
+            <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-4">
+              <p className="text-sm font-semibold text-slate-950">
+                Demo Product Audit UX Audit Report
+              </p>
+              <p className="mt-2 text-sm text-slate-500">
+                professional · Jul 1, 2026
+              </p>
+            </div>
           </div>
         </div>
       </div>
-    </ProjectWorkspaceShell>
+    </div>
+  );
+}
+
+function ReportTemplateCard({
+  title,
+  description,
+  active = false,
+}: {
+  title: string;
+  description: string;
+  active?: boolean;
+}) {
+  return (
+    <div
+      className={`relative rounded-2xl border p-5 ${
+        active
+          ? "border-violet-300 bg-violet-50/70 shadow-sm shadow-violet-100"
+          : "border-slate-200 bg-white"
+      }`}
+    >
+      <span
+        className={`absolute right-5 top-5 h-3 w-3 rounded-full border ${
+          active
+            ? "border-violet-600 bg-violet-600"
+            : "border-slate-300 bg-white"
+        }`}
+      />
+      <h5 className="pr-7 text-base font-semibold text-slate-950">{title}</h5>
+      <p className="mt-3 text-sm leading-6 text-slate-500">{description}</p>
+    </div>
+  );
+}
+
+function SnapshotRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-4">
+      <span className="text-slate-500">{label}</span>
+      <span className="font-semibold text-slate-950">{value}</span>
+    </div>
   );
 }
 
@@ -1341,7 +1582,8 @@ function ProjectWorkspaceShell({
   activeTab,
   children,
 }: {
-  activeTab: "overview" | "findings" | "journeys" | "recommendations" | "reports";
+  activeTab:
+    "overview" | "findings" | "journeys" | "recommendations" | "reports";
   children: ReactNode;
 }) {
   const tabs = [
@@ -1427,7 +1669,6 @@ function ProjectListRow({
   );
 }
 
-
 function ClientTableRow({
   name,
   url,
@@ -1455,6 +1696,250 @@ function ClientTableRow({
       <span className="flex h-9 w-9 items-center justify-center rounded-full border border-green-200 bg-green-50 text-xs font-semibold text-green-700">
         {health}
       </span>
+    </div>
+  );
+}
+
+function ClientDirectoryRow({
+  name,
+  industry,
+  projects,
+  drafts,
+  findings,
+  activity,
+  status,
+}: {
+  name: string;
+  industry: string;
+  projects: string;
+  drafts: string;
+  findings: string;
+  activity: string;
+  status: "On Track" | "Healthy";
+}) {
+  return (
+    <div className="grid grid-cols-[1.35fr_0.65fr_0.75fr_0.75fr_0.9fr_0.75fr_32px] items-center border-b border-slate-100 px-6 py-4 text-sm last:border-b-0">
+      <div className="flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-700">
+          {name.slice(0, 2).toUpperCase()}
+        </div>
+        <div>
+          <p className="font-semibold text-slate-950">{name}</p>
+          <p className="mt-1 text-xs text-slate-500">{industry}</p>
+        </div>
+      </div>
+      <div>
+        <p className="font-semibold text-slate-900">{projects}</p>
+        <p className="mt-1 text-xs text-slate-500">Active</p>
+      </div>
+      <p className="font-semibold text-slate-900">{drafts}</p>
+      <p className="font-semibold text-slate-900">{findings}</p>
+      <div>
+        <p className="font-semibold text-slate-900">{activity}</p>
+        <p className="mt-1 text-xs text-slate-500">Findings open</p>
+      </div>
+      <span
+        className={`w-fit rounded-full px-3 py-1 text-xs font-semibold ${status === "Healthy" ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"}`}
+      >
+        {status}
+      </span>
+      <span className="text-lg font-semibold text-slate-400">⋮</span>
+    </div>
+  );
+}
+
+function ProjectDirectoryRow({
+  name,
+  type,
+  client,
+  url,
+  status,
+  date,
+  targetKey,
+}: {
+  name: string;
+  type: string;
+  client: string;
+  url: string;
+  status: string;
+  date: string;
+  targetKey?: string;
+}) {
+  return (
+    <div
+      data-tour-target={targetKey}
+      className="flex items-center justify-between border-b border-slate-100 px-6 py-6 last:border-b-0"
+    >
+      <div>
+        <p className="text-base font-semibold text-slate-950">{name}</p>
+        <div className="mt-3 flex gap-2">
+          <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
+            {type}
+          </span>
+          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+            {client}
+          </span>
+        </div>
+        <p className="mt-3 text-sm text-slate-500">{url}</p>
+      </div>
+      <div className="text-right">
+        <StatusPill status={status} />
+        <p className="mt-3 text-sm text-slate-400">{date}</p>
+      </div>
+    </div>
+  );
+}
+
+function ProjectTabs({
+  activeTab,
+}: {
+  activeTab: "overview" | "journeys" | "reports";
+}) {
+  const tabs = [
+    { id: "overview" as const, label: "Overview" },
+    { id: "journeys" as const, label: "Journeys" },
+    { id: "reports" as const, label: "Reports" },
+  ];
+  return (
+    <div className="mt-8 flex gap-8 border-b border-slate-200 pb-5 text-sm font-semibold">
+      {tabs.map((tab) => (
+        <span
+          key={tab.id}
+          data-tour-target={`tab-${tab.id}`}
+          className={
+            activeTab === tab.id ? "text-violet-700" : "text-slate-500"
+          }
+        >
+          {tab.label}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function InfoCard({
+  label,
+  value,
+  accent = false,
+}: {
+  label: string;
+  value: string;
+  accent?: boolean;
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+        {label}
+      </p>
+      <p
+        className={`mt-4 text-base font-semibold ${accent ? "text-violet-700" : "text-slate-950"}`}
+      >
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function FindingSummaryRow({
+  title,
+  severity,
+  recommendation,
+}: {
+  title: string;
+  severity: "P2" | "P3";
+  recommendation: string;
+}) {
+  return (
+    <div className="grid grid-cols-[1.4fr_0.7fr_0.7fr_1.25fr] items-center border-b border-slate-100 px-5 py-4 text-sm last:border-b-0">
+      <p className="font-semibold text-slate-950">{title}</p>
+      <span
+        className={`w-fit rounded-full px-3 py-1 text-xs font-semibold ${severity === "P2" ? "bg-yellow-100 text-yellow-700" : "bg-blue-100 text-blue-700"}`}
+      >
+        {severity}
+      </span>
+      <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+        Open
+      </span>
+      <p className="truncate text-slate-600">{recommendation}</p>
+    </div>
+  );
+}
+
+function FieldBlock({
+  label,
+  help,
+  children,
+}: {
+  label: string;
+  help?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="mb-5 last:mb-0">
+      <p className="text-sm font-semibold text-slate-800">{label}</p>
+      {help && <p className="mt-1 text-xs text-slate-500">{help}</p>}
+      {children}
+    </div>
+  );
+}
+
+function InputBox({
+  value,
+  muted = false,
+}: {
+  value: string;
+  muted?: boolean;
+}) {
+  return (
+    <div
+      className={`mt-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm ${muted ? "text-slate-400" : "text-slate-900"}`}
+    >
+      {value}
+    </div>
+  );
+}
+
+function SelectBox({
+  value,
+  targetKey,
+  muted = false,
+}: {
+  value: string;
+  targetKey?: string;
+  muted?: boolean;
+}) {
+  return (
+    <div
+      data-tour-target={targetKey}
+      className={`mt-2 flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm ${muted ? "text-slate-400" : "text-slate-900"}`}
+    >
+      <span>{value}</span>
+      <span className="text-slate-400">⌄</span>
+    </div>
+  );
+}
+
+function JourneyListCard({
+  title,
+  description,
+  steps,
+  findings,
+}: {
+  title: string;
+  description: string;
+  steps: string;
+  findings: string;
+}) {
+  return (
+    <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-6 py-5 shadow-sm">
+      <div>
+        <p className="text-lg font-semibold text-slate-950">{title}</p>
+        <p className="mt-2 text-sm text-slate-500">{description}</p>
+      </div>
+      <div className="flex gap-4 text-sm font-medium text-slate-500">
+        <span>{steps}</span>
+        <span>{findings}</span>
+      </div>
     </div>
   );
 }
