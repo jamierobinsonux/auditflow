@@ -383,7 +383,7 @@ export function FrameworkBuilderClient({
     }
 
     toast.success(isEditing ? "Framework updated." : "Framework created.");
-    router.push(`/templates/${frameworkId}`);
+    router.push("/templates");
     router.refresh();
   }
 

@@ -30,7 +30,7 @@ export function ClientForm({ client }: ClientFormProps) {
   const [primaryContactEmail, setPrimaryContactEmail] = useState(
     client?.primary_contact_email ?? ""
   );
-  const [phone, setPhone] = useState(client?.phone ?? "");
+  const [phone, setPhone] = useState(formatPhoneNumber(client?.phone ?? ""));
   const [brandColor, setBrandColor] = useState(client?.brand_color ?? "#7C3AED");
   const [status, setStatus] = useState(client?.status ?? "Active");
   const [notes, setNotes] = useState(client?.notes ?? "");
@@ -150,7 +150,7 @@ export function ClientForm({ client }: ClientFormProps) {
           <TextInput
             placeholder="(555) 123-4567"
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
+            onChange={(e) => setPhone(formatPhoneNumber(e.target.value))}
           />
         </FormField>
 
@@ -185,4 +185,14 @@ export function ClientForm({ client }: ClientFormProps) {
       </div>
     </form>
   );
+}
+
+
+function formatPhoneNumber(value: string) {
+  const digits = value.replace(/\D/g, "").slice(0, 10);
+
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
 }

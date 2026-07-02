@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, ImageIcon, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
@@ -50,6 +50,19 @@ export function ClientBrandAssetsForm({
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
+  const [logoPreviewUrl, setLogoPreviewUrl] = useState(logoUrl);
+
+  useEffect(() => {
+    if (!logoFile) {
+      setLogoPreviewUrl(logoUrl);
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(logoFile);
+    setLogoPreviewUrl(objectUrl);
+
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [logoFile, logoUrl]);
 
   async function uploadAsset(file: File | null, currentUrl: string, folder: string) {
     if (!file) return currentUrl || null;
@@ -222,9 +235,20 @@ export function ClientBrandAssetsForm({
           <div className="rounded-xl bg-white p-5 shadow-sm">
             <div className="h-1.5 w-20 rounded-full" style={{ backgroundColor: primaryColor }} />
             <div className="mt-8 flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl text-lg font-bold text-white" style={{ backgroundColor: primaryColor }}>
-                {companyName.slice(0, 1).toUpperCase()}
-              </div>
+              {logoPreviewUrl ? (
+                <img
+                  src={logoPreviewUrl}
+                  alt=""
+                  className="h-12 w-12 rounded-xl border border-slate-200 bg-white object-contain p-1"
+                />
+              ) : (
+                <div
+                  className="flex h-12 w-12 items-center justify-center rounded-xl text-lg font-bold text-white"
+                  style={{ backgroundColor: primaryColor }}
+                >
+                  {companyName.slice(0, 1).toUpperCase()}
+                </div>
+              )}
               <div>
                 <p className="font-semibold text-slate-950">{companyName || client.name}</p>
                 <p className="mt-1 text-xs text-slate-500">UX Audit Report</p>

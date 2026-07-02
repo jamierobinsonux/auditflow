@@ -17,6 +17,14 @@ import { ArchivedProjectBanner } from "@/components/archived-project-banner";
 import { ArchivedBadge } from "@/components/ui/archived-badge";
 import type { Finding } from "@/types/finding";
 
+type LinkedRecommendation = {
+  id: string;
+  title: string | null;
+  recommendation: string | null;
+  category: string | null;
+  impact: string | null;
+};
+
 export default async function ProjectDetailPage({
   params,
 }: {
@@ -52,7 +60,62 @@ export default async function ProjectDetailPage({
     .eq("user_id", user?.id)
     .order("created_at", { ascending: false });
 
-  const findings = (findingData ?? []) as Finding[];
+  const rawFindings = (findingData ?? []) as Finding[];
+  const savedRecommendationIds = rawFindings
+    .map((finding: any) => finding.saved_recommendation_id)
+    .filter(Boolean);
+  const frameworkRecommendationIds = rawFindings
+    .map((finding: any) => finding.framework_recommendation_id)
+    .filter(Boolean);
+
+  const [{ data: savedRecommendations }, { data: frameworkRecommendations }] = await Promise.all([
+    savedRecommendationIds.length
+      ? supabase
+          .from("studio_recommendations")
+          .select("id,title,recommendation,category,impact")
+          .in("id", savedRecommendationIds)
+          .eq("user_id", user?.id)
+      : Promise.resolve({ data: [] } as any),
+    frameworkRecommendationIds.length
+      ? supabase
+          .from("studio_framework_recommendations")
+          .select("id,title,recommendation,category,impact")
+          .in("id", frameworkRecommendationIds)
+          .eq("user_id", user?.id)
+      : Promise.resolve({ data: [] } as any),
+  ]);
+
+  const savedRecommendationById = new Map<string, LinkedRecommendation>(
+  ((savedRecommendations ?? []) as LinkedRecommendation[]).map((item) => [
+    item.id,
+    item,
+  ])
+);
+
+const frameworkRecommendationById = new Map<string, LinkedRecommendation>(
+  ((frameworkRecommendations ?? []) as LinkedRecommendation[]).map((item) => [
+    item.id,
+    item,
+  ])
+);
+  const findings = rawFindings.map((finding: any) => {
+  const linkedRecommendation: LinkedRecommendation | undefined =
+    finding.saved_recommendation_id
+      ? savedRecommendationById.get(finding.saved_recommendation_id)
+      : finding.framework_recommendation_id
+        ? frameworkRecommendationById.get(finding.framework_recommendation_id)
+        : undefined;
+
+  return {
+    ...finding,
+    recommendation:
+      finding.recommendation ||
+      linkedRecommendation?.recommendation ||
+      null,
+    category: finding.category ?? linkedRecommendation?.category ?? null,
+    impact: finding.impact ?? linkedRecommendation?.impact ?? null,
+  };
+});
 
   if (!project) return <PageShell>Project not found.</PageShell>;
 

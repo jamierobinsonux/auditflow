@@ -13,6 +13,7 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { AuditTypeBadge } from "@/components/ui/audit-type-badge";
 import { UpgradeRequiredCard } from "@/components/upgrade-required-card";
 import { ClientWorkspaceTabs } from "@/components/client-workspace-tabs";
+import { DeleteClientButton } from "@/components/delete-client-button";
 import type { Client } from "@/types/client";
 import type { Project } from "@/types/project";
 import type { Finding } from "@/types/finding";
@@ -114,6 +115,7 @@ export default async function ClientDetailPage({
         description={client.website_url || client.industry || "Client workspace"}
         action={
           <div className="flex gap-3">
+            <DeleteClientButton clientId={client.id} />
             <Button asChild variant="outline">
               <Link href={`/clients/${client.id}/edit`}>Edit Client</Link>
             </Button>

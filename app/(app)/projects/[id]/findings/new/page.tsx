@@ -48,6 +48,7 @@ export default function NewFindingPage() {
   const [journeys, setJourneys] = useState<Journey[]>([]);
   const [steps, setSteps] = useState<JourneyStep[]>([]);
   const [recommendations, setRecommendations] = useState<RecommendationOption[]>([]);
+  const [frameworkCategories, setFrameworkCategories] = useState<string[]>([]);
   const [images, setImages] = useState<EvidenceUpload[]>([{ file: null, evidenceName: "", caption: "" }]);
 
   const availableSteps = useMemo(
@@ -131,14 +132,25 @@ export default function NewFindingPage() {
             .order("sort_order", { ascending: true })
         : Promise.resolve({ data: [], error: null } as any);
 
-      const [{ data: libraryData }, { data: frameworkData }] = await Promise.all([
+      const frameworkCategoriesQuery = projectData.framework_id
+        ? supabase
+            .from("studio_framework_categories")
+            .select("name")
+            .eq("user_id", user.id)
+            .eq("framework_id", projectData.framework_id)
+            .order("sort_order", { ascending: true })
+        : Promise.resolve({ data: [], error: null } as any);
+
+      const [{ data: libraryData }, { data: frameworkData }, { data: categoryData }] = await Promise.all([
         libraryQuery,
         frameworkQuery,
+        frameworkCategoriesQuery,
       ]);
 
       const libraryOptions = (libraryData ?? []).map((item: any) => ({ ...item, source: "library" as const }));
       const frameworkOptions = (frameworkData ?? []).map((item: any) => ({ ...item, source: "framework" as const }));
       setRecommendations([...frameworkOptions, ...libraryOptions]);
+      setFrameworkCategories((categoryData ?? []).map((item: any) => item.name).filter(Boolean));
     }
 
     loadData();
@@ -313,7 +325,19 @@ export default function NewFindingPage() {
           </div>
 
           <FormField label="Category" description="Optional">
-            <TextInput value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Forms, Navigation, Accessibility..." />
+            {frameworkCategories.length > 0 ? (
+              <SelectInput value={category} onChange={(e) => setCategory(e.target.value)}>
+                <option value="">Select category</option>
+                {frameworkCategories.map((frameworkCategory) => (
+                  <option key={frameworkCategory} value={frameworkCategory}>
+                    {frameworkCategory}
+                  </option>
+                ))}
+                <option value="Other">Other</option>
+              </SelectInput>
+            ) : (
+              <TextInput value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Forms, Navigation, Accessibility..." />
+            )}
           </FormField>
 
           <RecommendationPicker recommendations={recommendations} onApply={applyRecommendation} />

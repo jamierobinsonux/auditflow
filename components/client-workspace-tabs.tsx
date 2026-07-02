@@ -5,6 +5,7 @@ const tabs = [
   { name: "Projects", href: "projects" },
   { name: "Reports", href: "reports" },
   { name: "Brand Assets", href: "brand-assets" },
+  { name: "Portal", href: "portal" },
 ];
 
 export function ClientWorkspaceTabs({
@@ -12,7 +13,7 @@ export function ClientWorkspaceTabs({
   active,
 }: {
   clientId: string;
-  active: "overview" | "projects" | "reports" | "brand-assets";
+  active: "overview" | "projects" | "reports" | "brand-assets" | "portal";
 }) {
   return (
     <div className="mt-8 border-b border-slate-200">

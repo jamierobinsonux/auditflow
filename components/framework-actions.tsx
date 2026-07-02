@@ -59,6 +59,37 @@ export function FrameworkActions({
     router.refresh();
   }
 
+
+
+  async function deleteFramework() {
+    const deleteResults = await Promise.all([
+      supabase.from("studio_framework_categories").delete().eq("framework_id", frameworkId).eq("user_id", userId),
+      supabase.from("studio_framework_journey_stages").delete().eq("framework_id", frameworkId).eq("user_id", userId),
+      supabase.from("studio_framework_recommendations").delete().eq("framework_id", frameworkId).eq("user_id", userId),
+      supabase.from("studio_framework_report_defaults").delete().eq("framework_id", frameworkId).eq("user_id", userId),
+    ]);
+
+    const childError = deleteResults.find((result) => result.error)?.error;
+    if (childError) {
+      toast.error(childError.message);
+      return;
+    }
+
+    const { error } = await supabase
+      .from("studio_frameworks")
+      .delete()
+      .eq("id", frameworkId)
+      .eq("user_id", userId);
+
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+
+    toast.success("Framework deleted.");
+    router.refresh();
+  }
+
   async function duplicate() {
     const { data: source, error } = await supabase
       .from("studio_frameworks")
@@ -151,6 +182,23 @@ export function FrameworkActions({
       <Button type="button" size="sm" variant="outline" onClick={duplicate}>
         Duplicate
       </Button>
+
+
+
+      <ConfirmDialog
+        title="Delete framework?"
+        description="This permanently deletes the framework, including its categories, journeys, and saved framework recommendations. This action cannot be undone."
+        confirmLabel="Delete"
+        destructive
+        onConfirm={async () => {
+          await deleteFramework();
+        }}
+        trigger={
+          <Button type="button" size="sm" variant="ghost" className="text-red-600 hover:text-red-700">
+            Delete
+          </Button>
+        }
+      />
 
       <ConfirmDialog
         title={status === "Active" ? "Archive framework?" : "Restore framework?"}

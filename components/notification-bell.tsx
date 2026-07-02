@@ -57,6 +57,16 @@ export function NotificationBell() {
     setUnreadCount(0);
   }
 
+  async function dismissAll() {
+    await fetch("/api/notifications", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "dismiss_all" }),
+    });
+    setNotifications([]);
+    setUnreadCount(0);
+  }
+
   async function dismissNotification(id: string) {
     setNotifications((current) => current.filter((notification) => notification.id !== id));
     setUnreadCount((current) => Math.max(0, current - 1));
@@ -112,14 +122,23 @@ export function NotificationBell() {
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={markAllRead}
-              className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-semibold text-violet-700 transition hover:bg-violet-50"
-            >
-              <CheckCheck size={14} />
-              Mark read
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={markAllRead}
+                className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-semibold text-violet-700 transition hover:bg-violet-50"
+              >
+                <CheckCheck size={14} />
+                Mark read
+              </button>
+              <button
+                type="button"
+                onClick={dismissAll}
+                className="rounded-lg px-2 py-1 text-xs font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
+              >
+                Dismiss all
+              </button>
+            </div>
           </div>
 
           <div className="max-h-[460px] overflow-y-auto">

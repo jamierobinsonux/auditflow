@@ -50,6 +50,17 @@ export default async function FindingViewPage({
 
   if (!finding) return <PageShell>Finding not found.</PageShell>;
 
+  const linkedRecommendation = await loadLinkedRecommendation({
+    supabase,
+    userId: user?.id,
+    savedRecommendationId: finding.saved_recommendation_id,
+    frameworkRecommendationId: finding.framework_recommendation_id,
+  });
+
+  const recommendationText = finding.recommendation || linkedRecommendation?.recommendation || null;
+  const recommendationTitle = linkedRecommendation?.title ?? null;
+  const findingCategory = finding.category ?? linkedRecommendation?.category ?? null;
+
   const evidenceImages = images ?? [];
 
   return (
@@ -73,6 +84,11 @@ export default async function FindingViewPage({
       <div className="mt-3 flex gap-2">
         <SeverityBadge severity={finding.severity} />
         <StatusBadge status={finding.status} />
+        {findingCategory && (
+          <span className="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
+            {findingCategory}
+          </span>
+        )}
       </div>
 
       <ProjectTabs projectId={id} />
@@ -89,8 +105,14 @@ export default async function FindingViewPage({
         <Card className="p-6">
           <SectionHeader title="Recommendation" />
 
+          {recommendationTitle && (
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-violet-600">
+              Linked recommendation: {recommendationTitle}
+            </p>
+          )}
+
           <p className="text-sm leading-6 text-slate-600">
-            {finding.recommendation || "No recommendation added."}
+            {recommendationText || "No recommendation added."}
           </p>
         </Card>
 
@@ -120,4 +142,42 @@ export default async function FindingViewPage({
       </div>
     </PageShell>
   );
+}
+
+async function loadLinkedRecommendation({
+  supabase,
+  userId,
+  savedRecommendationId,
+  frameworkRecommendationId,
+}: {
+  supabase: Awaited<ReturnType<typeof createClient>>;
+  userId?: string;
+  savedRecommendationId?: string | null;
+  frameworkRecommendationId?: string | null;
+}) {
+  if (!userId) return null;
+
+  if (savedRecommendationId) {
+    const { data } = await supabase
+      .from("studio_recommendations")
+      .select("id,title,category,recommendation,impact")
+      .eq("id", savedRecommendationId)
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    return data;
+  }
+
+  if (frameworkRecommendationId) {
+    const { data } = await supabase
+      .from("studio_framework_recommendations")
+      .select("id,title,category,recommendation,impact")
+      .eq("id", frameworkRecommendationId)
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    return data;
+  }
+
+  return null;
 }

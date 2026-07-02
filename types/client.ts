@@ -15,6 +15,9 @@ export type Client = {
   status: ClientStatus;
   notes: string | null;
   created_at: string;
+  portal_enabled?: boolean | null;
+  portal_token?: string | null;
+  portal_last_regenerated?: string | null;
   updated_at: string;
 };
 

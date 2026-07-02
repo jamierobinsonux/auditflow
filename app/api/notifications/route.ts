@@ -38,7 +38,7 @@ export async function GET() {
   return Response.json({ notifications: notifications ?? [], unreadCount });
 }
 
-export async function PATCH() {
+export async function PATCH(request: Request) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -48,9 +48,16 @@ export async function PATCH() {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const body = await request.json().catch(() => ({}));
+  const dismissAll = body?.action === "dismiss_all";
+
   const { error } = await supabase
     .from("notifications")
-    .update({ is_read: true })
+    .update(
+      dismissAll
+        ? { dismissed_at: new Date().toISOString(), is_read: true }
+        : { is_read: true }
+    )
     .eq("user_id", user.id)
     .is("dismissed_at", null)
     .is("resolved_at", null);

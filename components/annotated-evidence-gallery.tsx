@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { AnnotationEditor } from "@/components/annotation-editor";
+import { DeleteEvidenceButton } from "@/components/delete-evidence-button";
 
 type Image = {
   id: string;
@@ -51,12 +52,13 @@ export function AnnotatedEvidenceGallery({
             key={image.id}
             className="overflow-hidden rounded-2xl border border-slate-200 bg-white"
           >
-            <button
-              type="button"
-              onClick={() => setOpenImageId(isOpen ? null : image.id)}
-              className="flex w-full items-center justify-between bg-slate-50 px-5 py-4 text-left hover:bg-slate-100"
-            >
-              <div>
+            <div className="flex w-full items-center justify-between bg-slate-50 px-5 py-4">
+              <button
+                type="button"
+                onClick={() => setOpenImageId(isOpen ? null : image.id)}
+                className="min-w-0 flex-1 text-left"
+              >
+                <div>
                 <p className="text-sm font-semibold text-slate-950">
                   {image.evidence_name || image.caption || `Evidence image ${index + 1}`}
                 </p>
@@ -64,15 +66,27 @@ export function AnnotatedEvidenceGallery({
                 <p className="mt-1 text-xs text-slate-500">
                   {imageAnnotations.length} annotation
                   {imageAnnotations.length === 1 ? "" : "s"}
+                  {image.caption ? ` · ${image.caption}` : ""}
                 </p>
-              </div>
+                </div>
+              </button>
 
-              {isOpen ? (
-                <ChevronDown size={18} className="text-slate-500" />
-              ) : (
-                <ChevronRight size={18} className="text-slate-500" />
-              )}
-            </button>
+              <div className="flex items-center gap-3">
+                <DeleteEvidenceButton imageId={image.id} />
+                <button
+                  type="button"
+                  onClick={() => setOpenImageId(isOpen ? null : image.id)}
+                  className="rounded-lg p-1 text-slate-500 hover:bg-slate-100"
+                  aria-label={isOpen ? "Collapse evidence" : "Expand evidence"}
+                >
+                  {isOpen ? (
+                    <ChevronDown size={18} />
+                  ) : (
+                    <ChevronRight size={18} />
+                  )}
+                </button>
+              </div>
+            </div>
 
             {isOpen && (
               <div className="p-5">
