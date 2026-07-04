@@ -13,35 +13,77 @@ export default function SignupPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  function getSignupErrorMessage(message: string) {
+    const normalized = message.toLowerCase();
+
+    if (normalized.includes("already registered") || normalized.includes("already exists")) {
+      return "An account with this email already exists. Sign in instead, or reset your password if you need help getting back in.";
+    }
+
+    if (normalized.includes("password")) {
+      return "Please choose a stronger password. Use at least 8 characters.";
+    }
+
+    if (normalized.includes("rate limit") || normalized.includes("too many requests")) {
+      return "Too many signup attempts. Please wait a moment, then try again.";
+    }
+
+    return "Something went wrong while creating your account. Please try again.";
+  }
 
   async function handleEmailSignup(e: React.FormEvent) {
     e.preventDefault();
+    setErrorMessage(null);
+
+    if (!acceptedTerms) {
+      setErrorMessage("Please agree to the Terms of Service and Privacy Policy before creating your account.");
+      return;
+    }
+
+    setIsSubmitting(true);
 
     const { error } = await supabase.auth.signUp({
-      email,
+      email: email.trim(),
       password,
       options: {
         data: {
-          full_name: name,
+          full_name: name.trim(),
+          accepted_terms: true,
+          accepted_terms_at: new Date().toISOString(),
         },
         emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     });
 
+    setIsSubmitting(false);
+
     if (error) {
-      alert(error.message);
+      setErrorMessage(getSignupErrorMessage(error.message));
       return;
     }
 
-    alert("Check your email to confirm your account.");
-    router.push("/login");
+    router.push("/login?message=check-email");
   }
 
   async function handleGoogleSignup() {
+    setErrorMessage(null);
+
+    if (!acceptedTerms) {
+      setErrorMessage("Please agree to the Terms of Service and Privacy Policy before continuing with Google.");
+      return;
+    }
+
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
+        queryParams: {
+          prompt: "select_account",
+        },
       },
     });
   }
@@ -73,7 +115,10 @@ export default function SignupPage() {
             className="w-full rounded-xl border border-slate-200 p-3 text-sm"
             placeholder="Name"
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => {
+              setName(e.target.value);
+              setErrorMessage(null);
+            }}
             required
           />
 
@@ -82,7 +127,10 @@ export default function SignupPage() {
             className="w-full rounded-xl border border-slate-200 p-3 text-sm"
             placeholder="Email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              setErrorMessage(null);
+            }}
             required
           />
 
@@ -91,12 +139,48 @@ export default function SignupPage() {
             className="w-full rounded-xl border border-slate-200 p-3 text-sm"
             placeholder="Password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              setErrorMessage(null);
+            }}
             required
           />
 
-          <button className="w-full rounded-xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white hover:bg-violet-700">
-            Start free
+          <label className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-5 text-slate-600">
+            <input
+              type="checkbox"
+              checked={acceptedTerms}
+              onChange={(e) => {
+                setAcceptedTerms(e.target.checked);
+                setErrorMessage(null);
+              }}
+              className="mt-1 h-4 w-4 rounded border-slate-300 text-violet-600 focus:ring-violet-600"
+              required
+            />
+            <span>
+              I agree to AuditFlow&apos;s {" "}
+              <Link href="/terms" className="font-semibold text-violet-600 hover:text-violet-700">
+                Terms of Service
+              </Link>{" "}
+              and {" "}
+              <Link href="/privacy" className="font-semibold text-violet-600 hover:text-violet-700">
+                Privacy Policy
+              </Link>
+              .
+            </span>
+          </label>
+
+          {errorMessage ? (
+            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-5 text-red-700" role="alert">
+              {errorMessage}
+            </div>
+          ) : null}
+
+          <button
+            disabled={isSubmitting}
+            className="w-full rounded-xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isSubmitting ? "Creating account..." : "Start free"}
           </button>
         </form>
 
@@ -104,6 +188,16 @@ export default function SignupPage() {
           Already have an account?{" "}
           <Link href="/login" className="font-semibold text-violet-600">
             Sign in
+          </Link>
+        </p>
+
+        <p className="mt-5 text-center text-xs text-slate-400">
+          <Link href="/terms" className="font-semibold text-slate-500 hover:text-violet-600">
+            Terms
+          </Link>{" "}
+          ·{" "}
+          <Link href="/privacy" className="font-semibold text-slate-500 hover:text-violet-600">
+            Privacy
           </Link>
         </p>
       </div>

@@ -310,6 +310,21 @@ export default function LandingPage() {
           </Link>
         </div>
       </section>
+
+      <footer className="border-t border-slate-200 bg-white px-6 py-8 sm:px-8">
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+          <p>© {new Date().getFullYear()} AuditFlow. All rights reserved.</p>
+
+          <div className="flex items-center gap-5">
+            <Link href="/terms" className="font-medium hover:text-violet-600">
+              Terms of Service
+            </Link>
+            <Link href="/privacy" className="font-medium hover:text-violet-600">
+              Privacy Policy
+            </Link>
+          </div>
+        </div>
+      </footer>
     </main>
   );
 }

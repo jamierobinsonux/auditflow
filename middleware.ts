@@ -37,14 +37,18 @@ export async function middleware(request: NextRequest) {
 
   const isAuthPage =
     request.nextUrl.pathname.startsWith("/login") ||
-    request.nextUrl.pathname.startsWith("/signup");
+    request.nextUrl.pathname.startsWith("/signup") ||
+    request.nextUrl.pathname.startsWith("/forgot-password");
 
   const isProtectedPage =
     request.nextUrl.pathname.startsWith("/dashboard") ||
     request.nextUrl.pathname.startsWith("/projects") ||
     request.nextUrl.pathname.startsWith("/templates") ||
     request.nextUrl.pathname.startsWith("/reports") ||
-    request.nextUrl.pathname.startsWith("/settings");
+    request.nextUrl.pathname.startsWith("/settings") ||
+    request.nextUrl.pathname.startsWith("/clients") ||
+    request.nextUrl.pathname.startsWith("/recommendations") ||
+    request.nextUrl.pathname.startsWith("/help");
 
   if (!user && isProtectedPage) {
     return NextResponse.redirect(new URL("/login", request.url));
@@ -64,7 +68,12 @@ export const config = {
     "/templates/:path*",
     "/reports/:path*",
     "/settings/:path*",
+    "/clients/:path*",
+    "/recommendations/:path*",
+    "/help/:path*",
     "/login",
     "/signup",
+    "/forgot-password",
+    "/reset-password",
   ],
 };
