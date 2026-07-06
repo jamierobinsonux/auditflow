@@ -183,6 +183,10 @@ async function emailAccountHolderAboutClientComment({
       return;
     }
 
+    if (data.user.user_metadata?.email_client_comments === false) {
+      return;
+    }
+
     const origin = new URL(request.url).origin;
     const findingTitle = context.finding.title || "Untitled finding";
     const project = Array.isArray(context.finding.projects) ? context.finding.projects[0] : context.finding.projects;

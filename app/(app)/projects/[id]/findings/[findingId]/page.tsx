@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { SeverityBadge } from "@/components/ui/severity-badge";
 import { AuditorCommentForm } from "@/components/findings/auditor-comment-form";
+import { getUserSubscription } from "@/lib/subscription";
 
 export default async function FindingViewPage({
   params,
@@ -49,14 +50,19 @@ export default async function FindingViewPage({
     .eq("user_id", user?.id)
     .order("created_at", { ascending: true });
 
-  const { data: comments } = await supabase
-    .from("finding_comments")
-    .select("id,author_name,body,created_at,author_type")
-    .eq("finding_id", findingId)
-    .eq("user_id", user?.id)
-    .order("created_at", { ascending: false });
-
   if (!finding) return <PageShell>Finding not found.</PageShell>;
+
+  const subscription = user ? await getUserSubscription(user.id) : null;
+  const canUseClientComments = Boolean(subscription?.isStudio);
+
+  const { data: comments } = canUseClientComments
+    ? await supabase
+        .from("finding_comments")
+        .select("id,author_name,body,created_at,author_type")
+        .eq("finding_id", findingId)
+        .eq("user_id", user?.id)
+        .order("created_at", { ascending: false })
+    : { data: [] };
 
   const linkedRecommendation = await loadLinkedRecommendation({
     supabase,
@@ -148,17 +154,19 @@ export default async function FindingViewPage({
           </div>
         </Card>
 
-        <Card className="p-6">
-          <SectionHeader
-            title="Client comments"
-            description="Feedback clients have added from their portal. Replies you add here will appear in the client portal thread."
-          />
+        {canUseClientComments && (
+          <Card className="p-6">
+            <SectionHeader
+              title="Client comments"
+              description="Feedback clients have added from their portal. Replies you add here will appear in the client portal thread."
+            />
 
-          <AuditorCommentForm
-            findingId={findingId}
-            initialComments={(comments ?? []) as any[]}
-          />
-        </Card>
+            <AuditorCommentForm
+              findingId={findingId}
+              initialComments={(comments ?? []) as any[]}
+            />
+          </Card>
+        )}
       </div>
     </PageShell>
   );

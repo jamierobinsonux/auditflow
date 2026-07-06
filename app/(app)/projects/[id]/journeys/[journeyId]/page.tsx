@@ -5,6 +5,7 @@ import { CreateStepForm } from "@/components/create-step-form";
 import { DeleteJourneyButton } from "@/components/delete-journey-button";
 import { EditStepInline } from "@/components/edit-step-inline";
 import { DeleteStepButton } from "@/components/delete-step-button";
+import { EditJourneyButton } from "@/components/edit-journey-button";
 
 export default async function JourneyDetailPage({
   params,
@@ -64,10 +65,17 @@ export default async function JourneyDetailPage({
           </p>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
+          <EditJourneyButton
+            journeyId={journeyId}
+            projectId={id}
+            initialName={journey.name}
+            initialDescription={journey.description}
+          />
+
           <Link
             href={`/projects/${id}/findings/new?journeyId=${journeyId}`}
-            className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-700"
+            className="inline-flex h-10 items-center rounded-xl bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-700"
           >
             + Add Finding
           </Link>
@@ -154,28 +162,33 @@ export default async function JourneyDetailPage({
         />
       </section>
 
-      <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-6">
-        <h2 className="text-[18px] font-semibold text-slate-950">
-          Unassigned to Step
-        </h2>
+      {(findings ?? []).some((finding) => !finding.journey_step_id) && (
+        <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-6">
+          <h2 className="text-[18px] font-semibold text-slate-950">
+            Findings not assigned to a step
+          </h2>
+          <p className="mt-1 text-sm text-slate-500">
+            These findings are attached to this journey, but not to a specific journey step yet.
+          </p>
 
-        <div className="mt-4 space-y-2">
-          {(findings ?? [])
-            .filter((finding) => !finding.journey_step_id)
-            .map((finding) => (
-              <Link
-                key={finding.id}
-                href={`/projects/${id}/findings/${finding.id}`}
-                className="block rounded-lg border border-slate-200 p-3 text-sm hover:bg-slate-50"
-              >
-                <span className="font-medium">{finding.title}</span>
-                <span className="ml-2 text-xs text-slate-500">
-                  {finding.severity}
-                </span>
-              </Link>
-            ))}
-        </div>
-      </section>
+          <div className="mt-4 space-y-2">
+            {(findings ?? [])
+              .filter((finding) => !finding.journey_step_id)
+              .map((finding) => (
+                <Link
+                  key={finding.id}
+                  href={`/projects/${id}/findings/${finding.id}`}
+                  className="block rounded-lg border border-slate-200 p-3 text-sm hover:bg-slate-50"
+                >
+                  <span className="font-medium">{finding.title}</span>
+                  <span className="ml-2 text-xs text-slate-500">
+                    {finding.severity}
+                  </span>
+                </Link>
+              ))}
+          </div>
+        </section>
+      )}
     </main>
   );
 }

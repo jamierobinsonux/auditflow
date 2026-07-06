@@ -41,10 +41,6 @@ export function AnnotatedEvidenceGallery({
 
   return (
     <div className="mt-4 space-y-3">
-      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900 md:hidden">
-        <p className="font-semibold">Evidence annotation works best on tablet or desktop.</p>
-        <p className="mt-1">You can review evidence on mobile, but precise image annotation is optimized for larger screens.</p>
-      </div>
       {images.map((image, index) => {
         const imageAnnotations = annotations.filter(
           (annotation) => annotation.image_id === image.id

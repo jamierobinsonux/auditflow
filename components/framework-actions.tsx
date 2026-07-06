@@ -18,27 +18,6 @@ export function FrameworkActions({
   const router = useRouter();
   const supabase = createClient();
 
-  async function setDefault() {
-    await supabase
-      .from("studio_frameworks")
-      .update({ is_default: false })
-      .eq("user_id", userId);
-
-    const { error } = await supabase
-      .from("studio_frameworks")
-      .update({ is_default: true, updated_at: new Date().toISOString() })
-      .eq("id", frameworkId)
-      .eq("user_id", userId);
-
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-
-    toast.success("Default framework updated.");
-    router.refresh();
-  }
-
   async function toggleArchive() {
     const nextStatus = status === "Active" ? "Archived" : "Active";
 
@@ -175,10 +154,6 @@ export function FrameworkActions({
 
   return (
     <div className="flex flex-wrap gap-2">
-      <Button type="button" size="sm" variant="outline" onClick={setDefault}>
-        Set default
-      </Button>
-
       <Button type="button" size="sm" variant="outline" onClick={duplicate}>
         Duplicate
       </Button>

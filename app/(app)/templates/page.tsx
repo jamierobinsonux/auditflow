@@ -135,56 +135,58 @@ export default async function FrameworksPage({
         </section>
       )}
 
-      <section className="mt-10">
-        <div>
-          <h2 className="text-base font-semibold text-slate-950">
-            Built-in frameworks
-          </h2>
-          <p className="mt-1 text-sm text-slate-500">
-            AuditFlow starter frameworks are available to all users.
-          </p>
-        </div>
+      {activeTab === "active" && (
+        <section className="mt-10">
+          <div>
+            <h2 className="text-base font-semibold text-slate-950">
+              Built-in frameworks
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">
+              AuditFlow starter frameworks are available to all users.
+            </p>
+          </div>
 
-        <div className="mt-5 grid items-stretch gap-5 md:grid-cols-2">
-          {auditFrameworks.map((framework) => (
-            <Card
-              key={framework.id}
-              className="flex h-full min-h-[300px] flex-col p-6 transition duration-200 hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-md"
-            >
-              <div className="flex flex-1 flex-col">
-                <p className="text-xs font-semibold uppercase tracking-wide text-violet-600">
-                  {framework.category}
-                </p>
-                <h3 className="mt-2 text-[18px] font-semibold text-slate-950">
-                  {framework.name}
-                </h3>
-                <p className="mt-3 text-sm leading-6 text-slate-500">
-                  {framework.description}
-                </p>
-
-                <div className="mt-5 rounded-xl bg-slate-50 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    Includes
+          <div className="mt-5 grid items-stretch gap-5 md:grid-cols-2">
+            {auditFrameworks.map((framework) => (
+              <Card
+                key={framework.id}
+                className="flex h-full min-h-[300px] flex-col p-6 transition duration-200 hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-md"
+              >
+                <div className="flex flex-1 flex-col">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-violet-600">
+                    {framework.category}
                   </p>
-                  <ul className="mt-2 space-y-1 text-sm leading-6 text-slate-600">
-                    {framework.journeys.slice(0, 4).map((journey) => (
-                      <li key={journey.name}>• {journey.name}</li>
-                    ))}
-                  </ul>
-                </div>
+                  <h3 className="mt-2 text-[18px] font-semibold text-slate-950">
+                    {framework.name}
+                  </h3>
+                  <p className="mt-3 text-sm leading-6 text-slate-500">
+                    {framework.description}
+                  </p>
 
-                <div className="mt-auto pt-6">
-                  <Button asChild>
-                    <Link href={`/projects/new?frameworkId=${framework.id}`}>
-                      Use Framework
-                    </Link>
-                  </Button>
+                  <div className="mt-5 rounded-xl bg-slate-50 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      Includes
+                    </p>
+                    <ul className="mt-2 space-y-1 text-sm leading-6 text-slate-600">
+                      {framework.journeys.slice(0, 4).map((journey) => (
+                        <li key={journey.name}>• {journey.name}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="mt-auto pt-6">
+                    <Button asChild>
+                      <Link href={`/projects/new?frameworkId=${framework.id}`}>
+                        Use Framework
+                      </Link>
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </Card>
-          ))}
-        </div>
-      </section>
+              </Card>
+            ))}
+          </div>
+        </section>
+      )}
     </PageShell>
   );
 }
@@ -205,11 +207,6 @@ function CustomFrameworkCard({
               <p className="text-xs font-semibold uppercase tracking-wide text-violet-600">
                 {framework.category || "Studio"}
               </p>
-              {framework.is_default && (
-                <span className="rounded-full bg-violet-50 px-2 py-1 text-xs font-semibold text-violet-700">
-                  Default
-                </span>
-              )}
               {framework.status === "Archived" && (
                 <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600">
                   Archived

@@ -100,7 +100,6 @@ export function NewProjectForm() {
           .select("*, journey_stages:studio_framework_journey_stages(*)")
           .eq("user_id", user.id)
           .eq("status", "Active")
-          .order("is_default", { ascending: false })
           .order("updated_at", { ascending: false }),
       ]);
 

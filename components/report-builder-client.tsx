@@ -196,10 +196,6 @@ export function ReportBuilderClient({
 
   return (
     <div className="mt-8 space-y-6">
-      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900 md:hidden">
-        <p className="font-semibold">Report building works best on a larger screen.</p>
-        <p className="mt-1">You can preview and export on mobile, but detailed report configuration is easier on tablet or desktop.</p>
-      </div>
       <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:flex-row lg:items-center lg:justify-between">
         <div>
           <p className="text-sm font-semibold text-slate-950">Report builder</p>

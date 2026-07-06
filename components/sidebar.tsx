@@ -1,12 +1,11 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BrandLogo } from "@/components/brand-logo";
 import { formatDisplayName } from "@/lib/format-name";
 import {
-  Menu,
-  X,
   LayoutDashboard,
   BarChart3,
   FolderKanban,
@@ -20,7 +19,6 @@ import {
   LifeBuoy,
 } from "lucide-react";
 import { SignOutButton } from "@/components/sign-out-button";
-import { useState } from "react";
 
 type SidebarProps = {
   user: {
@@ -93,26 +91,25 @@ const displayName = formatDisplayName(rawName);
 
   const initials = getInitials(displayName);
 
-  const [mobileOpen, setMobileOpen] = useState(false);
+  return (
+    <aside className="fixed left-0 top-0 flex h-screen w-72 flex-col border-r border-slate-200 bg-white">
 
-  const sidebarContent = (
-    <>
       <Link
-        href="/dashboard"
-        className="border-b border-slate-200 px-6 py-5 transition hover:bg-slate-50"
-        onClick={() => setMobileOpen(false)}
-      >
-        <BrandLogo />
-      </Link>
+  href="/dashboard"
+  className="border-b border-slate-200 px-6 py-5 transition hover:bg-slate-50"
+>
+  <BrandLogo />
+</Link>
 
-      <nav className="flex-1 overflow-y-auto px-4 py-6">
+      <nav className="flex-1 px-4 py-6">
+
         <p className="mb-3 px-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
           Workspace
         </p>
 
         <div className="space-y-1">
           {navigation.slice(0, 2).map((item) => (
-            <NavItem key={item.name} item={item} pathname={pathname} isStudio={isStudio} onNavigate={() => setMobileOpen(false)} />
+            <NavItem key={item.name} item={item} pathname={pathname} isStudio={isStudio} />
           ))}
         </div>
 
@@ -122,12 +119,13 @@ const displayName = formatDisplayName(rawName);
 
         <div className="space-y-1">
           {navigation.slice(2).map((item) => (
-            <NavItem key={item.name} item={item} pathname={pathname} isStudio={isStudio} onNavigate={() => setMobileOpen(false)} />
+            <NavItem key={item.name} item={item} pathname={pathname} isStudio={isStudio} />
           ))}
         </div>
       </nav>
 
       <div className="border-t border-slate-200 p-4">
+
         <NavItem
           item={{
             name: "Settings",
@@ -136,7 +134,6 @@ const displayName = formatDisplayName(rawName);
             exact: true,
           }}
           pathname={pathname}
-          onNavigate={() => setMobileOpen(false)}
         />
 
         <NavItem
@@ -147,7 +144,6 @@ const displayName = formatDisplayName(rawName);
             exact: false,
           }}
           pathname={pathname}
-          onNavigate={() => setMobileOpen(false)}
         />
 
         <NavItem
@@ -158,11 +154,11 @@ const displayName = formatDisplayName(rawName);
             exact: true,
           }}
           pathname={pathname}
-          onNavigate={() => setMobileOpen(false)}
         />
 
         <div className="mt-4 rounded-2xl bg-slate-50 p-4">
           <div className="flex items-center gap-3">
+
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-violet-100 text-sm font-semibold text-violet-700">
               {initials}
             </div>
@@ -184,46 +180,7 @@ const displayName = formatDisplayName(rawName);
           </div>
         </div>
       </div>
-    </>
-  );
-
-  return (
-    <>
-      <button
-        type="button"
-        aria-label="Open navigation"
-        onClick={() => setMobileOpen(true)}
-        className="fixed left-4 top-4 z-50 inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 lg:hidden"
-      >
-        <Menu size={18} />
-      </button>
-
-      <aside className="fixed left-0 top-0 hidden h-screen w-72 flex-col border-r border-slate-200 bg-white lg:flex">
-        {sidebarContent}
-      </aside>
-
-      {mobileOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <button
-            type="button"
-            aria-label="Close navigation overlay"
-            className="absolute inset-0 bg-slate-950/30"
-            onClick={() => setMobileOpen(false)}
-          />
-          <aside className="relative flex h-full w-[min(20rem,calc(100vw-2rem))] flex-col border-r border-slate-200 bg-white shadow-2xl">
-            <button
-              type="button"
-              aria-label="Close navigation"
-              onClick={() => setMobileOpen(false)}
-              className="absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
-            >
-              <X size={18} />
-            </button>
-            {sidebarContent}
-          </aside>
-        </div>
-      )}
-    </>
+    </aside>
   );
 }
 
@@ -231,7 +188,6 @@ function NavItem({
   item,
   pathname,
   isStudio = false,
-  onNavigate,
 }: {
   item: {
     name: string;
@@ -242,7 +198,6 @@ function NavItem({
   };
   pathname: string;
   isStudio?: boolean;
-  onNavigate?: () => void;
 }) {
   const Icon = item.icon;
 
@@ -253,7 +208,6 @@ function NavItem({
   return (
     <Link
       href={item.href}
-      onClick={onNavigate}
       className={`grid grid-cols-[20px_minmax(0,1fr)_auto] items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors ${
         active
           ? "bg-violet-50 text-violet-700"

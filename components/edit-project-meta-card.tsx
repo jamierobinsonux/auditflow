@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { SelectInput } from "@/components/ui/select-input";
 
 export function EditProjectMetaCard({
   projectId,
@@ -53,15 +54,14 @@ export function EditProjectMetaCard({
       {editing ? (
         <div className="mt-3 space-y-3" onClick={(e) => e.stopPropagation()}>
           {type === "select" ? (
-            <select
-              className="w-full rounded-xl border border-slate-200 bg-white p-3 text-sm"
+            <SelectInput
               value={draftValue}
               onChange={(e) => setDraftValue(e.target.value)}
             >
               {options.map((option) => (
                 <option key={option}>{option}</option>
               ))}
-            </select>
+            </SelectInput>
           ) : (
             <input
               className="w-full rounded-xl border border-slate-200 bg-white p-3 text-sm"
