@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import { Button } from "@/components/ui/button";
 
 export function DeleteJourneyButton({
   projectId,
@@ -62,12 +63,9 @@ export function DeleteJourneyButton({
       destructive
       onConfirm={handleDelete}
       trigger={
-        <button
-          type="button"
-          className="rounded-xl border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
-        >
+        <Button type="button" variant="destructive">
           Delete Journey
-        </button>
+        </Button>
       }
     />
   );

@@ -114,11 +114,11 @@ export default async function ClientDetailPage({
         title={client.name}
         description={client.website_url || client.industry || "Client workspace"}
         action={
-          <div className="flex gap-3">
-            <DeleteClientButton clientId={client.id} />
+          <div className="flex flex-wrap items-center gap-3">
             <Button asChild variant="outline">
               <Link href={`/clients/${client.id}/edit`}>Edit Client</Link>
             </Button>
+            <DeleteClientButton clientId={client.id} />
             <Button asChild>
               <Link href={`/projects/new?clientId=${client.id}`}>+ New Project</Link>
             </Button>

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
@@ -10,10 +11,12 @@ export function FrameworkActions({
   frameworkId,
   userId,
   status,
+  editHref,
 }: {
   frameworkId: string;
   userId: string;
   status: "Active" | "Archived";
+  editHref?: string;
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -153,27 +156,16 @@ export function FrameworkActions({
   }
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap items-center gap-2">
+      {editHref ? (
+        <Button asChild size="sm" variant="outline">
+          <Link href={editHref}>Edit</Link>
+        </Button>
+      ) : null}
+
       <Button type="button" size="sm" variant="outline" onClick={duplicate}>
         Duplicate
       </Button>
-
-
-
-      <ConfirmDialog
-        title="Delete framework?"
-        description="This permanently deletes the framework, including its categories, journeys, and saved framework recommendations. This action cannot be undone."
-        confirmLabel="Delete"
-        destructive
-        onConfirm={async () => {
-          await deleteFramework();
-        }}
-        trigger={
-          <Button type="button" size="sm" variant="ghost" className="text-red-600 hover:text-red-700">
-            Delete
-          </Button>
-        }
-      />
 
       <ConfirmDialog
         title={status === "Active" ? "Archive framework?" : "Restore framework?"}
@@ -190,6 +182,21 @@ export function FrameworkActions({
         trigger={
           <Button type="button" size="sm" variant="ghost">
             {status === "Active" ? "Archive" : "Restore"}
+          </Button>
+        }
+      />
+
+      <ConfirmDialog
+        title="Delete framework?"
+        description="This permanently deletes the framework, including its categories, journeys, and saved framework recommendations. This action cannot be undone."
+        confirmLabel="Delete"
+        destructive
+        onConfirm={async () => {
+          await deleteFramework();
+        }}
+        trigger={
+          <Button type="button" size="sm" variant="ghost" className="text-red-600 hover:text-red-700">
+            Delete
           </Button>
         }
       />

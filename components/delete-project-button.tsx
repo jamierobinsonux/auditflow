@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import { Button } from "@/components/ui/button";
 
 export function DeleteProjectButton({ projectId }: { projectId: string }) {
   const router = useRouter();
@@ -33,9 +34,9 @@ export function DeleteProjectButton({ projectId }: { projectId: string }) {
       destructive
       onConfirm={deleteProject}
       trigger={
-        <button className="rounded-xl bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">
+        <Button type="button" variant="destructive">
           Delete Project
-        </button>
+        </Button>
       }
     />
   );

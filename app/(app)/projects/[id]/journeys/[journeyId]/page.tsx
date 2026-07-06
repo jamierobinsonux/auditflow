@@ -65,13 +65,14 @@ export default async function JourneyDetailPage({
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <EditJourneyButton
             journeyId={journeyId}
             projectId={id}
             initialName={journey.name}
             initialDescription={journey.description}
           />
+          <DeleteJourneyButton projectId={id} journeyId={journeyId} />
 
           <Link
             href={`/projects/${id}/findings/new?journeyId=${journeyId}`}
@@ -79,8 +80,6 @@ export default async function JourneyDetailPage({
           >
             + Add Finding
           </Link>
-
-          <DeleteJourneyButton projectId={id} journeyId={journeyId} />
         </div>
       </div>
 
@@ -113,14 +112,14 @@ export default async function JourneyDetailPage({
                   </div>
 
                   <div className="flex items-center gap-3">
+                    <DeleteStepButton stepId={step.id} />
+
                     <Link
                       href={`/projects/${id}/findings/new?journeyId=${journeyId}&stepId=${step.id}`}
                       className="text-sm font-medium text-violet-600"
                     >
                       Add finding
                     </Link>
-
-                    <DeleteStepButton stepId={step.id} />
                   </div>
                 </div>
 

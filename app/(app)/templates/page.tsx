@@ -217,9 +217,6 @@ function CustomFrameworkCard({
               {framework.name}
             </h3>
           </div>
-          <Button asChild variant="outline" size="sm">
-            <Link href={`/templates/${framework.id}/edit`}>Edit</Link>
-          </Button>
         </div>
 
         <p className="mt-3 text-sm leading-6 text-slate-500">
@@ -247,6 +244,7 @@ function CustomFrameworkCard({
             frameworkId={framework.id}
             userId={userId}
             status={framework.status}
+            editHref={`/templates/${framework.id}/edit`}
           />
         </div>
       </div>
