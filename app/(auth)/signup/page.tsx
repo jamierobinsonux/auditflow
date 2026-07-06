@@ -44,10 +44,32 @@ export default function SignupPage() {
       return;
     }
 
+    const trimmedEmail = email.trim().toLowerCase();
+
     setIsSubmitting(true);
 
-    const { error } = await supabase.auth.signUp({
-      email: email.trim(),
+    const existingEmailResponse = await fetch("/api/auth/check-email", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email: trimmedEmail }),
+    });
+
+    if (existingEmailResponse.ok) {
+      const existingEmailResult = (await existingEmailResponse.json()) as {
+        exists?: boolean;
+      };
+
+      if (existingEmailResult.exists) {
+        setIsSubmitting(false);
+        setErrorMessage("An account with this email already exists. Sign in instead, or reset your password if you need help getting back in.");
+        return;
+      }
+    }
+
+    const { data, error } = await supabase.auth.signUp({
+      email: trimmedEmail,
       password,
       options: {
         data: {
@@ -66,7 +88,12 @@ export default function SignupPage() {
       return;
     }
 
-    router.push(`/check-email?email=${encodeURIComponent(email.trim())}`);
+    if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+      setErrorMessage("An account with this email already exists. Sign in instead, or reset your password if you need help getting back in.");
+      return;
+    }
+
+    router.push(`/check-email?email=${encodeURIComponent(trimmedEmail)}`);
   }
 
   async function handleGoogleSignup() {
@@ -172,7 +199,17 @@ export default function SignupPage() {
 
           {errorMessage ? (
             <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-5 text-red-700" role="alert">
-              {errorMessage}
+              <p>{errorMessage}</p>
+              {errorMessage.toLowerCase().includes("already exists") ? (
+                <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
+                  <Link href="/login" className="font-semibold text-red-800 underline underline-offset-4 hover:text-red-900">
+                    Sign in
+                  </Link>
+                  <Link href="/forgot-password" className="font-semibold text-red-800 underline underline-offset-4 hover:text-red-900">
+                    Reset password
+                  </Link>
+                </div>
+              ) : null}
             </div>
           ) : null}
 

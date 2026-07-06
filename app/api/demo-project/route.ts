@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { canCreateProject, getUsage, getUserSubscription } from "@/lib/subscription";
+import { DEMO_PROJECT_CLIENT_NAME, DEMO_PROJECT_NAME, DEMO_PROJECT_URL } from "@/lib/subscription";
 
 const demoFindings = [
   {
@@ -60,33 +60,26 @@ export async function POST() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const [subscription, usage] = await Promise.all([
-    getUserSubscription(user.id),
-    getUsage(user.id),
-  ]);
+  const { data: existingDemo } = await supabase
+    .from("projects")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("name", DEMO_PROJECT_NAME)
+    .eq("client_name", DEMO_PROJECT_CLIENT_NAME)
+    .eq("website_url", DEMO_PROJECT_URL)
+    .maybeSingle();
 
-  if (
-    !canCreateProject({
-      planId: subscription.planId,
-      projectsUsed: usage.projectsUsed,
-    })
-  ) {
-    return NextResponse.json(
-      {
-        error: "You've reached the Free plan limit of 1 project.",
-        upgradeRequired: true,
-      },
-      { status: 403 }
-    );
+  if (existingDemo) {
+    return NextResponse.json({ project: existingDemo });
   }
 
   const { data: project, error: projectError } = await supabase
     .from("projects")
     .insert({
       user_id: user.id,
-      name: "Demo Mobile App Audit",
-      client_name: "Demo Client",
-      website_url: "https://example.com",
+      name: DEMO_PROJECT_NAME,
+      client_name: DEMO_PROJECT_CLIENT_NAME,
+      website_url: DEMO_PROJECT_URL,
       audit_type: "Mobile App",
       status: "Completed",
     })

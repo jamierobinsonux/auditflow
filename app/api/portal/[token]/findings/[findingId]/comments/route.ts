@@ -183,6 +183,21 @@ async function emailAccountHolderAboutClientComment({
       return;
     }
 
+    const { data: subscription, error: subscriptionError } = await supabaseAdmin
+      .from("subscriptions")
+      .select("plan")
+      .eq("user_id", context.client.user_id)
+      .maybeSingle();
+
+    if (subscriptionError) {
+      console.warn("Client comment email skipped: subscription lookup failed.", subscriptionError.message);
+      return;
+    }
+
+    if (String(subscription?.plan || "") !== "Studio") {
+      return;
+    }
+
     if (data.user.user_metadata?.email_client_comments === false) {
       return;
     }

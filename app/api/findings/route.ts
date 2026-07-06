@@ -5,6 +5,7 @@ import {
   canCreateFinding,
   getUsage,
   getUserSubscription,
+  isDemoProject,
 } from "@/lib/subscription";
 
 export async function POST(request: Request) {
@@ -32,7 +33,7 @@ export async function POST(request: Request) {
 
   const { data: project } = await supabase
     .from("projects")
-    .select("id,user_id")
+    .select("id,user_id,name,client_name,website_url")
     .eq("id", projectId)
     .eq("user_id", user.id)
     .maybeSingle();
@@ -50,7 +51,7 @@ export async function POST(request: Request) {
     !canCreateFinding({
       planId: subscription.planId,
       findingsUsed: usage.findingsUsed,
-    })
+    }) && !isDemoProject(project)
   ) {
     return NextResponse.json(
       {

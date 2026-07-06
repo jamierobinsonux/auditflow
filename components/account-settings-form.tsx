@@ -16,6 +16,7 @@ export function AccountSettingsForm({
   initialClientCommentEmails,
   initialClientReplyEmails,
   email,
+  canUseClientNotifications,
 }: {
   initialDisplayName: string;
   initialWorkspaceName: string;
@@ -24,6 +25,7 @@ export function AccountSettingsForm({
   initialClientCommentEmails: boolean;
   initialClientReplyEmails: boolean;
   email: string;
+  canUseClientNotifications: boolean;
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -46,8 +48,8 @@ export function AccountSettingsForm({
         workspace_name: workspaceName.trim() || "AuditFlow Workspace",
         timezone,
         date_format: dateFormat,
-        email_client_comments: clientCommentEmails,
-        email_client_replies: clientReplyEmails,
+        email_client_comments: canUseClientNotifications ? clientCommentEmails : false,
+        email_client_replies: canUseClientNotifications ? clientReplyEmails : false,
       },
     });
 
@@ -124,24 +126,50 @@ export function AccountSettingsForm({
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-[18px] font-semibold text-slate-950">Notifications</h2>
-        <p className="mt-1 text-sm text-slate-500">Choose which client portal updates should send email notifications.</p>
-        <div className="mt-6 space-y-4">
-          <label className="flex items-start gap-3 rounded-xl border border-slate-200 p-4">
-            <input type="checkbox" className="mt-1 h-4 w-4 rounded border-slate-300 text-violet-600" checked={clientCommentEmails} onChange={(event) => setClientCommentEmails(event.target.checked)} />
-            <span>
-              <span className="block text-sm font-semibold text-slate-950">Client comments</span>
-              <span className="block text-sm text-slate-500">Email me when a client leaves a new comment in the portal.</span>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2 className="text-[18px] font-semibold text-slate-950">Notifications</h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Choose which client portal updates should send email notifications.
+            </p>
+          </div>
+          {!canUseClientNotifications && (
+            <span className="rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700">
+              Studio
             </span>
-          </label>
-          <label className="flex items-start gap-3 rounded-xl border border-slate-200 p-4">
-            <input type="checkbox" className="mt-1 h-4 w-4 rounded border-slate-300 text-violet-600" checked={clientReplyEmails} onChange={(event) => setClientReplyEmails(event.target.checked)} />
-            <span>
-              <span className="block text-sm font-semibold text-slate-950">Client replies</span>
-              <span className="block text-sm text-slate-500">Email me when a client replies to a comment thread.</span>
-            </span>
-          </label>
+          )}
         </div>
+
+        {canUseClientNotifications ? (
+          <div className="mt-6 space-y-4">
+            <label className="flex items-start gap-3 rounded-xl border border-slate-200 p-4">
+              <input type="checkbox" className="mt-1 h-4 w-4 rounded border-slate-300 text-violet-600" checked={clientCommentEmails} onChange={(event) => setClientCommentEmails(event.target.checked)} />
+              <span>
+                <span className="block text-sm font-semibold text-slate-950">Client comments</span>
+                <span className="block text-sm text-slate-500">Email me when a client leaves a new comment in the portal.</span>
+              </span>
+            </label>
+            <label className="flex items-start gap-3 rounded-xl border border-slate-200 p-4">
+              <input type="checkbox" className="mt-1 h-4 w-4 rounded border-slate-300 text-violet-600" checked={clientReplyEmails} onChange={(event) => setClientReplyEmails(event.target.checked)} />
+              <span>
+                <span className="block text-sm font-semibold text-slate-950">Client replies</span>
+                <span className="block text-sm text-slate-500">Email me when a client replies to a comment thread.</span>
+              </span>
+            </label>
+          </div>
+        ) : (
+          <div className="mt-6 rounded-2xl border border-violet-100 bg-violet-50 p-5">
+            <p className="text-sm font-semibold text-slate-950">
+              Client email notifications are available on Studio.
+            </p>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              Studio includes client spaces, portal comments, and email notifications when clients leave comments or replies.
+            </p>
+            <a href="/settings/billing" className="mt-4 inline-flex rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-700">
+              Upgrade to Studio
+            </a>
+          </div>
+        )}
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">

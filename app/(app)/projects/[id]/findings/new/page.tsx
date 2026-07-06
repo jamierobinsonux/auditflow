@@ -24,7 +24,22 @@ type JourneyStep = { id: string; journey_id: string; title: string };
 type ProjectContext = {
   id: string;
   framework_id: string | null;
+  name?: string | null;
+  client_name?: string | null;
+  website_url?: string | null;
 };
+
+const DEMO_PROJECT_NAME = "Demo Mobile App Audit";
+const DEMO_PROJECT_CLIENT_NAME = "Demo Client";
+const DEMO_PROJECT_URL = "https://example.com";
+
+function isDemoProject(project: ProjectContext | null) {
+  return (
+    project?.name === DEMO_PROJECT_NAME &&
+    project?.client_name === DEMO_PROJECT_CLIENT_NAME &&
+    project?.website_url === DEMO_PROJECT_URL
+  );
+}
 
 export default function NewFindingPage() {
   const router = useRouter();
@@ -71,7 +86,7 @@ export default function NewFindingPage() {
       const [{ data: projectData }, { data: journeyData }, { data: stepData }] = await Promise.all([
         supabase
           .from("projects")
-          .select("id,framework_id")
+          .select("id,framework_id,name,client_name,website_url")
           .eq("id", projectId)
           .eq("user_id", user.id)
           .maybeSingle(),
@@ -94,10 +109,14 @@ export default function NewFindingPage() {
         return;
       }
 
-      const [{ count: findingCount }, { data: subscription }] = await Promise.all([
+      const [{ data: allProjects }, { data: allFindings }, { data: subscription }] = await Promise.all([
+        supabase
+          .from("projects")
+          .select("id,name,client_name,website_url")
+          .eq("user_id", user.id),
         supabase
           .from("findings")
-          .select("id", { count: "exact", head: true })
+          .select("id,project_id")
           .eq("user_id", user.id),
         supabase
           .from("subscriptions")
@@ -107,8 +126,20 @@ export default function NewFindingPage() {
       ]);
 
       const currentPlan = subscription?.plan || "Free";
+      const demoProjectIds = new Set(
+        (allProjects ?? [])
+          .filter((project) =>
+            project.name === DEMO_PROJECT_NAME &&
+            project.client_name === DEMO_PROJECT_CLIENT_NAME &&
+            project.website_url === DEMO_PROJECT_URL
+          )
+          .map((project) => project.id)
+      );
+      const realFindingCount = (allFindings ?? []).filter(
+        (finding) => !demoProjectIds.has(finding.project_id)
+      ).length;
 
-      if (currentPlan === "Free" && (findingCount ?? 0) >= 5) {
+      if (currentPlan === "Free" && !isDemoProject(projectData as ProjectContext) && realFindingCount >= 5) {
         router.replace("/settings/billing?limit=findings");
         return;
       }

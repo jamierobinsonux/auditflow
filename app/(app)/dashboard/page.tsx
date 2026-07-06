@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { formatDisplayName } from "@/lib/format-name";
+import { getUsage, isDemoProject } from "@/lib/subscription";
 import { FreePlanUsageCard } from "@/components/free-plan-usage-card";
 import { OnboardingChecklist } from "@/components/onboarding-checklist";
 import { WelcomeBanner } from "@/components/welcome-banner";
@@ -101,13 +102,21 @@ export default async function DashboardPage() {
 
   const currentPlan = subscription?.plan || "Free";
   const isFreePlan = currentPlan === "Free";
+  const usage = user?.id
+    ? await getUsage(user.id)
+    : { projectsUsed: 0, findingsUsed: 0, demoProjectsUsed: 0 };
   const isStudioPlan = currentPlan === "Studio" || currentPlan === "studio";
 
   const projects = (projectData ?? []) as Project[];
+  const demoProjectIds = new Set(
+    projects.filter((project) => isDemoProject(project)).map((project) => project.id)
+  );
+  const realProjects = projects.filter((project) => !demoProjectIds.has(project.id));
   const activeProjectIds = projects.map((project) => project.id);
   const findings = ((findingData ?? []) as Finding[]).filter((finding) =>
     activeProjectIds.includes(finding.project_id)
   );
+  const realFindings = findings.filter((finding) => !demoProjectIds.has(finding.project_id));
   const reportExports = (reportData ?? []) as ReportExport[];
   const clients = (clientData ?? []) as ClientLite[];
   const recommendations = (recommendationData ?? []) as StudioRecommendation[];
@@ -127,11 +136,11 @@ export default async function DashboardPage() {
 
 
   const projectStatValue = isFreePlan
-    ? `${totalProjects} / 1`
+    ? `${usage.projectsUsed} / 1`
     : totalProjects.toString();
 
   const findingStatValue = isFreePlan
-    ? `${totalFindings} / 5`
+    ? `${usage.findingsUsed} / 5`
     : totalFindings.toString();
 
   const summary =
@@ -163,8 +172,8 @@ export default async function DashboardPage() {
 
       <FreePlanUsageCard
         plan={currentPlan}
-        projectsUsed={totalProjects}
-        findingsUsed={totalFindings}
+        projectsUsed={usage.projectsUsed}
+        findingsUsed={usage.findingsUsed}
       />
 
       <OnboardingChecklist

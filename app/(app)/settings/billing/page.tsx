@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { subscriptionPlans } from "@/lib/subscription-plans";
+import { getUsage } from "@/lib/subscription";
 import { PlanCard } from "@/components/billing/plan-card";
 import { ManageSubscriptionButton } from "@/components/billing/manage-subscription-button";
 
@@ -26,15 +27,9 @@ export default async function BillingPage({
     .eq("user_id", user?.id)
     .maybeSingle();
 
-  const { data: projects } = await supabase
-    .from("projects")
-    .select("id")
-    .eq("user_id", user?.id);
-
-  const { data: findings } = await supabase
-    .from("findings")
-    .select("id")
-    .eq("user_id", user?.id);
+  const usage = user?.id
+    ? await getUsage(user.id)
+    : { projectsUsed: 0, findingsUsed: 0, demoProjectsUsed: 0 };
 
   const currentPlan = subscription?.plan || "Free";
   const plan = subscriptionPlans.find((item) => item.id === currentPlan);
@@ -63,14 +58,14 @@ export default async function BillingPage({
         />
         <UsageCard
           label="Projects used"
-          value={`${projects?.length ?? 0} / ${
+          value={`${usage.projectsUsed} / ${
             plan?.limits.projects ?? "Unlimited"
           }`}
           helper="Project limit"
         />
         <UsageCard
           label="Findings used"
-          value={`${findings?.length ?? 0} / ${
+          value={`${usage.findingsUsed} / ${
             plan?.limits.findings ?? "Unlimited"
           }`}
           helper="Finding limit"

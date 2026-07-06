@@ -61,6 +61,7 @@ export default async function SettingsPage() {
           initialClientCommentEmails={emailClientComments}
           initialClientReplyEmails={emailClientReplies}
           email={user.email || ""}
+          canUseClientNotifications={subscription.isStudio}
         />
 
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
