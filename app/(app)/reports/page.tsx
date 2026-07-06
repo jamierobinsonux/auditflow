@@ -91,7 +91,7 @@ export default async function ReportsPage({
         </div>
       ) : (
         <Card className="mt-8 overflow-hidden">
-          <div className="grid grid-cols-[minmax(240px,1.5fr)_minmax(150px,0.9fr)_minmax(180px,1fr)_80px_120px_120px] items-center bg-slate-100 px-6 py-4 text-xs font-semibold uppercase tracking-wide text-slate-600">
+          <div className="hidden items-center bg-slate-100 px-6 py-4 text-xs font-semibold uppercase tracking-wide text-slate-600 md:grid md:grid-cols-[minmax(220px,1.5fr)_minmax(130px,0.9fr)_minmax(160px,1fr)_70px_110px_116px] lg:grid-cols-[minmax(240px,1.5fr)_minmax(150px,0.9fr)_minmax(180px,1fr)_80px_120px_120px]">
             <span>Report</span>
             <span>Client</span>
             <span>Project</span>
@@ -109,18 +109,30 @@ export default async function ReportsPage({
               const downloadUrl = `/api/projects/${report.project_id}/report?mode=download&${query}`;
 
               return (
-                <div key={report.id} className="grid grid-cols-[minmax(240px,1.5fr)_minmax(150px,0.9fr)_minmax(180px,1fr)_80px_120px_120px] items-center gap-4 px-6 py-5 text-sm">
+                <div key={report.id} className="block px-5 py-5 text-sm md:grid md:grid-cols-[minmax(220px,1.5fr)_minmax(130px,0.9fr)_minmax(160px,1fr)_70px_110px_116px] md:items-center md:gap-4 md:px-6 lg:grid-cols-[minmax(240px,1.5fr)_minmax(150px,0.9fr)_minmax(180px,1fr)_80px_120px_120px]">
                   <div>
                     <p className="max-w-[360px] whitespace-normal break-words font-semibold leading-snug text-slate-950">{title}</p>
                     <p className="mt-1 text-xs text-slate-500">{labelize(report.template || "professional")} template</p>
                   </div>
-                  <span className="min-w-0 whitespace-normal break-words text-left font-medium leading-snug text-slate-700">{clientName}</span>
-                  <Link href={`/projects/${report.project_id}`} className="min-w-0 whitespace-normal break-words text-left font-medium leading-snug text-slate-700 hover:text-violet-700">
-                    {projectName}
-                  </Link>
-                  <span className="text-slate-600">v{report.version ?? 1}</span>
-                  <span className="text-slate-500">{formatClientDate(report.created_at)}</span>
-                  <div className="flex justify-end gap-2 pr-4">
+                  <span className="mt-4 flex items-start justify-between gap-4 border-t border-slate-100 pt-4 md:mt-0 md:block md:border-0 md:pt-0">
+                    <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-slate-400 md:hidden">Client</span>
+                    <span className="min-w-0 whitespace-normal break-words text-right font-medium leading-snug text-slate-700 md:text-left">{clientName}</span>
+                  </span>
+                  <span className="mt-3 flex items-start justify-between gap-4 md:mt-0 md:block">
+                    <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-slate-400 md:hidden">Project</span>
+                    <Link href={`/projects/${report.project_id}`} className="min-w-0 whitespace-normal break-words text-right font-medium leading-snug text-slate-700 hover:text-violet-700 md:text-left">
+                      {projectName}
+                    </Link>
+                  </span>
+                  <span className="mt-3 flex items-center justify-between md:mt-0 md:block">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-slate-400 md:hidden">Version</span>
+                    <span className="text-slate-600">v{report.version ?? 1}</span>
+                  </span>
+                  <span className="mt-3 flex items-center justify-between md:mt-0 md:block">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-slate-400 md:hidden">Generated</span>
+                    <span className="text-slate-500">{formatClientDate(report.created_at)}</span>
+                  </span>
+                  <div className="mt-4 flex justify-end gap-2 md:mt-0 md:pr-4">
                     <Button asChild variant="outline" size="icon-sm">
                       <a href={previewUrl} target="_blank" rel="noreferrer" aria-label="Preview report"><Eye className="size-4" /></a>
                     </Button>

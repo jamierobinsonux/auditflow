@@ -178,7 +178,7 @@ export default async function ClientsPage({
         </div>
       ) : (
         <Card className="mt-8 overflow-hidden">
-          <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr] bg-slate-100 px-6 py-4 text-xs font-semibold uppercase tracking-wide text-slate-600">
+          <div className="hidden bg-slate-100 px-6 py-4 text-xs font-semibold uppercase tracking-wide text-slate-600 md:grid md:grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr]">
             <span>Client</span>
             <span>Projects</span>
             <span>Draft Reports</span>
@@ -199,7 +199,7 @@ export default async function ClientsPage({
             <Link
               key={client.id}
               href={`/clients/${client.id}`}
-              className={`grid grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr] items-center px-6 py-4 text-sm transition hover:bg-slate-50 ${
+              className={`block px-5 py-5 text-sm transition hover:bg-slate-50 md:grid md:grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr] md:items-center md:px-6 md:py-4 ${
                 index !== 0 ? "border-t border-slate-100" : ""
               }`}
             >
@@ -223,17 +223,30 @@ export default async function ClientsPage({
                   <span className="mt-0.5 block text-xs text-slate-500">{client.industry || client.website_url || "Client workspace"}</span>
                 </span>
               </span>
-              <span>
-                <span className="font-semibold text-slate-950">{client.projectCount}</span>
-                <span className="mt-0.5 block text-xs text-slate-500">Active</span>
+              <span className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4 md:mt-0 md:block md:border-0 md:pt-0">
+                <span className="text-xs font-semibold uppercase tracking-wide text-slate-400 md:hidden">Projects</span>
+                <span>
+                  <span className="font-semibold text-slate-950">{client.projectCount}</span>
+                  <span className="mt-0.5 hidden text-xs text-slate-500 md:block">Active</span>
+                </span>
               </span>
-              <span className="font-semibold text-slate-950">{client.draftReports}</span>
-              <span className="font-semibold text-slate-950">{client.openFindings}</span>
-              <span>
-                <span className="font-medium text-slate-900">{formatRelativeDate(client.latestActivity)}</span>
-                <span className="mt-0.5 block text-xs text-slate-500">{latestActivityLabel(client)}</span>
+              <span className="mt-3 flex items-center justify-between md:mt-0 md:block">
+                <span className="text-xs font-semibold uppercase tracking-wide text-slate-400 md:hidden">Draft Reports</span>
+                <span className="font-semibold text-slate-950">{client.draftReports}</span>
               </span>
-              <span>
+              <span className="mt-3 flex items-center justify-between md:mt-0 md:block">
+                <span className="text-xs font-semibold uppercase tracking-wide text-slate-400 md:hidden">Open Findings</span>
+                <span className="font-semibold text-slate-950">{client.openFindings}</span>
+              </span>
+              <span className="mt-3 flex items-center justify-between md:mt-0 md:block">
+                <span className="text-xs font-semibold uppercase tracking-wide text-slate-400 md:hidden">Last Activity</span>
+                <span className="text-right md:text-left">
+                  <span className="font-medium text-slate-900">{formatRelativeDate(client.latestActivity)}</span>
+                  <span className="mt-0.5 block text-xs text-slate-500">{latestActivityLabel(client)}</span>
+                </span>
+              </span>
+              <span className="mt-3 flex items-center justify-between md:mt-0 md:block">
+                <span className="text-xs font-semibold uppercase tracking-wide text-slate-400 md:hidden">Status</span>
                 <span className={`inline-flex rounded-lg px-3 py-1 text-xs font-semibold ${getClientHealthClasses(client.health)}`}>
                   {client.health}
                 </span>

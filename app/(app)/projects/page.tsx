@@ -163,13 +163,13 @@ export default async function ProjectsPage({
               <Link
                 key={project.id}
                 href={`/projects/${project.id}`}
-                className={`block p-6 transition hover:bg-slate-50 ${
+                className={`block p-5 transition hover:bg-slate-50 sm:p-6 ${
                   index !== 0 ? "border-t border-slate-100" : ""
                 }`}
               >
-                <div className="flex items-center justify-between gap-6">
-                  <div>
-                    <h2 className="text-base font-semibold text-slate-950">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+                  <div className="min-w-0">
+                    <h2 className="break-words text-base font-semibold text-slate-950">
                       {project.name}
                     </h2>
 
@@ -187,7 +187,7 @@ export default async function ProjectsPage({
                     </p>
                   </div>
 
-                  <div className="text-right">
+                  <div className="flex w-full items-center justify-between sm:block sm:w-auto sm:text-right">
                     <StatusBadge status={project.status} />
 
                     <p className="mt-2 text-xs text-slate-400">
