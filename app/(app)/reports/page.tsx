@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/empty-state";
 import { DeleteReportButton } from "@/components/delete-report-button";
 import { UpgradeRequiredCard } from "@/components/upgrade-required-card";
+import { AutoSubmitForm } from "@/components/auto-submit-form";
 import type { ReportExport } from "@/types/report";
 
 export default async function ReportsPage({
@@ -64,7 +65,7 @@ export default async function ReportsPage({
       />
 
       {allReports.length > 0 && (
-        <form className="mt-8 max-w-xl" action="/reports">
+        <AutoSubmitForm className="mt-8 max-w-xl" action="/reports">
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
             <input
@@ -74,7 +75,7 @@ export default async function ReportsPage({
               className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3 text-sm outline-none transition focus:border-violet-300 focus:ring-4 focus:ring-violet-100"
             />
           </div>
-        </form>
+        </AutoSubmitForm>
       )}
 
       {reports.length === 0 ? (
@@ -91,13 +92,13 @@ export default async function ReportsPage({
         </div>
       ) : (
         <Card className="mt-8 overflow-hidden">
-          <div className="hidden items-center bg-slate-100 px-6 py-4 text-xs font-semibold uppercase tracking-wide text-slate-600 md:grid md:grid-cols-[minmax(220px,1.5fr)_minmax(130px,0.9fr)_minmax(160px,1fr)_70px_110px_116px] lg:grid-cols-[minmax(240px,1.5fr)_minmax(150px,0.9fr)_minmax(180px,1fr)_80px_120px_120px]">
-            <span>Report</span>
-            <span>Client</span>
-            <span>Project</span>
+          <div className="hidden items-center gap-6 bg-slate-100 px-6 py-4 text-xs font-semibold uppercase tracking-wide text-slate-600 md:grid md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1.35fr)_64px_112px_136px]">
+            <span className="min-w-0">Report</span>
+            <span className="min-w-0">Client</span>
+            <span className="min-w-0">Project</span>
             <span>Version</span>
             <span>Generated</span>
-            <span className="text-right pr-4">Actions</span>
+            <span className="text-right">Actions</span>
           </div>
           <div className="divide-y divide-slate-100">
             {reports.map((report) => {
@@ -109,18 +110,18 @@ export default async function ReportsPage({
               const downloadUrl = `/api/projects/${report.project_id}/report?mode=download&${query}`;
 
               return (
-                <div key={report.id} className="block px-5 py-5 text-sm md:grid md:grid-cols-[minmax(220px,1.5fr)_minmax(130px,0.9fr)_minmax(160px,1fr)_70px_110px_116px] md:items-center md:gap-4 md:px-6 lg:grid-cols-[minmax(240px,1.5fr)_minmax(150px,0.9fr)_minmax(180px,1fr)_80px_120px_120px]">
-                  <div>
-                    <p className="max-w-[360px] whitespace-normal break-words font-semibold leading-snug text-slate-950">{title}</p>
-                    <p className="mt-1 text-xs text-slate-500">{labelize(report.template || "professional")} template</p>
+                <div key={report.id} className="block px-5 py-5 text-sm md:grid md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1.35fr)_64px_112px_136px] md:items-center md:gap-6 md:px-6">
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold leading-snug text-slate-950" title={title}>{title}</p>
+                    <p className="mt-1 truncate text-xs text-slate-500">{labelize(report.template || "professional")} template</p>
                   </div>
                   <span className="mt-4 flex items-start justify-between gap-4 border-t border-slate-100 pt-4 md:mt-0 md:block md:border-0 md:pt-0">
                     <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-slate-400 md:hidden">Client</span>
-                    <span className="min-w-0 whitespace-normal break-words text-right font-medium leading-snug text-slate-700 md:text-left">{clientName}</span>
+                    <span className="min-w-0 truncate text-right font-medium leading-snug text-slate-700 md:block md:text-left" title={clientName}>{clientName}</span>
                   </span>
                   <span className="mt-3 flex items-start justify-between gap-4 md:mt-0 md:block">
                     <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-slate-400 md:hidden">Project</span>
-                    <Link href={`/projects/${report.project_id}`} className="min-w-0 whitespace-normal break-words text-right font-medium leading-snug text-slate-700 hover:text-violet-700 md:text-left">
+                    <Link href={`/projects/${report.project_id}`} className="min-w-0 truncate text-right font-medium leading-snug text-slate-700 hover:text-violet-700 md:block md:text-left" title={projectName}>
                       {projectName}
                     </Link>
                   </span>
@@ -132,7 +133,7 @@ export default async function ReportsPage({
                     <span className="text-xs font-semibold uppercase tracking-wide text-slate-400 md:hidden">Generated</span>
                     <span className="text-slate-500">{formatClientDate(report.created_at)}</span>
                   </span>
-                  <div className="mt-4 flex justify-end gap-2 md:mt-0 md:pr-4">
+                  <div className="mt-4 flex min-w-0 justify-end gap-2 md:mt-0">
                     <Button asChild variant="outline" size="icon-sm">
                       <a href={previewUrl} target="_blank" rel="noreferrer" aria-label="Preview report"><Eye className="size-4" /></a>
                     </Button>

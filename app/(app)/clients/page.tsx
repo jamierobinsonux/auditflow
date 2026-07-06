@@ -10,6 +10,7 @@ import { Card } from "@/components/layout/card";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/empty-state";
 import { UpgradeRequiredCard } from "@/components/upgrade-required-card";
+import { AutoSubmitForm } from "@/components/auto-submit-form";
 import type { Client } from "@/types/client";
 import type { Project } from "@/types/project";
 import type { Finding } from "@/types/finding";
@@ -25,9 +26,9 @@ type ClientWithStats = Client & {
 export default async function ClientsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; status?: string }>;
+  searchParams: Promise<{ q?: string; status?: string; sort?: string }>;
 }) {
-  const { q = "", status = "all" } = await searchParams;
+  const { q = "", status = "all", sort = "activity-desc" } = await searchParams;
   const supabase = await createClient();
 
   const {
@@ -73,7 +74,8 @@ export default async function ClientsPage({
   const findings = (findingData ?? []) as Pick<Finding, "id" | "project_id" | "status">[];
   const reports = (reportData ?? []) as { id: string; project_id: string; created_at: string }[];
 
-  const clientsWithStats = clients
+  const clientsWithStats = sortClients(
+    clients
     .map((client): ClientWithStats => {
       const clientProjects = projects.filter((project) => project.client_id === client.id);
       const clientProjectIds = new Set(clientProjects.map((project) => project.id));
@@ -114,7 +116,9 @@ export default async function ClientsPage({
         : true;
       const matchesStatus = status === "all" ? true : client.health.toLowerCase().replace(" ", "-") === status;
       return matchesQuery && matchesStatus;
-    });
+    }),
+    sort
+  );
 
   return (
     <PageShell>
@@ -128,8 +132,8 @@ export default async function ClientsPage({
         }
       />
 
-      <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-        <form className="relative flex-1" action="/clients">
+      <AutoSubmitForm className="mt-8 grid gap-3 md:grid-cols-[minmax(0,1fr)_220px_220px]" action="/clients">
+        <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
           <input
             name="q"
@@ -137,30 +141,39 @@ export default async function ClientsPage({
             placeholder="Search clients..."
             className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3 text-sm outline-none transition focus:border-violet-300 focus:ring-4 focus:ring-violet-100"
           />
-        </form>
+        </div>
 
-        <form action="/clients">
-          {q && <input type="hidden" name="q" value={q} />}
-          <div className="relative">
-            <select
-              name="status"
-              defaultValue={status}
-              className="h-11 appearance-none rounded-xl border border-slate-200 bg-white py-2 pl-3 pr-14 text-sm text-slate-700 outline-none transition focus:border-violet-300 focus:ring-4 focus:ring-violet-100"
-            >
-              <option value="all">All Status</option>
-              <option value="healthy">Healthy</option>
-              <option value="on-track">On Track</option>
-              <option value="not-started">Not Started</option>
-              <option value="at-risk">At Risk</option>
-              <option value="inactive">Inactive</option>
-            </select>
-            <ChevronDown
-              aria-hidden="true"
-              className="pointer-events-none absolute right-5 top-1/2 size-4 -translate-y-1/2 text-slate-400"
-            />
-          </div>
-        </form>
-      </div>
+        <div className="relative">
+          <select
+            name="status"
+            defaultValue={status}
+            className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-white py-2 pl-3 pr-14 text-sm text-slate-700 outline-none transition focus:border-violet-300 focus:ring-4 focus:ring-violet-100"
+          >
+            <option value="all">All Statuses</option>
+            <option value="healthy">Healthy</option>
+            <option value="on-track">On Track</option>
+            <option value="not-started">Not Started</option>
+            <option value="at-risk">At Risk</option>
+            <option value="inactive">Inactive</option>
+          </select>
+          <ChevronDown aria-hidden="true" className="pointer-events-none absolute right-5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+        </div>
+
+        <div className="relative">
+          <select
+            name="sort"
+            defaultValue={sort}
+            className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-white py-2 pl-3 pr-14 text-sm text-slate-700 outline-none transition focus:border-violet-300 focus:ring-4 focus:ring-violet-100"
+          >
+            <option value="activity-desc">Most recent activity</option>
+            <option value="activity-asc">Oldest activity</option>
+            <option value="name-asc">Name A-Z</option>
+            <option value="name-desc">Name Z-A</option>
+            <option value="status">Status</option>
+          </select>
+          <ChevronDown aria-hidden="true" className="pointer-events-none absolute right-5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+        </div>
+      </AutoSubmitForm>
 
       {clientsWithStats.length === 0 ? (
         <div className="mt-8">
@@ -178,7 +191,7 @@ export default async function ClientsPage({
         </div>
       ) : (
         <Card className="mt-8 overflow-hidden">
-          <div className="hidden bg-slate-100 px-6 py-4 text-xs font-semibold uppercase tracking-wide text-slate-600 md:grid md:grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr]">
+          <div className="hidden items-center gap-8 bg-slate-100 px-6 py-4 text-xs font-semibold uppercase tracking-wide text-slate-600 md:grid md:grid-cols-[minmax(240px,1.5fr)_110px_120px_130px_minmax(150px,0.9fr)_120px]">
             <span>Client</span>
             <span>Projects</span>
             <span>Draft Reports</span>
@@ -199,11 +212,11 @@ export default async function ClientsPage({
             <Link
               key={client.id}
               href={`/clients/${client.id}`}
-              className={`block px-5 py-5 text-sm transition hover:bg-slate-50 md:grid md:grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr] md:items-center md:px-6 md:py-4 ${
+              className={`block px-5 py-5 text-sm transition hover:bg-slate-50 md:grid md:grid-cols-[minmax(240px,1.5fr)_110px_120px_130px_minmax(150px,0.9fr)_120px] md:items-center md:gap-8 md:px-6 md:py-4 ${
                 index !== 0 ? "border-t border-slate-100" : ""
               }`}
             >
-              <span className="flex items-center gap-3">
+              <span className="flex min-w-0 items-center gap-3">
                 {client.logo_url ? (
                   <img
                     src={client.logo_url}
@@ -218,9 +231,9 @@ export default async function ClientsPage({
                     {getClientInitials(client.name)}
                   </span>
                 )}
-                <span>
-                  <span className="block font-semibold text-slate-950">{client.name}</span>
-                  <span className="mt-0.5 block text-xs text-slate-500">{client.industry || client.website_url || "Client workspace"}</span>
+                <span className="min-w-0">
+                  <span className="block truncate font-semibold text-slate-950" title={client.name}>{client.name}</span>
+                  <span className="mt-0.5 block truncate text-xs text-slate-500" title={client.industry || client.website_url || "Client workspace"}>{client.industry || client.website_url || "Client workspace"}</span>
                 </span>
               </span>
               <span className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4 md:mt-0 md:block md:border-0 md:pt-0">
@@ -240,8 +253,8 @@ export default async function ClientsPage({
               </span>
               <span className="mt-3 flex items-center justify-between md:mt-0 md:block">
                 <span className="text-xs font-semibold uppercase tracking-wide text-slate-400 md:hidden">Last Activity</span>
-                <span className="text-right md:text-left">
-                  <span className="font-medium text-slate-900">{formatRelativeDate(client.latestActivity)}</span>
+                <span className="min-w-0 text-right md:block md:text-left">
+                  <span className="block truncate font-medium text-slate-900">{formatRelativeDate(client.latestActivity)}</span>
                   <span className="mt-0.5 block text-xs text-slate-500">{latestActivityLabel(client)}</span>
                 </span>
               </span>
@@ -273,4 +286,27 @@ function latestActivityLabel(client: ClientWithStats) {
   if (client.openFindings > 0) return "Findings open";
   if (client.projectCount > 0) return "Project updated";
   return "Client created";
+}
+
+
+function sortClients(clients: ClientWithStats[], sort: string) {
+  const healthRank: Record<string, number> = {
+    "At Risk": 0,
+    "Inactive": 1,
+    "Not Started": 2,
+    "On Track": 3,
+    "Healthy": 4,
+  };
+
+  return [...clients].sort((a, b) => {
+    if (sort === "name-asc") return a.name.localeCompare(b.name);
+    if (sort === "name-desc") return b.name.localeCompare(a.name);
+    if (sort === "activity-asc") {
+      return new Date(a.latestActivity ?? 0).getTime() - new Date(b.latestActivity ?? 0).getTime();
+    }
+    if (sort === "status") {
+      return (healthRank[a.health] ?? 99) - (healthRank[b.health] ?? 99) || a.name.localeCompare(b.name);
+    }
+    return new Date(b.latestActivity ?? 0).getTime() - new Date(a.latestActivity ?? 0).getTime();
+  });
 }

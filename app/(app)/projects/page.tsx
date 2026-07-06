@@ -8,6 +8,7 @@ import { Card } from "@/components/layout/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { AuditTypeBadge } from "@/components/ui/audit-type-badge";
+import { AutoSubmitForm } from "@/components/auto-submit-form";
 import type { Client } from "@/types/client";
 import type { Project } from "@/types/project";
 
@@ -87,7 +88,7 @@ export default async function ProjectsPage({
         }
       />
 
-      <form className="mt-8 flex flex-col gap-3 sm:flex-row" action={searchAction}>
+      <AutoSubmitForm className="mt-8 flex flex-col gap-3 sm:flex-row" action={searchAction}>
         {clientId && <input type="hidden" name="clientId" value={clientId} />}
         {showArchived && <input type="hidden" name="view" value="archived" />}
         <div className="relative flex-1">
@@ -117,8 +118,7 @@ export default async function ProjectsPage({
           />
         </div>
 
-        <Button type="submit" variant="outline">Apply</Button>
-      </form>
+      </AutoSubmitForm>
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <Button asChild variant={!showArchived ? "default" : "outline"}>

@@ -15,6 +15,7 @@ import { SeverityBadge } from "@/components/ui/severity-badge";
 import { ArchiveProjectButton } from "@/components/archive-project-button";
 import { ArchivedProjectBanner } from "@/components/archived-project-banner";
 import { ArchivedBadge } from "@/components/ui/archived-badge";
+import { AutoSubmitForm } from "@/components/auto-submit-form";
 import type { Finding } from "@/types/finding";
 import { hydrateFindingRecommendation, uniqueRecommendationIds, type LinkedRecommendation } from "@/lib/recommendations";
 
@@ -232,7 +233,7 @@ const frameworkRecommendationById = new Map<string, LinkedRecommendation>(
         />
 
         {rawFindings.length > 0 && (
-          <form className="mb-4 grid gap-3 md:grid-cols-[1fr_220px]" action={`/projects/${id}`}>
+          <AutoSubmitForm className="mb-4 grid gap-3 md:grid-cols-[1fr_220px]" action={`/projects/${id}`}>
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
               <input
@@ -251,6 +252,7 @@ const frameworkRecommendationById = new Map<string, LinkedRecommendation>(
                 <option value="newest">Newest first</option>
                 <option value="oldest">Oldest first</option>
                 <option value="severity">Severity: P0 to P3</option>
+                <option value="severity-desc">Severity: P3 to P0</option>
                 <option value="status">Status</option>
                 <option value="journey">Journey</option>
                 <option value="title">Title A-Z</option>
@@ -260,7 +262,7 @@ const frameworkRecommendationById = new Map<string, LinkedRecommendation>(
                 className="pointer-events-none absolute right-5 top-1/2 size-4 -translate-y-1/2 text-slate-400"
               />
             </div>
-          </form>
+          </AutoSubmitForm>
         )}
 
         {findings.length === 0 ? (
@@ -277,27 +279,27 @@ const frameworkRecommendationById = new Map<string, LinkedRecommendation>(
           />
         ) : (
           <Card className="overflow-hidden">
-            <div className="grid grid-cols-4 bg-slate-100 p-4 text-xs font-semibold uppercase tracking-wide text-slate-600">
-              <span>Finding</span>
+            <div className="grid grid-cols-[minmax(260px,1.5fr)_120px_140px_minmax(220px,1.2fr)] items-center gap-8 bg-slate-100 px-6 py-4 text-xs font-semibold uppercase tracking-wide text-slate-600">
+              <span className="min-w-0">Finding</span>
               <span>Severity</span>
               <span>Status</span>
-              <span>Recommendation</span>
+              <span className="min-w-0">Recommendation</span>
             </div>
 
             {findings.map((finding) => (
               <Link
                 key={finding.id}
                 href={`/projects/${id}/findings/${finding.id}`}
-                className="grid grid-cols-4 items-center border-t border-slate-100 p-4 text-sm hover:bg-slate-50"
+                className="grid grid-cols-[minmax(260px,1.5fr)_120px_140px_minmax(220px,1.2fr)] items-center gap-8 border-t border-slate-100 px-6 py-4 text-sm hover:bg-slate-50"
               >
-                <span className="font-medium text-slate-950">
+                <span className="min-w-0 truncate font-medium text-slate-950" title={finding.title}>
                   {finding.title}
                 </span>
 
                 <SeverityBadge severity={finding.severity} />
                 <StatusBadge status={finding.status} />
 
-                <span className="truncate text-slate-600">
+                <span className="min-w-0 truncate text-slate-600" title={finding.recommendation || "—"}>
                   {finding.recommendation || "—"}
                 </span>
               </Link>
@@ -320,6 +322,10 @@ function sortFindings(findings: any[], sort: string) {
 
     if (sort === "severity") {
       return (severityRank[String(a.severity ?? "").toLowerCase()] ?? 99) - (severityRank[String(b.severity ?? "").toLowerCase()] ?? 99);
+    }
+
+    if (sort === "severity-desc") {
+      return (severityRank[String(b.severity ?? "").toLowerCase()] ?? 99) - (severityRank[String(a.severity ?? "").toLowerCase()] ?? 99);
     }
 
     if (sort === "status") {

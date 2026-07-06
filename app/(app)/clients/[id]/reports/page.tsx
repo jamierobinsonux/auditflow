@@ -40,7 +40,7 @@ export default async function ClientReportsPage({ params }: { params: Promise<{ 
       <ClientWorkspaceTabs clientId={client.id} active="reports" />
       {reports.length === 0 ? <div className="mt-8"><EmptyState icon={FileText} title="No reports yet" description="Reports exported from this client's projects will appear here." /></div> : (
         <Card className="mt-8 overflow-hidden">
-          <div className="grid grid-cols-[2fr_1.4fr_.8fr_1fr_auto] bg-slate-100 px-6 py-4 text-xs font-semibold uppercase tracking-wide text-slate-600"><span>Report</span><span>Project</span><span>Version</span><span>Generated</span><span>Actions</span></div>
+          <div className="grid grid-cols-[minmax(0,2fr)_minmax(0,1.35fr)_64px_112px_96px] items-center gap-6 bg-slate-100 px-6 py-4 text-xs font-semibold uppercase tracking-wide text-slate-600"><span className="min-w-0">Report</span><span className="min-w-0">Project</span><span>Version</span><span>Generated</span><span className="text-right">Actions</span></div>
           <div className="divide-y divide-slate-100">
             {reports.map((report) => {
               const projectName = report.project?.name || "Project";
@@ -49,12 +49,12 @@ export default async function ClientReportsPage({ params }: { params: Promise<{ 
               const previewUrl = `/api/projects/${report.project_id}/report?mode=preview&${query}`;
               const downloadUrl = `/api/projects/${report.project_id}/report?mode=download&${query}`;
               return (
-                <div key={report.id} className="grid grid-cols-[2fr_1.4fr_.8fr_1fr_auto] items-center px-6 py-5 text-sm">
-                  <div><p className="font-semibold text-slate-950">{title}</p><p className="mt-1 text-xs text-slate-500">{labelize(report.template || "professional")} template</p></div>
-                  <Link href={`/projects/${report.project_id}`} className="font-medium text-slate-700 hover:text-violet-700">{projectName}</Link>
+                <div key={report.id} className="grid grid-cols-[minmax(0,2fr)_minmax(0,1.35fr)_64px_112px_96px] items-center gap-6 px-6 py-5 text-sm">
+                  <div className="min-w-0"><p className="truncate font-semibold text-slate-950" title={title}>{title}</p><p className="mt-1 truncate text-xs text-slate-500">{labelize(report.template || "professional")} template</p></div>
+                  <Link href={`/projects/${report.project_id}`} className="min-w-0 truncate font-medium text-slate-700 hover:text-violet-700" title={projectName}>{projectName}</Link>
                   <span className="text-slate-600">v{report.version ?? 1}</span>
                   <span className="text-slate-500">{formatClientDate(report.created_at)}</span>
-                  <div className="flex justify-end gap-2"><Button asChild variant="outline" size="icon-sm"><a href={previewUrl} target="_blank" rel="noreferrer" aria-label="Preview report"><Eye className="size-4" /></a></Button><Button asChild variant="outline" size="icon-sm"><a href={downloadUrl} aria-label="Download report"><Download className="size-4" /></a></Button></div>
+                  <div className="flex min-w-0 justify-end gap-2"><Button asChild variant="outline" size="icon-sm"><a href={previewUrl} target="_blank" rel="noreferrer" aria-label="Preview report"><Eye className="size-4" /></a></Button><Button asChild variant="outline" size="icon-sm"><a href={downloadUrl} aria-label="Download report"><Download className="size-4" /></a></Button></div>
                 </div>
               );
             })}

@@ -182,9 +182,9 @@ export function RecommendationLibraryClient({
           </Card>
         ) : (
           <Card className="overflow-hidden">
-            <div className="grid grid-cols-[1.2fr_160px_120px_120px] bg-slate-100 p-4 text-xs font-semibold uppercase tracking-wide text-slate-600">
-              <span>Recommendation</span>
-              <span>Category</span>
+            <div className="hidden items-center gap-8 bg-slate-100 px-6 py-4 text-xs font-semibold uppercase tracking-wide text-slate-600 md:grid md:grid-cols-[minmax(320px,1.7fr)_minmax(150px,0.7fr)_minmax(110px,0.5fr)_150px]">
+              <span className="min-w-0">Recommendation</span>
+              <span className="min-w-0">Category</span>
               <span>Impact</span>
               <span className="text-right">Actions</span>
             </div>
@@ -192,19 +192,25 @@ export function RecommendationLibraryClient({
             {filteredRecommendations.map((item) => (
               <div
                 key={item.id}
-                className="grid grid-cols-[1.2fr_160px_120px_120px] items-start gap-4 border-t border-slate-100 p-4 text-sm"
+                className="block px-5 py-5 text-sm md:grid md:grid-cols-[minmax(320px,1.7fr)_minmax(150px,0.7fr)_minmax(110px,0.5fr)_150px] md:items-center md:gap-8 md:border-t md:border-slate-100 md:px-6"
               >
-                <div>
-                  <p className="font-semibold text-slate-950">{item.title}</p>
-                  <p className="mt-1 max-h-12 overflow-hidden text-sm leading-6 text-slate-500">
+                <div className="min-w-0">
+                  <p className="truncate font-semibold text-slate-950" title={item.title}>{item.title}</p>
+                  <p className="mt-1 truncate text-sm leading-6 text-slate-500" title={item.recommendation}>
                     {item.recommendation}
                   </p>
                 </div>
 
-                <span className="text-slate-600">{item.category || "—"}</span>
-                <span className="text-slate-600">{item.impact || "—"}</span>
+                <span className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4 text-slate-600 md:mt-0 md:block md:min-w-0 md:border-0 md:pt-0 md:truncate" title={item.category || "—"}>
+                  <span className="text-xs font-semibold uppercase tracking-wide text-slate-400 md:hidden">Category</span>
+                  <span>{item.category || "—"}</span>
+                </span>
+                <span className="mt-3 flex items-center justify-between text-slate-600 md:mt-0 md:block">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-slate-400 md:hidden">Impact</span>
+                  <span>{item.impact || "—"}</span>
+                </span>
 
-                <div className="flex justify-end gap-2">
+                <div className="mt-4 flex items-center justify-end gap-2 md:mt-0">
                   <Button type="button" variant="outline" size="sm" onClick={() => openEdit(item)}>
                     <Edit2 className="h-3.5 w-3.5" />
                     Edit
@@ -216,8 +222,9 @@ export function RecommendationLibraryClient({
                     destructive
                     onConfirm={() => handleDelete(item.id)}
                     trigger={
-                      <Button type="button" variant="ghost" size="sm" className="text-red-600 hover:bg-red-50 hover:text-red-700">
+                      <Button type="button" variant="outline" size="sm" className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700">
                         <Trash2 className="h-3.5 w-3.5" />
+                        Delete
                       </Button>
                     }
                   />

@@ -203,7 +203,7 @@ export default async function DashboardPage() {
             <SectionHeader title="Recent projects" />
 
             <Card className="mt-5 overflow-hidden">
-              <div className="grid grid-cols-[2fr_1.1fr_1fr_0.8fr_1fr] bg-slate-100 px-6 py-4 text-xs font-semibold uppercase tracking-wide text-slate-600">
+              <div className="grid grid-cols-[minmax(240px,1.5fr)_minmax(120px,0.8fr)_120px_100px_130px] items-center gap-8 bg-slate-100 px-6 py-4 text-xs font-semibold uppercase tracking-wide text-slate-600">
                 <span>Project</span>
                 <span>Type</span>
                 <span>Updated</span>
@@ -220,7 +220,7 @@ export default async function DashboardPage() {
                   <Link
                     key={project.id}
                     href={`/projects/${project.id}`}
-                    className="grid grid-cols-[2fr_1.1fr_1fr_0.8fr_1fr] items-center border-t border-slate-100 px-6 py-4 text-sm transition hover:bg-slate-50"
+                    className="grid grid-cols-[minmax(240px,1.5fr)_minmax(120px,0.8fr)_120px_100px_130px] items-center gap-8 border-t border-slate-100 px-6 py-4 text-sm transition hover:bg-slate-50"
                   >
                     <div className="min-w-0">
                       <p className="truncate font-semibold text-slate-950">

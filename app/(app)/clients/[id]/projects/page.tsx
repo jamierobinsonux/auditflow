@@ -86,7 +86,7 @@ export default async function ClientProjectsPage({
         </div>
       ) : (
         <Card className="mt-8 overflow-hidden">
-          <div className="grid grid-cols-[2fr_1fr_1fr_1fr] bg-slate-100 px-6 py-4 text-xs font-semibold uppercase tracking-wide text-slate-600">
+          <div className="grid grid-cols-[minmax(260px,1.6fr)_minmax(130px,0.8fr)_minmax(130px,0.8fr)_130px] items-center gap-8 bg-slate-100 px-6 py-4 text-xs font-semibold uppercase tracking-wide text-slate-600">
             <span>Project</span>
             <span>Type</span>
             <span>Status</span>
@@ -97,11 +97,11 @@ export default async function ClientProjectsPage({
               <Link
                 key={project.id}
                 href={`/projects/${project.id}`}
-                className="grid grid-cols-[2fr_1fr_1fr_1fr] items-center px-6 py-5 text-sm transition hover:bg-slate-50"
+                className="grid grid-cols-[minmax(260px,1.6fr)_minmax(130px,0.8fr)_minmax(130px,0.8fr)_130px] items-center gap-8 px-6 py-5 text-sm transition hover:bg-slate-50"
               >
-                <div>
-                  <p className="font-semibold text-slate-950">{project.name}</p>
-                  <p className="mt-1 text-xs text-slate-500">{project.website_url || "No website"}</p>
+                <div className="min-w-0">
+                  <p className="truncate font-semibold text-slate-950" title={project.name}>{project.name}</p>
+                  <p className="mt-1 truncate text-xs text-slate-500" title={project.website_url || "No website"}>{project.website_url || "No website"}</p>
                 </div>
                 <AuditTypeBadge type={project.audit_type} />
                 <StatusBadge status={project.status} />
