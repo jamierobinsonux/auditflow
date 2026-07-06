@@ -73,9 +73,11 @@ export default async function SettingsPage() {
             </p>
           </div>
 
-          <span className="rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700">
-            Pro
-          </span>
+          {!isProReportBranding && (
+            <span className="rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700">
+              Pro
+            </span>
+          )}
         </div>
 
         {isProReportBranding ? (

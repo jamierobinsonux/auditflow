@@ -55,7 +55,7 @@ export function EditEvidenceButton({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="text-sm font-medium text-slate-600 hover:text-slate-950"
+        className="inline-flex h-5 items-center text-sm font-medium leading-none text-slate-600 hover:text-slate-950"
       >
         Edit
       </button>

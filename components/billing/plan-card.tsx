@@ -16,7 +16,9 @@ type PlanCardProps = {
 
 export function PlanCard({ plan, currentPlan }: PlanCardProps) {
   const isCurrent = currentPlan === plan.id;
-  const showRecommended = Boolean(plan.recommended && currentPlan !== "Studio");
+  const showRecommended = Boolean(plan.recommended && currentPlan === "Free");
+  const isPaidPlan = currentPlan === "Pro" || currentPlan === "Studio";
+  const upgradeLabel = isPaidPlan && plan.id !== currentPlan ? `Switch to ${plan.name}` : undefined;
 
   const priceId =
     plan.id === "Pro"
@@ -64,6 +66,7 @@ export function PlanCard({ plan, currentPlan }: PlanCardProps) {
           plan={plan.id}
           priceId={priceId}
           disabled={isCurrent}
+          label={upgradeLabel}
         />
       )}
 

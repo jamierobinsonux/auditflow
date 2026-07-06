@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Archive, FolderOpen } from "lucide-react";
+import { Archive, ChevronDown, FolderOpen, Search } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { EmptyState } from "@/components/empty-state";
 import { PageShell } from "@/components/layout/page-shell";
@@ -14,9 +14,9 @@ import type { Project } from "@/types/project";
 export default async function ProjectsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ view?: string; clientId?: string }>;
+  searchParams: Promise<{ view?: string; clientId?: string; q?: string; status?: string }>;
 }) {
-  const { view, clientId } = await searchParams;
+  const { view, clientId, q = "", status = "all" } = await searchParams;
   const showArchived = view === "archived";
 
   const supabase = await createClient();
@@ -45,12 +45,29 @@ export default async function ProjectsPage({
       .order("name", { ascending: true }),
   ]);
 
-  const projects = (data ?? []) as Project[];
+  const allProjects = (data ?? []) as Project[];
+  const projects = allProjects.filter((project) => {
+    const matchesSearch = q.trim()
+      ? [project.name, project.client_name, project.website_url, project.audit_type, project.status]
+          .filter(Boolean)
+          .some((value) => String(value).toLowerCase().includes(q.trim().toLowerCase()))
+      : true;
+    const matchesStatus = status === "all" ? true : String(project.status || "").toLowerCase() === status;
+    return matchesSearch && matchesStatus;
+  });
   const clients = (clientsData ?? []) as Pick<Client, "id" | "name">[];
   const selectedClient = clients.find((client) => client.id === clientId);
   const clientNameById = new Map(clients.map((client) => [client.id, client.name]));
 
-  const baseHref = clientId ? `/projects?clientId=${clientId}` : "/projects";
+  const activeParams = new URLSearchParams();
+  if (clientId) activeParams.set("clientId", clientId);
+  if (q) activeParams.set("q", q);
+  if (status !== "all") activeParams.set("status", status);
+  const activeHref = activeParams.toString() ? `/projects?${activeParams.toString()}` : "/projects";
+  const archivedParams = new URLSearchParams(activeParams);
+  archivedParams.set("view", "archived");
+  const archivedHref = `/projects?${archivedParams.toString()}`;
+  const searchAction = "/projects";
 
   return (
     <PageShell>
@@ -70,15 +87,46 @@ export default async function ProjectsPage({
         }
       />
 
-      <div className="mt-8 flex flex-wrap items-center gap-2">
+      <form className="mt-8 flex flex-col gap-3 sm:flex-row" action={searchAction}>
+        {clientId && <input type="hidden" name="clientId" value={clientId} />}
+        {showArchived && <input type="hidden" name="view" value="archived" />}
+        <div className="relative flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+          <input
+            name="q"
+            defaultValue={q}
+            placeholder="Search projects..."
+            className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3 text-sm outline-none transition focus:border-violet-300 focus:ring-4 focus:ring-violet-100"
+          />
+        </div>
+
+        <div className="relative sm:w-56">
+          <select
+            name="status"
+            defaultValue={status}
+            className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-white py-2 pl-3 pr-14 text-sm text-slate-700 outline-none transition focus:border-violet-300 focus:ring-4 focus:ring-violet-100"
+          >
+            <option value="all">All Statuses</option>
+            <option value="draft">Draft</option>
+            <option value="in progress">In Progress</option>
+            <option value="completed">Completed</option>
+          </select>
+          <ChevronDown
+            aria-hidden="true"
+            className="pointer-events-none absolute right-5 top-1/2 size-4 -translate-y-1/2 text-slate-400"
+          />
+        </div>
+
+        <Button type="submit" variant="outline">Apply</Button>
+      </form>
+
+      <div className="mt-4 flex flex-wrap items-center gap-2">
         <Button asChild variant={!showArchived ? "default" : "outline"}>
-          <Link href={baseHref}>Active</Link>
+          <Link href={activeHref}>Active</Link>
         </Button>
 
         <Button asChild variant={showArchived ? "default" : "outline"}>
-          <Link href={clientId ? `/projects?clientId=${clientId}&view=archived` : "/projects?view=archived"}>
-            Archived
-          </Link>
+          <Link href={archivedHref}>Archived</Link>
         </Button>
 
         {selectedClient && (
@@ -92,7 +140,7 @@ export default async function ProjectsPage({
         <div className="mt-8">
           <EmptyState
             icon={showArchived ? Archive : FolderOpen}
-            title={showArchived ? "No archived projects" : "No active projects yet"}
+            title={q || status !== "all" ? "No projects match your filters" : showArchived ? "No archived projects" : "No active projects yet"}
             description={
               showArchived
                 ? "Archived projects will appear here when you want to hide completed work from your active dashboard."

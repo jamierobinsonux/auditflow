@@ -14,10 +14,10 @@ export default async function ClientPortalPage({
   searchParams,
 }: {
   params: Promise<{ token: string }>;
-  searchParams: Promise<{ priority?: string }>;
+  searchParams: Promise<{ priority?: string; projectId?: string }>;
 }) {
   const { token } = await params;
-  const { priority } = await searchParams;
+  const { priority, projectId } = await searchParams;
   const selectedPriority = normalizePriority(priority);
   const { data: client } = await supabaseAdmin
     .from("clients")
@@ -56,10 +56,12 @@ export default async function ClientPortalPage({
 
   const clientProjects = projects ?? [];
   const projectIds = new Set(clientProjects.map((project: any) => project.id));
+  const selectedProject = clientProjects.find((project: any) => project.id === projectId) ?? null;
+  const activeProjectIds = selectedProject ? new Set([selectedProject.id]) : projectIds;
   const clientReports = normalizeReports(reports ?? []).filter(
-    (report) => report.project?.client_id === client.id || projectIds.has(report.project_id)
+    (report) => (report.project?.client_id === client.id || projectIds.has(report.project_id)) && activeProjectIds.has(report.project_id)
   );
-  const clientFindings = (findings ?? []).filter((finding: any) => projectIds.has(finding.project_id));
+  const clientFindings = (findings ?? []).filter((finding: any) => activeProjectIds.has(finding.project_id));
   const filteredFindings = selectedPriority === "all"
     ? clientFindings
     : clientFindings.filter((finding: any) => finding.severity === selectedPriority);
@@ -98,23 +100,32 @@ export default async function ClientPortalPage({
 
         <section className="mt-8 grid gap-6 lg:grid-cols-[1.2fr_.8fr]">
           <Card className="p-6">
-            <SectionHeader title="Projects" description="Read-only overview of active UX audit work." />
+            <SectionHeader title="Projects" description="Click a project to view its reports and findings." />
             {clientProjects.length === 0 ? (
               <EmptyPortalState icon={FolderKanban} title="No projects shared yet" />
             ) : (
               <div className="mt-5 divide-y divide-slate-100">
-                {clientProjects.map((project: any) => (
-                  <div key={project.id} className="flex items-center justify-between gap-4 py-4">
-                    <div>
-                      <p className="font-semibold text-slate-950">{project.name}</p>
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        <AuditTypeBadge type={project.audit_type} />
-                        <StatusBadge status={project.status} />
+                {clientProjects.map((project: any) => {
+                  const isSelected = selectedProject?.id === project.id;
+                  return (
+                    <Link
+                      key={project.id}
+                      href={isSelected ? `/portal/${token}` : `/portal/${token}?projectId=${project.id}`}
+                      className={`flex items-center justify-between gap-4 rounded-2xl px-3 py-4 transition hover:bg-slate-50 ${
+                        isSelected ? "bg-violet-50 ring-1 ring-violet-100" : ""
+                      }`}
+                    >
+                      <div>
+                        <p className="font-semibold text-slate-950">{project.name}</p>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          <AuditTypeBadge type={project.audit_type} />
+                          <StatusBadge status={project.status} />
+                        </div>
                       </div>
-                    </div>
-                    <p className="text-xs text-slate-500">Updated {formatDate(project.updated_at || project.created_at)}</p>
-                  </div>
-                ))}
+                      <p className="text-xs text-slate-500">Updated {formatDate(project.updated_at || project.created_at)}</p>
+                    </Link>
+                  );
+                })}
               </div>
             )}
           </Card>
@@ -145,13 +156,20 @@ export default async function ClientPortalPage({
         </section>
 
         <Card className="mt-8 p-6">
-          <SectionHeader title="Findings and recommendations" description="A read-only summary of documented UX findings and recommended improvements." />
+          <SectionHeader
+            title={selectedProject ? `${selectedProject.name} findings` : "Findings and recommendations"}
+            description={selectedProject ? "A read-only summary for the selected project." : "A read-only summary of documented UX findings and recommended improvements."}
+            action={selectedProject ? <Button asChild variant="outline" size="sm"><Link href={`/portal/${token}`}>View all projects</Link></Button> : undefined}
+          />
 
           {clientFindings.length > 0 && (
             <div className="mt-5 flex flex-wrap gap-2">
               {["all", "P0", "P1", "P2", "P3"].map((item) => {
                 const active = selectedPriority === item;
-                const href = item === "all" ? `/portal/${token}` : `/portal/${token}?priority=${item}`;
+                const projectParam = selectedProject ? `projectId=${selectedProject.id}` : "";
+                const priorityParam = item === "all" ? "" : `priority=${item}`;
+                const query = [projectParam, priorityParam].filter(Boolean).join("&");
+                const href = query ? `/portal/${token}?${query}` : `/portal/${token}`;
 
                 return (
                   <Link

@@ -38,7 +38,7 @@ export function DeleteEvidenceButton({
       trigger={
         <button
           type="button"
-          className="text-sm font-medium text-red-600 hover:text-red-700"
+          className="inline-flex h-5 items-center text-sm font-medium leading-none text-red-600 hover:text-red-700"
         >
           Delete
         </button>

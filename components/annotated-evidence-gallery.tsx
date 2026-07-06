@@ -72,7 +72,7 @@ export function AnnotatedEvidenceGallery({
                 </div>
               </button>
 
-              <div className="flex items-center gap-3">
+              <div className="inline-flex items-center gap-4 leading-none">
                 <EditEvidenceButton
                   imageId={image.id}
                   evidenceName={image.evidence_name}

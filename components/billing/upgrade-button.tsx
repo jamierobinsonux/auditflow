@@ -7,10 +7,12 @@ export function UpgradeButton({
   plan,
   priceId,
   disabled,
+  label,
 }: {
   plan: string;
   priceId?: string;
   disabled?: boolean;
+  label?: string;
 }) {
   const [loading, setLoading] = useState(false);
 
@@ -55,7 +57,7 @@ export function UpgradeButton({
         ? "Current Plan"
         : loading
         ? "Redirecting..."
-        : `Upgrade to ${plan}`}
+        : label || `Upgrade to ${plan}`}
     </button>
   );
 }

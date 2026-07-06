@@ -61,6 +61,25 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Project name is required." }, { status: 400 });
   }
 
+  const { data: duplicateProject, error: duplicateProjectError } = await supabase
+    .from("projects")
+    .select("id")
+    .eq("user_id", user.id)
+    .ilike("name", name)
+    .limit(1)
+    .maybeSingle();
+
+  if (duplicateProjectError) {
+    return NextResponse.json({ error: duplicateProjectError.message }, { status: 500 });
+  }
+
+  if (duplicateProject) {
+    return NextResponse.json(
+      { error: `A project named "${name}" already exists.` },
+      { status: 409 }
+    );
+  }
+
   let clientName = body.clientName?.trim() || null;
   let websiteUrl = body.websiteUrl?.trim() || null;
   let frameworkId: string | null = null;

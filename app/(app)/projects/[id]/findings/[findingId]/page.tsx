@@ -13,6 +13,7 @@ import { Card } from "@/components/layout/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { SeverityBadge } from "@/components/ui/severity-badge";
+import { AuditorCommentForm } from "@/components/findings/auditor-comment-form";
 
 export default async function FindingViewPage({
   params,
@@ -150,35 +151,13 @@ export default async function FindingViewPage({
         <Card className="p-6">
           <SectionHeader
             title="Client comments"
-            description="Feedback clients have added from their portal."
+            description="Feedback clients have added from their portal. Replies you add here will appear in the client portal thread."
           />
 
-          {(comments ?? []).length === 0 ? (
-            <p className="mt-3 text-sm leading-6 text-slate-500">
-              No client comments have been added yet.
-            </p>
-          ) : (
-            <div className="mt-5 space-y-3">
-              {(comments ?? []).map((comment: any) => (
-                <div
-                  key={comment.id}
-                  className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="text-sm font-semibold text-slate-950">
-                      {comment.author_name || "Client"}
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      {formatDate(comment.created_at)}
-                    </p>
-                  </div>
-                  <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-600">
-                    {comment.body}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
+          <AuditorCommentForm
+            findingId={findingId}
+            initialComments={(comments ?? []) as any[]}
+          />
         </Card>
       </div>
     </PageShell>

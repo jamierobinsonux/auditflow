@@ -117,12 +117,41 @@ export default function EditProjectPage() {
       return;
     }
 
+    const trimmedName = name.trim();
+
+    if (!trimmedName) {
+      toast.error("Project name is required.");
+      setIsSaving(false);
+      return;
+    }
+
+    const { data: duplicateProject, error: duplicateProjectError } = await supabase
+      .from("projects")
+      .select("id")
+      .eq("user_id", user.id)
+      .ilike("name", trimmedName)
+      .neq("id", id)
+      .limit(1)
+      .maybeSingle();
+
+    if (duplicateProjectError) {
+      toast.error(duplicateProjectError.message);
+      setIsSaving(false);
+      return;
+    }
+
+    if (duplicateProject) {
+      toast.error(`A project named "${trimmedName}" already exists.`);
+      setIsSaving(false);
+      return;
+    }
+
     const clientSnapshotName = selectedClient?.name || clientName || null;
 
     const { error } = await supabase
       .from("projects")
       .update({
-        name,
+        name: trimmedName,
         client_id: clientId || null,
         client_name: clientSnapshotName,
         website_url: websiteUrl || null,

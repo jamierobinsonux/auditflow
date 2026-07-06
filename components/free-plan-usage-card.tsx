@@ -17,8 +17,9 @@ export function FreePlanUsageCard({
   const projectPercent = Math.min((projectsUsed / projectLimit) * 100, 100);
   const findingPercent = Math.min((findingsUsed / findingLimit) * 100, 100);
 
+  const hasHitLimit = projectsUsed >= projectLimit && findingsUsed >= findingLimit;
   const isNearLimit =
-    projectsUsed >= projectLimit || findingsUsed >= findingLimit - 1;
+    hasHitLimit || projectsUsed >= projectLimit || findingsUsed >= findingLimit - 1;
 
   return (
     <section
@@ -32,14 +33,16 @@ export function FreePlanUsageCard({
         <div>
           <p className="text-sm font-semibold text-violet-700">Free plan usage</p>
           <h2 className="mt-2 text-[18px] font-semibold text-slate-950">
-            {isNearLimit
+            {hasHitLimit
+              ? "You’ve hit your Free plan limit"
+              : isNearLimit
               ? "You’re getting close to your Free plan limit"
               : "Track your Free plan usage"}
           </h2>
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            Free includes 1 project and 5 findings. Upgrade to Pro for
-            unlimited projects, unlimited findings, public report links, and
-            professional exports.
+            {hasHitLimit
+              ? "You’ve used your 1 project and 5 findings. Upgrade to Pro to keep creating audits, findings, public report links, and professional exports."
+              : "Free includes 1 project and 5 findings. Upgrade to Pro for unlimited projects, unlimited findings, public report links, and professional exports."}
           </p>
         </div>
 

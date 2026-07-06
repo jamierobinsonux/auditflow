@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Building2, ChevronDown, MoreVertical, Search } from "lucide-react";
+import { Building2, ChevronDown, Info, Search } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getUserSubscription } from "@/lib/subscription";
 import { getClientHealth, getClientHealthClasses, getClientInitials } from "@/lib/studio";
@@ -178,21 +178,28 @@ export default async function ClientsPage({
         </div>
       ) : (
         <Card className="mt-8 overflow-hidden">
-          <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_auto] bg-slate-100 px-6 py-4 text-xs font-semibold uppercase tracking-wide text-slate-600">
+          <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr] bg-slate-100 px-6 py-4 text-xs font-semibold uppercase tracking-wide text-slate-600">
             <span>Client</span>
             <span>Projects</span>
             <span>Draft Reports</span>
             <span>Open Findings</span>
             <span>Last Activity</span>
-            <span>Status</span>
-            <span />
+            <span className="inline-flex items-center gap-1">
+              Status
+              <span
+                title="Client health is based on active projects and open findings. Healthy means no open findings, On Track means work is active, At Risk means there are many open findings, and Not Started means no projects yet."
+                className="inline-flex h-4 w-4 items-center justify-center rounded-full text-slate-400"
+              >
+                <Info className="h-3.5 w-3.5" />
+              </span>
+            </span>
           </div>
 
           {clientsWithStats.map((client, index) => (
             <Link
               key={client.id}
               href={`/clients/${client.id}`}
-              className={`grid grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_auto] items-center px-6 py-4 text-sm transition hover:bg-slate-50 ${
+              className={`grid grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr] items-center px-6 py-4 text-sm transition hover:bg-slate-50 ${
                 index !== 0 ? "border-t border-slate-100" : ""
               }`}
             >
@@ -231,7 +238,6 @@ export default async function ClientsPage({
                   {client.health}
                 </span>
               </span>
-              <MoreVertical className="size-4 text-slate-400" />
             </Link>
           ))}
         </Card>

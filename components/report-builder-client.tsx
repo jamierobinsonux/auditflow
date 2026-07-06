@@ -22,9 +22,7 @@ type ReportTemplateId =
   | "professional"
   | "executive"
   | "minimal"
-  | "findings"
-  | "evidence"
-  | "accessibility";
+  | "findings";
 
 type ProjectSummary = {
   id: string;
@@ -85,18 +83,6 @@ const templates: {
     name: "Findings Only",
     description: "Detailed findings, prioritization, and recommendations without broader report narrative.",
     sections: ["cover", "contents", "findings", "prioritization", "recommendations"],
-  },
-  {
-    id: "evidence",
-    name: "Evidence Appendix",
-    description: "Finding evidence and appendix-focused export for documentation review.",
-    sections: ["cover", "contents", "findings", "appendix"],
-  },
-  {
-    id: "accessibility",
-    name: "Accessibility",
-    description: "Structured version for accessibility and heuristic review documentation.",
-    sections: ["cover", "contents", "executive", "scope", "findings", "prioritization", "recommendations", "appendix", "conclusion"],
   },
 ];
 

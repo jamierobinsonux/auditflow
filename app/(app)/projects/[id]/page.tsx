@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ClipboardList } from "lucide-react";
+import { ChevronDown, ClipboardList, Search } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { ProjectTabs } from "@/components/project-tabs";
 import { DeleteProjectButton } from "@/components/delete-project-button";
@@ -21,10 +21,13 @@ import { hydrateFindingRecommendation, uniqueRecommendationIds, type LinkedRecom
 
 export default async function ProjectDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ findingQ?: string; sort?: string }>;
 }) {
   const { id } = await params;
+  const { findingQ = "", sort = "newest" } = await searchParams;
   const supabase = await createClient();
 
   const {
@@ -88,13 +91,24 @@ const frameworkRecommendationById = new Map<string, LinkedRecommendation>(
     item,
   ])
 );
-  const findings = rawFindings.map((finding: any) =>
-  hydrateFindingRecommendation({
-    finding,
-    savedRecommendations: savedRecommendationById,
-    frameworkRecommendations: frameworkRecommendationById,
-  })
-);
+  const findings = sortFindings(
+    rawFindings
+      .map((finding: any) =>
+        hydrateFindingRecommendation({
+          finding,
+          savedRecommendations: savedRecommendationById,
+          frameworkRecommendations: frameworkRecommendationById,
+        })
+      )
+      .filter((finding: any) => {
+        const query = findingQ.trim().toLowerCase();
+        if (!query) return true;
+        return [finding.title, finding.description, finding.category, finding.recommendation, finding.status, finding.severity]
+          .filter(Boolean)
+          .some((value) => String(value).toLowerCase().includes(query));
+      }),
+    sort
+  );
 
   if (!project) return <PageShell>Project not found.</PageShell>;
 
@@ -217,6 +231,38 @@ const frameworkRecommendationById = new Map<string, LinkedRecommendation>(
           }
         />
 
+        {rawFindings.length > 0 && (
+          <form className="mb-4 grid gap-3 md:grid-cols-[1fr_220px]" action={`/projects/${id}`}>
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+              <input
+                name="findingQ"
+                defaultValue={findingQ}
+                placeholder="Search findings..."
+                className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3 text-sm outline-none transition focus:border-violet-300 focus:ring-4 focus:ring-violet-100"
+              />
+            </div>
+            <div className="relative min-w-[180px]">
+              <select
+                name="sort"
+                defaultValue={sort}
+                className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-white py-2 pl-3 pr-14 text-sm text-slate-700 outline-none transition focus:border-violet-300 focus:ring-4 focus:ring-violet-100"
+              >
+                <option value="newest">Newest first</option>
+                <option value="oldest">Oldest first</option>
+                <option value="severity">Severity: P0 to P3</option>
+                <option value="status">Status</option>
+                <option value="journey">Journey</option>
+                <option value="title">Title A-Z</option>
+              </select>
+              <ChevronDown
+                aria-hidden="true"
+                className="pointer-events-none absolute right-5 top-1/2 size-4 -translate-y-1/2 text-slate-400"
+              />
+            </div>
+          </form>
+        )}
+
         {findings.length === 0 ? (
           <EmptyState
             icon={ClipboardList}
@@ -261,4 +307,33 @@ const frameworkRecommendationById = new Map<string, LinkedRecommendation>(
       </section>
     </PageShell>
   );
+}
+
+function sortFindings(findings: any[], sort: string) {
+  const severityRank: Record<string, number> = { p0: 0, p1: 1, p2: 2, p3: 3 };
+  const statusRank: Record<string, number> = { open: 0, "in progress": 1, "in review": 2, resolved: 3 };
+
+  return [...findings].sort((a, b) => {
+    if (sort === "oldest") {
+      return new Date(a.created_at ?? 0).getTime() - new Date(b.created_at ?? 0).getTime();
+    }
+
+    if (sort === "severity") {
+      return (severityRank[String(a.severity ?? "").toLowerCase()] ?? 99) - (severityRank[String(b.severity ?? "").toLowerCase()] ?? 99);
+    }
+
+    if (sort === "status") {
+      return (statusRank[String(a.status ?? "").toLowerCase()] ?? 99) - (statusRank[String(b.status ?? "").toLowerCase()] ?? 99);
+    }
+
+    if (sort === "journey") {
+      return String(a.journey_id ?? "").localeCompare(String(b.journey_id ?? ""));
+    }
+
+    if (sort === "title") {
+      return String(a.title ?? "").localeCompare(String(b.title ?? ""));
+    }
+
+    return new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime();
+  });
 }

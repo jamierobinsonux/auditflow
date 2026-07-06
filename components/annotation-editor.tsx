@@ -313,14 +313,14 @@ export function AnnotationEditor({
                             {annotation.note || "No note added."}
                           </p>
 
-                          <div className="mt-2 flex gap-3">
+                          <div className="mt-2 inline-flex items-center gap-4 leading-none">
                             <button
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 startEditing(annotation);
                               }}
-                              className="text-xs font-medium text-violet-600"
+                              className="inline-flex h-5 items-center text-xs font-medium leading-none text-violet-600 hover:text-violet-700"
                             >
                               Edit
                             </button>
@@ -335,7 +335,7 @@ export function AnnotationEditor({
                                 <button
                                   type="button"
                                   onClick={(e) => e.stopPropagation()}
-                                  className="text-xs font-medium text-red-600"
+                                  className="inline-flex h-5 items-center text-xs font-medium leading-none text-red-600 hover:text-red-700"
                                 >
                                   Delete
                                 </button>

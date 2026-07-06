@@ -225,6 +225,36 @@ export default function EditFindingPage() {
       return;
     }
 
+    const trimmedTitle = title.trim();
+
+    if (!trimmedTitle) {
+      toast.error("Finding title is required.");
+      setIsSaving(false);
+      return;
+    }
+
+    const { data: duplicateFinding, error: duplicateFindingError } = await supabase
+      .from("findings")
+      .select("id")
+      .eq("project_id", projectId)
+      .eq("user_id", user.id)
+      .ilike("title", trimmedTitle)
+      .neq("id", findingId)
+      .limit(1)
+      .maybeSingle();
+
+    if (duplicateFindingError) {
+      toast.error(duplicateFindingError.message);
+      setIsSaving(false);
+      return;
+    }
+
+    if (duplicateFinding) {
+      toast.error(`A finding named "${trimmedTitle}" already exists in this project.`);
+      setIsSaving(false);
+      return;
+    }
+
     const recommendationSource = selectedRecommendation?.source ?? currentRecommendationSource;
     const savedRecommendationId = selectedRecommendation
       ? selectedRecommendation.source === "library"
@@ -240,7 +270,7 @@ export default function EditFindingPage() {
     const { error } = await supabase
       .from("findings")
       .update({
-        title,
+        title: trimmedTitle,
         description,
         severity,
         status,

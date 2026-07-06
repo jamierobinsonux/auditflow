@@ -66,7 +66,7 @@ export default function SignupPage() {
       return;
     }
 
-    router.push("/login?message=check-email");
+    router.push(`/check-email?email=${encodeURIComponent(email.trim())}`);
   }
 
   async function handleGoogleSignup() {

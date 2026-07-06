@@ -68,6 +68,26 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Finding title is required." }, { status: 400 });
   }
 
+  const { data: duplicateFinding, error: duplicateFindingError } = await supabase
+    .from("findings")
+    .select("id")
+    .eq("project_id", projectId)
+    .eq("user_id", user.id)
+    .ilike("title", title)
+    .limit(1)
+    .maybeSingle();
+
+  if (duplicateFindingError) {
+    return NextResponse.json({ error: duplicateFindingError.message }, { status: 500 });
+  }
+
+  if (duplicateFinding) {
+    return NextResponse.json(
+      { error: `A finding named "${title}" already exists in this project.` },
+      { status: 409 }
+    );
+  }
+
   const { data: finding, error } = await supabase
     .from("findings")
     .insert({
