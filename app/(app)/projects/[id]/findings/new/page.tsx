@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { EvidenceUploader, type EvidenceUpload } from "@/components/evidence-uploader";
@@ -44,6 +44,7 @@ function isDemoProject(project: ProjectContext | null) {
 export default function NewFindingPage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const supabase = createClient();
   const projectId = params.id as string;
 
@@ -144,10 +145,34 @@ export default function NewFindingPage() {
         return;
       }
 
+      const loadedJourneys = (journeyData ?? []) as Journey[];
+      const loadedSteps = (stepData ?? []) as JourneyStep[];
+
+      const requestedJourneyId = searchParams.get("journeyId") || "";
+      const requestedStepId =
+        searchParams.get("stepId") || searchParams.get("journeyStepId") || "";
+
+      const matchingStep = requestedStepId
+        ? loadedSteps.find((step) => step.id === requestedStepId)
+        : null;
+
+      const validJourneyId = loadedJourneys.some(
+        (journey) => journey.id === requestedJourneyId
+      )
+        ? requestedJourneyId
+        : matchingStep?.journey_id ?? "";
+
+      const validStepId =
+        matchingStep && (!validJourneyId || matchingStep.journey_id === validJourneyId)
+          ? matchingStep.id
+          : "";
+
       setIsCheckingAccess(false);
       setProject(projectData as ProjectContext);
-      setJourneys((journeyData ?? []) as Journey[]);
-      setSteps((stepData ?? []) as JourneyStep[]);
+      setJourneys(loadedJourneys);
+      setSteps(loadedSteps);
+      setJourneyId(validJourneyId);
+      setJourneyStepId(validStepId);
 
       const libraryQuery = supabase
         .from("studio_recommendations")
@@ -186,7 +211,7 @@ export default function NewFindingPage() {
     }
 
     loadData();
-  }, [projectId, router, supabase]);
+  }, [projectId, router, searchParams, supabase]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
