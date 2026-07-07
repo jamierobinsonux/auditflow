@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 
 const MAX_COMMENT_LENGTH = 2000;
 
@@ -47,7 +48,11 @@ export async function POST(
     ? (finding as any).projects[0]
     : (finding as any).projects;
 
-  const { data: comment, error } = await supabase
+  // Use the service-role client for the insert after verifying above that
+  // the signed-in auditor owns this finding. The finding_comments table is
+  // also written by the public client portal, so its RLS policies do not
+  // currently include an authenticated INSERT policy for auditor replies.
+  const { data: comment, error } = await supabaseAdmin
     .from("finding_comments")
     .insert({
       user_id: user.id,
