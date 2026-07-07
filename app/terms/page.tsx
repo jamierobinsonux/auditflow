@@ -58,7 +58,7 @@ const sections = [
   {
     title: "8. Third-party services",
     body: [
-      "AuditFlow uses service providers to operate the product, including Supabase for authentication, database, and storage; Vercel for hosting and deployment; and Stripe for payments and billing. Your use of AuditFlow may also be subject to those providers policies where applicable.",
+      "AuditFlow uses service providers to operate the product, including Supabase for authentication, database, and storage; Vercel for hosting and deployment; Stripe for payments and billing; and Postmark for transactional email delivery. Your use of AuditFlow may also be subject to those providers policies where applicable.",
     ],
   },
   {

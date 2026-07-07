@@ -30,8 +30,8 @@ const sections = [
   {
     title: "4. Service providers",
     body: [
-      "AuditFlow relies on third-party service providers to operate the product. Supabase provides authentication, database services, and file storage. Vercel provides hosting and deployment infrastructure. Stripe provides payment processing, subscriptions, invoices, and billing-related services.",
-      "These providers may process information only as needed to provide their services to AuditFlow and are subject to their own security, privacy, and compliance practices.",
+      "AuditFlow relies on third-party service providers to operate the product. Supabase provides authentication, database services, and file storage. Vercel provides hosting and deployment infrastructure. Stripe provides payment processing, subscriptions, invoices, and billing-related services. Postmark provides transactional email delivery for account emails, password resets, billing-related messages, and client portal notifications.",
+      "These providers may process information only as needed to provide their services to AuditFlow and are subject to their own security, privacy, and compliance practices. Postmark may process email addresses, message content, delivery status, and limited email metadata so that AuditFlow can send transactional and notification emails.",
     ],
   },
   {
