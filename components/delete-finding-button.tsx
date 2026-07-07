@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { ConfirmDialog } from "@/components/confirm-dialog";
-import { Button } from "@/components/ui/button";
 
 export function DeleteFindingButton({
   projectId,
@@ -40,9 +39,9 @@ export function DeleteFindingButton({
       destructive
       onConfirm={deleteFinding}
       trigger={
-        <Button type="button" variant="destructive">
+        <button className="rounded-xl bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">
           Delete Finding
-        </Button>
+        </button>
       }
     />
   );

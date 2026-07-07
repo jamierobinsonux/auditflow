@@ -62,7 +62,7 @@ export function DeleteClientButton({ clientId }: { clientId: string }) {
       destructive
       onConfirm={handleDelete}
       trigger={
-        <Button type="button" variant="destructive">
+        <Button type="button" variant="outline" className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700">
           Delete Client
         </Button>
       }

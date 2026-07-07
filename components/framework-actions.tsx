@@ -158,7 +158,7 @@ export function FrameworkActions({
   return (
     <div className="flex flex-wrap items-center gap-2">
       {editHref ? (
-        <Button asChild size="sm" variant="outline">
+        <Button asChild type="button" size="sm" variant="outline">
           <Link href={editHref}>Edit</Link>
         </Button>
       ) : null}
