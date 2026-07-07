@@ -114,7 +114,7 @@ export default async function ClientDetailPage({
         title={client.name}
         description={client.website_url || client.industry || "Client workspace"}
         action={
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
             <Button asChild variant="outline">
               <Link href={`/clients/${client.id}/edit`}>Edit Client</Link>
             </Button>

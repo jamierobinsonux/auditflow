@@ -35,7 +35,7 @@ export function ArchiveProjectButton({
   }
 
   return (
-    <Button variant="outline" onClick={handleClick}>
+    <Button variant="outline" onClick={handleClick} className="w-full sm:w-auto">
       {archived ? (
         <>
           <RotateCcw className="h-4 w-4" />

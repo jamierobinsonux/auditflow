@@ -83,7 +83,7 @@ export default async function FindingViewPage({
         title={finding.title}
         description="Review finding details, recommendations, and annotated evidence."
         action={
-          <div className="flex gap-3">
+          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
             <Button asChild variant="outline">
               <Link href={`/projects/${id}/findings/${findingId}/edit`}>
                 Edit Finding

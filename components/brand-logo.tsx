@@ -8,7 +8,7 @@ export function BrandLogo({
   showText?: boolean;
 }) {
   return (
-    <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+    <div className="flex items-center gap-3">
       <Image
         src="/AFLogo.png"
         alt="AuditFlow logo"
@@ -20,10 +20,10 @@ export function BrandLogo({
 
       {showText && (
         <div>
-          <p className="text-base font-semibold tracking-tight text-slate-950 sm:text-lg">
+          <p className="text-lg font-semibold tracking-tight text-slate-950">
             AuditFlow
           </p>
-          <p className="mt-0.5 text-[10px] uppercase tracking-[0.11em] text-slate-400 sm:text-[11px] sm:tracking-[0.14em]">
+          <p className="mt-0.5 text-[11px] uppercase tracking-[0.14em] text-slate-400">
             UX Audit Platform
           </p>
         </div>

@@ -9,7 +9,7 @@ export default function ProjectDetailLoading() {
           <Skeleton className="mt-3 h-5 w-96" />
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
           <Skeleton className="h-10 w-28" />
           <Skeleton className="h-10 w-32" />
         </div>

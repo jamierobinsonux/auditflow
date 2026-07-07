@@ -13,7 +13,7 @@ export default function FindingDetailLoading() {
           </div>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
           <Skeleton className="h-10 w-28" />
           <Skeleton className="h-10 w-32" />
         </div>

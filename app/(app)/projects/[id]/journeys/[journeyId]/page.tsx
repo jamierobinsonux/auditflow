@@ -54,7 +54,7 @@ export default async function JourneyDetailPage({
 
   return (
     <main className="p-10">
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-[24px] font-semibold text-slate-950">
             {journey.name}
@@ -65,7 +65,7 @@ export default async function JourneyDetailPage({
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
           <EditJourneyButton
             journeyId={journeyId}
             projectId={id}
@@ -76,7 +76,7 @@ export default async function JourneyDetailPage({
 
           <Link
             href={`/projects/${id}/findings/new?journeyId=${journeyId}`}
-            className="inline-flex h-10 items-center rounded-xl bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-700"
+            className="inline-flex h-10 w-full items-center justify-center rounded-xl bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-700 sm:w-auto"
           >
             + Add Finding
           </Link>

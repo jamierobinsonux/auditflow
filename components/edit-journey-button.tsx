@@ -61,7 +61,7 @@ export function EditJourneyButton({
 
   return (
     <>
-      <Button type="button" variant="outline" onClick={() => setIsOpen(true)}>
+      <Button type="button" variant="outline" onClick={() => setIsOpen(true)} className="w-full sm:w-auto">
         Edit Journey
       </Button>
 
