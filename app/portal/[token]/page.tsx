@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Download, Eye, FileText, FolderKanban } from "lucide-react";
+import { Bell, Download, Eye, FileText, FolderKanban } from "lucide-react";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { Card } from "@/components/layout/card";
 import { SectionHeader } from "@/components/layout/section-header";
@@ -28,7 +28,13 @@ export default async function ClientPortalPage({
 
   if (!client) notFound();
 
-  const [{ data: branding }, { data: projects }, { data: reports }, { data: findings }] = await Promise.all([
+  const [
+    { data: branding },
+    { data: projects },
+    { data: reports },
+    { data: findings },
+    { data: auditorComments },
+  ] = await Promise.all([
     supabaseAdmin
       .from("client_branding")
       .select("company_name,logo_url,primary_color,secondary_color,footer_text")
@@ -52,6 +58,14 @@ export default async function ClientPortalPage({
       .select("id,project_id,title,severity,status,category,recommendation,impact,created_at")
       .eq("user_id", client.user_id)
       .order("created_at", { ascending: false }),
+    supabaseAdmin
+      .from("finding_comments")
+      .select("id,finding_id,project_id,author_name,body,created_at,author_type")
+      .eq("user_id", client.user_id)
+      .eq("client_id", client.id)
+      .eq("author_type", "auditor")
+      .order("created_at", { ascending: false })
+      .limit(8),
   ]);
 
   const clientProjects = projects ?? [];
@@ -61,7 +75,17 @@ export default async function ClientPortalPage({
   const clientReports = normalizeReports(reports ?? []).filter(
     (report) => (report.project?.client_id === client.id || projectIds.has(report.project_id)) && activeProjectIds.has(report.project_id)
   );
-  const clientFindings = (findings ?? []).filter((finding: any) => activeProjectIds.has(finding.project_id));
+  const allClientFindings = (findings ?? []).filter((finding: any) => projectIds.has(finding.project_id));
+  const clientFindings = allClientFindings.filter((finding: any) => activeProjectIds.has(finding.project_id));
+  const findingById = new Map(allClientFindings.map((finding: any) => [finding.id, finding]));
+  const auditorNotifications = (auditorComments ?? [])
+    .filter((comment: any) => projectIds.has(comment.project_id))
+    .filter((comment: any) => activeProjectIds.has(comment.project_id))
+    .map((comment: any) => ({
+      ...comment,
+      finding: findingById.get(comment.finding_id),
+      project: clientProjects.find((project: any) => project.id === comment.project_id),
+    }));
   const filteredFindings = selectedPriority === "all"
     ? clientFindings
     : clientFindings.filter((finding: any) => finding.severity === selectedPriority);
@@ -98,7 +122,7 @@ export default async function ClientPortalPage({
           </div>
         </header>
 
-        <section className="mt-8 grid gap-6 lg:grid-cols-[1.2fr_.8fr]">
+        <section className="mt-8 space-y-6">
           <Card className="p-6">
             <SectionHeader title="Projects" description="Click a project to view its reports and findings." />
             {clientProjects.length === 0 ? (
@@ -111,18 +135,18 @@ export default async function ClientPortalPage({
                     <Link
                       key={project.id}
                       href={isSelected ? `/portal/${token}` : `/portal/${token}?projectId=${project.id}`}
-                      className={`flex items-center justify-between gap-4 rounded-2xl px-3 py-4 transition hover:bg-slate-50 ${
+                      className={`flex flex-col gap-3 rounded-2xl px-3 py-4 transition hover:bg-slate-50 sm:flex-row sm:items-center sm:justify-between ${
                         isSelected ? "bg-violet-50 ring-1 ring-violet-100" : ""
                       }`}
                     >
-                      <div>
-                        <p className="font-semibold text-slate-950">{project.name}</p>
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold text-slate-950">{project.name}</p>
                         <div className="mt-2 flex flex-wrap gap-2">
                           <AuditTypeBadge type={project.audit_type} />
                           <StatusBadge status={project.status} />
                         </div>
                       </div>
-                      <p className="text-xs text-slate-500">Updated {formatDate(project.updated_at || project.created_at)}</p>
+                      <p className="shrink-0 text-xs text-slate-500">Updated {formatDate(project.updated_at || project.created_at)}</p>
                     </Link>
                   );
                 })}
@@ -130,29 +154,66 @@ export default async function ClientPortalPage({
             )}
           </Card>
 
-          <Card className="p-6">
-            <SectionHeader title="Reports" description="Download exported reports anytime." />
-            {clientReports.length === 0 ? (
-              <EmptyPortalState icon={FileText} title="No reports shared yet" />
-            ) : (
-              <div className="mt-5 space-y-3">
-                {clientReports.slice(0, 8).map((report: any) => {
-                  const title = report.title || `${report.project?.name || "Audit"} Report`;
-                  const query = buildReportQuery(report, title);
-                  return (
-                    <div key={report.id} className="rounded-2xl border border-slate-200 p-4">
-                      <p className="font-semibold text-slate-950">{title}</p>
-                      <p className="mt-1 text-xs text-slate-500">{labelize(report.template || "professional")} · {formatDate(report.created_at)}</p>
-                      <div className="mt-3 flex gap-2">
-                        <Button asChild variant="outline" size="sm"><a href={`/api/portal/${token}/projects/${report.project_id}/report?mode=preview&${query}`} target="_blank" rel="noreferrer"><Eye className="h-4 w-4" />Preview</a></Button>
-                        <Button asChild variant="outline" size="sm"><a href={`/api/portal/${token}/projects/${report.project_id}/report?mode=download&${query}`}><Download className="h-4 w-4" />Download</a></Button>
+          <div className="grid gap-6 lg:grid-cols-2">
+            <Card className="p-6">
+              <SectionHeader title="Notifications" description="Recent replies from your consultant." />
+              {auditorNotifications.length === 0 ? (
+                <EmptyPortalState icon={Bell} title="No consultant replies yet" />
+              ) : (
+                <div className="mt-5 space-y-3">
+                  {auditorNotifications.map((notification: any) => {
+                    const findingTitle = notification.finding?.title || "A finding";
+                    const projectName = notification.project?.name || "Client project";
+
+                    return (
+                      <Link
+                        key={notification.id}
+                        href={`/portal/${token}/projects/${notification.project_id}/findings/${notification.finding_id}`}
+                        className="block rounded-2xl border border-violet-100 bg-violet-50/60 p-4 transition hover:border-violet-200 hover:bg-violet-50"
+                      >
+                        <p className="text-xs font-semibold uppercase tracking-wide text-violet-700">
+                          Consultant reply
+                        </p>
+                        <p className="mt-2 line-clamp-1 text-sm font-semibold text-slate-950">
+                          {notification.author_name || "Your consultant"} replied on {findingTitle}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          {projectName} · {formatDate(notification.created_at)}
+                        </p>
+                        <p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-600">
+                          {notification.body}
+                        </p>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </Card>
+
+            <Card className="p-6">
+              <SectionHeader title="Reports" description="Download exported reports anytime." />
+              {clientReports.length === 0 ? (
+                <EmptyPortalState icon={FileText} title="No reports shared yet" />
+              ) : (
+                <div className="mt-5 space-y-3">
+                  {clientReports.slice(0, 8).map((report: any) => {
+                    const title = report.title || `${report.project?.name || "Audit"} Report`;
+                    const query = buildReportQuery(report, title);
+                    return (
+                      <div key={report.id} className="rounded-2xl border border-slate-200 p-4">
+                        <p className="line-clamp-2 font-semibold text-slate-950">{title}</p>
+                        <p className="mt-1 text-xs text-slate-500">{labelize(report.template || "professional")} · {formatDate(report.created_at)}</p>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <Button asChild variant="outline" size="sm"><a href={`/api/portal/${token}/projects/${report.project_id}/report?mode=preview&${query}`} target="_blank" rel="noreferrer"><Eye className="h-4 w-4" />Preview</a></Button>
+                          <Button asChild variant="outline" size="sm"><a href={`/api/portal/${token}/projects/${report.project_id}/report?mode=download&${query}`}><Download className="h-4 w-4" />Download</a></Button>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </Card>
+                    );
+                  })}
+                </div>
+              )}
+            </Card>
+          </div>
         </section>
 
         <Card className="mt-8 p-6">

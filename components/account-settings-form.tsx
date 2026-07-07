@@ -13,8 +13,7 @@ export function AccountSettingsForm({
   initialWorkspaceName,
   initialTimezone,
   initialDateFormat,
-  initialClientCommentEmails,
-  initialClientReplyEmails,
+  initialClientActivityEmails,
   email,
   canUseClientNotifications,
 }: {
@@ -22,8 +21,7 @@ export function AccountSettingsForm({
   initialWorkspaceName: string;
   initialTimezone: string;
   initialDateFormat: string;
-  initialClientCommentEmails: boolean;
-  initialClientReplyEmails: boolean;
+  initialClientActivityEmails: boolean;
   email: string;
   canUseClientNotifications: boolean;
 }) {
@@ -33,8 +31,7 @@ export function AccountSettingsForm({
   const [workspaceName, setWorkspaceName] = useState(initialWorkspaceName);
   const [timezone, setTimezone] = useState(initialTimezone);
   const [dateFormat, setDateFormat] = useState(initialDateFormat);
-  const [clientCommentEmails, setClientCommentEmails] = useState(initialClientCommentEmails);
-  const [clientReplyEmails, setClientReplyEmails] = useState(initialClientReplyEmails);
+  const [clientActivityEmails, setClientActivityEmails] = useState(initialClientActivityEmails);
   const [isSaving, setIsSaving] = useState(false);
   const [isSendingReset, setIsSendingReset] = useState(false);
 
@@ -48,8 +45,10 @@ export function AccountSettingsForm({
         workspace_name: workspaceName.trim() || "AuditFlow Workspace",
         timezone,
         date_format: dateFormat,
-        email_client_comments: canUseClientNotifications ? clientCommentEmails : false,
-        email_client_replies: canUseClientNotifications ? clientReplyEmails : false,
+        email_client_comments: canUseClientNotifications ? clientActivityEmails : false,
+        // Keep the legacy replies metadata in sync so older notification checks
+        // continue to behave consistently.
+        email_client_replies: canUseClientNotifications ? clientActivityEmails : false,
       },
     });
 
@@ -128,9 +127,9 @@ export function AccountSettingsForm({
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="text-[18px] font-semibold text-slate-950">Notifications</h2>
+            <h2 className="text-[18px] font-semibold text-slate-950">Email notifications</h2>
             <p className="mt-1 text-sm text-slate-500">
-              Choose which client portal updates should send email notifications.
+              Choose which client portal activity should send you email notifications.
             </p>
           </div>
           {!canUseClientNotifications && (
@@ -143,17 +142,15 @@ export function AccountSettingsForm({
         {canUseClientNotifications ? (
           <div className="mt-6 space-y-4">
             <label className="flex items-start gap-3 rounded-xl border border-slate-200 p-4">
-              <input type="checkbox" className="mt-1 h-4 w-4 rounded border-slate-300 text-violet-600" checked={clientCommentEmails} onChange={(event) => setClientCommentEmails(event.target.checked)} />
+              <input
+                type="checkbox"
+                className="mt-1 h-4 w-4 rounded border-slate-300 text-violet-600"
+                checked={clientActivityEmails}
+                onChange={(event) => setClientActivityEmails(event.target.checked)}
+              />
               <span>
-                <span className="block text-sm font-semibold text-slate-950">Client comments</span>
-                <span className="block text-sm text-slate-500">Email me when a client leaves a new comment in the portal.</span>
-              </span>
-            </label>
-            <label className="flex items-start gap-3 rounded-xl border border-slate-200 p-4">
-              <input type="checkbox" className="mt-1 h-4 w-4 rounded border-slate-300 text-violet-600" checked={clientReplyEmails} onChange={(event) => setClientReplyEmails(event.target.checked)} />
-              <span>
-                <span className="block text-sm font-semibold text-slate-950">Client replies</span>
-                <span className="block text-sm text-slate-500">Email me when a client replies to a comment thread.</span>
+                <span className="block text-sm font-semibold text-slate-950">Client comments and replies</span>
+                <span className="block text-sm text-slate-500">Email me whenever a client comments or replies in the client portal.</span>
               </span>
             </label>
           </div>
@@ -163,7 +160,7 @@ export function AccountSettingsForm({
               Client email notifications are available on Studio.
             </p>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              Studio includes client spaces, portal comments, and email notifications when clients leave comments or replies.
+              Studio includes client spaces, portal comments, and email notifications when clients comment or reply in the portal.
             </p>
             <a href="/settings/billing" className="mt-4 inline-flex rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-700">
               Upgrade to Studio

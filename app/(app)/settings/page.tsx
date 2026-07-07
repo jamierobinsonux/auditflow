@@ -34,8 +34,7 @@ export default async function SettingsPage() {
   const workspaceName = metadata.workspace_name || "AuditFlow Workspace";
   const timezone = metadata.timezone || "America/New_York";
   const dateFormat = metadata.date_format || "MMM d, yyyy";
-  const emailClientComments = metadata.email_client_comments !== false;
-  const emailClientReplies = metadata.email_client_replies !== false;
+  const emailClientActivity = metadata.email_client_comments !== false;
   const hasActiveSubscription = Boolean(
     subscription.subscription?.stripe_subscription_id &&
       ["active", "trialing", "past_due", "unpaid"].includes(
@@ -58,8 +57,7 @@ export default async function SettingsPage() {
           initialWorkspaceName={workspaceName}
           initialTimezone={timezone}
           initialDateFormat={dateFormat}
-          initialClientCommentEmails={emailClientComments}
-          initialClientReplyEmails={emailClientReplies}
+          initialClientActivityEmails={emailClientActivity}
           email={user.email || ""}
           canUseClientNotifications={subscription.isStudio}
         />
