@@ -42,7 +42,6 @@ export function EditJourneyButton({
       .update({
         name: trimmedName,
         description: description.trim() || null,
-        updated_at: new Date().toISOString(),
       })
       .eq("id", journeyId)
       .eq("project_id", projectId);
