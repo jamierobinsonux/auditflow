@@ -31,18 +31,17 @@ type ScreenId =
   | "analytics"
   | "clients"
   | "projects"
-  | "projectsForFramework"
   | "createProject"
   | "createProjectSubmit"
   | "frameworks"
   | "projectOverview"
   | "createdProjectOverview"
-  | "frameworkApplied"
   | "newFinding"
   | "newFindingSubmit"
   | "evidence"
   | "journeys"
   | "recommendations"
+  | "projectBeforeReports"
   | "reports"
   | "reportExported";
 
@@ -102,75 +101,57 @@ const tourActions: TourAction[] = [
     targetKey: "sidebar-clients",
   },
   {
-    id: "projects",
-    workflow: "clients",
-    sidebar: "projects",
-    label: "View projects",
+    id: "frameworks",
+    workflow: "frameworks",
+    sidebar: "frameworks",
+    label: "Review reusable frameworks",
     description:
-      "Browse existing projects, continue active audits, or start something new for a client.",
+      "Frameworks are reusable audit starting points. Keep them separate from the project creation flow so the walkthrough stays connected.",
+    targetKey: "sidebar-frameworks",
+  },
+  {
+    id: "projects",
+    workflow: "manageProject",
+    sidebar: "projects",
+    label: "Find an audit project",
+    description:
+      "Search and filter projects, continue active audits, or start a new project from the same workspace.",
     targetKey: "sidebar-projects",
   },
   {
     id: "projectOverview",
-    workflow: "clients",
+    workflow: "manageProject",
     sidebar: "projects",
-    label: "Open an existing audit",
+    label: "Open the project workspace",
     description:
-      "Open a project to review findings, journeys, evidence, recommendations, and report progress.",
+      "Project tabs keep findings, journeys, and reports connected to one audit.",
     targetKey: "project-row-checkout",
   },
   {
-    id: "projectsForFramework",
-    workflow: "frameworks",
+    id: "createProject",
+    workflow: "manageProject",
     sidebar: "projects",
     label: "Start a new audit",
     description:
-      "Return to Projects when it is time to create another audit workspace.",
-    targetKey: "sidebar-projects",
-  },
-  {
-    id: "createProject",
-    workflow: "frameworks",
-    sidebar: "projects",
-    label: "Create a project",
-    description:
-      "Start blank or choose a reusable Studio framework when the audit should follow a standard process.",
+      "Create a project from the Projects page and optionally connect it to a client workspace.",
     targetKey: "new-project-button",
   },
   {
     id: "createProjectSubmit",
-    workflow: "frameworks",
+    workflow: "manageProject",
     sidebar: "projects",
     label: "Create the project",
     description:
-      "Scroll to the bottom of the project form and submit the project setup.",
+      "Scroll to the bottom of the form and submit the new project setup.",
     targetKey: "create-project-submit",
-  },
-  {
-    id: "frameworks",
-    workflow: "frameworks",
-    sidebar: "frameworks",
-    label: "Choose a framework",
-    description:
-      "Projects can start blank, or use a framework for categories, journeys, recommendations, and report defaults.",
-    targetKey: "use-framework-button",
-  },
-  {
-    id: "frameworkApplied",
-    workflow: "manageProject",
-    sidebar: "projects",
-    label: "Apply the framework",
-    description:
-      "Frameworks can bring in categories, journey stages, recommendations, and report defaults.",
-    targetKey: "framework-card-saas",
   },
   {
     id: "createdProjectOverview",
     workflow: "manageProject",
     sidebar: "projects",
-    label: "Manage the project",
+    label: "Land in the new project",
     description:
-      "The project workspace keeps findings, evidence, journeys, recommendations, and reports connected.",
+      "After creation, the walkthrough stays inside the project instead of jumping to a disconnected page.",
     targetKey: "new-finding-button",
   },
   {
@@ -179,7 +160,7 @@ const tourActions: TourAction[] = [
     sidebar: "projects",
     label: "Add findings",
     description:
-      "Capture severity, impact, effort, journey context, and a recommended next step while the issue is fresh.",
+      "Capture severity, status, journey context, and a recommended next step while the issue is fresh.",
     targetKey: "new-finding-button",
   },
   {
@@ -188,7 +169,7 @@ const tourActions: TourAction[] = [
     sidebar: "projects",
     label: "Save the finding",
     description:
-      "Scroll through the creation form to the evidence section and submit the new finding.",
+      "Scroll through the creation form to the evidence section and submit the finding.",
     targetKey: "add-finding-submit",
   },
   {
@@ -197,7 +178,7 @@ const tourActions: TourAction[] = [
     sidebar: "projects",
     label: "Attach evidence",
     description:
-      "Add screenshots and captions so stakeholders can understand exactly what happened.",
+      "Add screenshots, captions, and annotations so stakeholders can understand the issue.",
     targetKey: "save-finding-button",
   },
   {
@@ -215,16 +196,25 @@ const tourActions: TourAction[] = [
     sidebar: "recommendations",
     label: "Reuse recommendations",
     description:
-      "Studio teams can maintain reusable guidance and insert it into findings for consistent deliverables.",
+      "Search reusable guidance and insert it into findings for consistent deliverables.",
     targetKey: "sidebar-recommendations",
+  },
+  {
+    id: "projectBeforeReports",
+    workflow: "exportReport",
+    sidebar: "projects",
+    label: "Return to the project",
+    description:
+      "Reports are generated from the project workspace, so the tour returns to the project before opening the Reports tab.",
+    targetKey: "sidebar-projects",
   },
   {
     id: "reports",
     workflow: "exportReport",
     sidebar: "projects",
-    label: "Open project reports",
+    label: "Open the Reports tab",
     description:
-      "Start from the project workspace and click the Reports tab to build the client-ready export.",
+      "Click the project Reports tab to configure, preview, and export the client-ready PDF.",
     targetKey: "tab-reports",
   },
   {
@@ -602,31 +592,23 @@ function SidebarUtility({
 function ProductScreen({ screen }: { screen: ScreenId }) {
   if (screen === "analytics") return <AnalyticsScreen />;
   if (screen === "clients") return <ClientsScreen />;
-  if (screen === "projects" || screen === "projectsForFramework")
-    return <ProjectsScreen />;
+  if (screen === "projects") return <ProjectsScreen />;
   if (screen === "createProject" || screen === "createProjectSubmit")
     return <CreateProjectScreen scrolled={screen === "createProjectSubmit"} />;
   if (screen === "frameworks") return <FrameworksScreen />;
   if (screen === "projectOverview")
     return (
       <ProjectOverviewScreen
-        projectName="Demo Product Audit"
-        projectUrl="demo-product.example"
+        projectName="Northstar Onboarding Audit"
+        projectUrl="northstar.example"
         existing
       />
     );
-  if (screen === "frameworkApplied")
+  if (screen === "createdProjectOverview" || screen === "projectBeforeReports")
     return (
       <ProjectOverviewScreen
-        projectName="Demo Product Audit"
-        projectUrl="demo-product.example"
-      />
-    );
-  if (screen === "createdProjectOverview")
-    return (
-      <ProjectOverviewScreen
-        projectName="Demo Product Audit"
-        projectUrl="demo-product.example"
+        projectName="Northstar Onboarding Audit"
+        projectUrl="northstar.example"
       />
     );
   if (screen === "newFinding" || screen === "newFindingSubmit")
@@ -695,22 +677,22 @@ function DashboardScreen() {
             <span>Status</span>
           </div>
           <ProjectTableRow
-            name="Demo Product Audit"
-            url="demo-product.example"
-            type="Ecommerce"
+            name="Northstar Onboarding Audit"
+            url="northstar.example"
+            type="SaaS"
             findings="8"
             status="In Progress"
           />
           <ProjectTableRow
             name="Mobile App Onboarding Audit"
-            url="mobileapp.example"
+            url="beacon.example"
             type="Mobile App"
             findings="5"
             status="In Progress"
           />
           <ProjectTableRow
-            name="Pricing Page Conversion Review"
-            url="demo-product.example/pricing"
+            name="Pricing Page Audit"
+            url="northstar.example/pricing"
             type="SaaS"
             findings="3"
             status="Completed"
@@ -806,7 +788,7 @@ function AnalyticsScreen() {
           </p>
           <div className="mt-8 space-y-5">
             <BarRow
-              title="Demo Product Audit"
+              title="Northstar Onboarding Audit"
               subtitle="8 open findings"
               value="8 findings"
               width="100%"
@@ -818,7 +800,7 @@ function AnalyticsScreen() {
               width="62%"
             />
             <BarRow
-              title="Pricing Page Conversion Review"
+              title="Pricing Page Audit"
               subtitle="3 resolved findings"
               value="3 findings"
               width="38%"
@@ -848,13 +830,13 @@ function CreateProjectScreen({ scrolled = false }: { scrolled?: boolean }) {
           <SelectBox value="No client / personal project" />
         </FieldBlock>
         <FieldBlock label="Project name">
-          <InputBox value="e.g. SaaS onboarding audit" muted />
+          <InputBox value="e.g. onboarding audit" muted />
         </FieldBlock>
         <FieldBlock label="Client name" help="Optional">
-          <InputBox value="e.g. Acme" muted />
+          <InputBox value="e.g. Northstar Labs" muted />
         </FieldBlock>
         <FieldBlock label="Website URL" help="Optional">
-          <InputBox value="https://example.com" muted />
+          <InputBox value="https://northstar.example" muted />
         </FieldBlock>
         <FieldBlock label="Audit type">
           <SelectBox value="Onboarding" />
@@ -916,7 +898,7 @@ function ClientsScreen() {
           <span />
         </div>
         <ClientDirectoryRow
-          name="Sample Client"
+          name="Northstar Labs"
           industry="SaaS"
           projects="2"
           drafts="1"
@@ -925,7 +907,7 @@ function ClientsScreen() {
           status="On Track"
         />
         <ClientDirectoryRow
-          name="Cedar & Co."
+          name="Brightpath Studio"
           industry="Education"
           projects="1"
           drafts="1"
@@ -959,7 +941,7 @@ function FrameworksScreen() {
       <div className="mt-7 grid gap-5 lg:grid-cols-2">
         <FrameworkCard
           targetKey="framework-card-saas"
-          title="Demo Product Audit"
+          title="Northstar Onboarding Audit"
           label="Studio"
           description="Categories, journey stages, recommendations, and report defaults for product onboarding reviews."
           items={["Activation", "Empty states", "Forms", "Trust"]}
@@ -977,7 +959,7 @@ function FrameworksScreen() {
           items={["Keyboard", "Contrast", "Labels", "Semantics"]}
         />
         <FrameworkCard
-          title="Demo Product Audit"
+          title="Northstar Onboarding Audit"
           label="Built-in"
           description="Review product detail, cart, checkout, trust, error recovery, and purchase confidence."
           items={["Cart", "Payment", "Validation", "Confirmation"]}
@@ -1000,7 +982,7 @@ function RecommendationLibraryScreen() {
             work.
           </p>
         </div>
-        <span className="mt-24 rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-md shadow-violet-200">
+        <span className="rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-md shadow-violet-200">
           + New Recommendation
         </span>
       </div>
@@ -1038,6 +1020,24 @@ function RecommendationLibraryScreen() {
   );
 }
 
+function SearchBox({ label }: { label: string }) {
+  return (
+    <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-400 shadow-sm">
+      <span className="text-lg leading-none">⌕</span>
+      <span>{label}</span>
+    </div>
+  );
+}
+
+function FilterBox({ label }: { label: string }) {
+  return (
+    <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 shadow-sm">
+      <span>{label}</span>
+      <span className="text-slate-400">⌄</span>
+    </div>
+  );
+}
+
 function ProjectsScreen() {
   return (
     <div className="h-full">
@@ -1067,21 +1067,26 @@ function ProjectsScreen() {
         </span>
       </div>
 
-      <div className="mt-8 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+      <div className="mt-6 grid grid-cols-[1fr_180px] gap-4">
+        <SearchBox label="Search projects..." />
+        <FilterBox label="All Statuses" />
+      </div>
+
+      <div className="mt-6 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
         <ProjectDirectoryRow
           targetKey="project-row-checkout"
-          name="Demo Product Audit"
+          name="Northstar Onboarding Audit"
           type="SaaS"
-          client="Sample Client"
-          url="demo-product.example"
+          client="Northstar Labs"
+          url="northstar.example"
           status="In Progress"
           date="7/2/2026"
         />
         <ProjectDirectoryRow
-          name="Demo Mobile App Audit"
+          name="Beacon Mobile App Audit"
           type="Mobile App"
-          client="Sample Client"
-          url="https://example.com"
+          client="Northstar Labs"
+          url="https://northstar.example"
           status="Completed"
           date="7/1/2026"
         />
@@ -1091,8 +1096,8 @@ function ProjectsScreen() {
 }
 
 function ProjectOverviewScreen({
-  projectName = "Demo Product Audit",
-  projectUrl = "demo-product.example",
+  projectName = "Northstar Onboarding Audit",
+  projectUrl = "northstar.example",
   existing = false,
 }: {
   projectName?: string;
@@ -1126,7 +1131,7 @@ function ProjectOverviewScreen({
       <div className="mt-7 grid gap-5 lg:grid-cols-3">
         <InfoCard label="Audit Type" value="SaaS" />
         <InfoCard label="Status" value="In Progress" />
-        <InfoCard label="Client" value="Sample Client" accent />
+        <InfoCard label="Client" value="Northstar Labs" accent />
       </div>
 
       <div className="mt-8 flex items-end justify-between gap-6">
@@ -1144,6 +1149,11 @@ function ProjectOverviewScreen({
         </span>
       </div>
 
+      <div className="mt-6 grid grid-cols-[1fr_180px] gap-4">
+        <SearchBox label="Search findings..." />
+        <FilterBox label="Newest first" />
+      </div>
+
       <div className="mt-6 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
         <div className="grid grid-cols-[1.4fr_0.7fr_0.7fr_1.25fr] bg-slate-50 px-5 py-4 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
           <span>Finding</span>
@@ -1152,22 +1162,22 @@ function ProjectOverviewScreen({
           <span>Recommendation</span>
         </div>
         <FindingSummaryRow
-          title="Campaign Manager Page Issue"
+          title="Navigation hierarchy issue"
           severity="P2"
           recommendation="Use a clearer layout and reduce competing actions..."
         />
         <FindingSummaryRow
-          title="Side Navigation Polish"
+          title="Sidebar spacing issue"
           severity="P3"
           recommendation="Move overflow controls so navigation stays readable..."
         />
         <FindingSummaryRow
-          title="Account Settings Mislabeled"
+          title="Settings label mismatch"
           severity="P2"
           recommendation="Rename the area so the destination matches user expectations..."
         />
         <FindingSummaryRow
-          title="Continue Session UI Polish"
+          title="Confirmation feedback is subtle"
           severity="P3"
           recommendation="Decrease card size and increase hierarchy around the next action."
         />
@@ -1185,7 +1195,7 @@ function NewFindingScreen({ scrolled = false }: { scrolled?: boolean }) {
       >
         <FieldBlock label="Finding title">
           <InputBox
-            value="Users cannot recover after payment validation fails"
+            value="Users miss confirmation after completing setup"
             muted
           />
         </FieldBlock>
@@ -1226,7 +1236,7 @@ function NewFindingScreen({ scrolled = false }: { scrolled?: boolean }) {
               </p>
             </div>
             <FieldBlock label="Evidence name">
-              <InputBox value="Product Page Screenshot" muted />
+              <InputBox value="Dashboard Screenshot" muted />
             </FieldBlock>
             <div className="mt-2 min-h-[72px] rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-400">
               Image caption, e.g. checkout screen showing unclear payment error
@@ -1280,7 +1290,7 @@ function EvidenceScreen() {
           <div className="flex items-start justify-between border-b border-slate-100 bg-slate-50 px-6 py-5">
             <div>
               <h4 className="text-base font-semibold text-slate-950">
-                Product Page Screenshot
+                Dashboard Screenshot
               </h4>
               <p className="mt-2 text-sm text-slate-500">1 annotation</p>
             </div>
@@ -1366,7 +1376,7 @@ function JourneyMapsScreen() {
             Journeys
           </h3>
           <p className="mt-3 text-base text-slate-500">
-            Demo Product Audit
+            Northstar Onboarding Audit
           </p>
         </div>
         <span className="rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-md shadow-violet-200">
@@ -1420,7 +1430,7 @@ function ReportsScreen({ exported = false }: { exported?: boolean }) {
           Reports
         </h3>
         <p className="mt-3 text-base text-slate-500">
-          Demo Product Audit
+          Configure, preview, and export client-ready audit reports.
         </p>
       </div>
 
@@ -1496,14 +1506,6 @@ function ReportsScreen({ exported = false }: { exported?: boolean }) {
               title="Findings Only"
               description="Detailed findings, prioritization, and recommendations without broader report narrative."
             />
-            <ReportTemplateCard
-              title="Evidence Appendix"
-              description="Finding evidence and appendix-focused export for documentation review."
-            />
-            <ReportTemplateCard
-              title="Accessibility"
-              description="Structured version for accessibility and heuristic review documentation."
-            />
           </div>
         </div>
 
@@ -1513,10 +1515,10 @@ function ReportsScreen({ exported = false }: { exported?: boolean }) {
               Audit snapshot
             </h4>
             <div className="mt-5 space-y-4 text-base">
-              <SnapshotRow label="Findings" value="17" />
-              <SnapshotRow label="Journeys" value="5" />
-              <SnapshotRow label="Evidence items" value="17" />
-              <SnapshotRow label="Branding" value="Sample Client" />
+              <SnapshotRow label="Findings" value="4" />
+              <SnapshotRow label="Journeys" value="3" />
+              <SnapshotRow label="Evidence items" value="5" />
+              <SnapshotRow label="Branding" value="Demo Client" />
             </div>
           </div>
 
@@ -1526,7 +1528,7 @@ function ReportsScreen({ exported = false }: { exported?: boolean }) {
             </h4>
             <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-4">
               <p className="text-sm font-semibold text-slate-950">
-                Demo Product Audit UX Audit Report
+                Demo Onboarding Audit UX Audit Report
               </p>
               <p className="mt-2 text-sm text-slate-500">
                 professional · Jul 1, 2026
