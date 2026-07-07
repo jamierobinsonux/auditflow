@@ -7,9 +7,11 @@ import { createClient } from "@/lib/supabase/client";
 export function EditStepInline({
   stepId,
   initialTitle,
+  mobileStacked = false,
 }: {
   stepId: string;
   initialTitle: string;
+  mobileStacked?: boolean;
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -34,9 +36,9 @@ export function EditStepInline({
 
   if (isEditing) {
     return (
-      <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+      <div className="flex flex-1 items-center gap-2">
         <input
-          className="min-w-0 flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm"
+          className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           autoFocus
@@ -65,13 +67,21 @@ export function EditStepInline({
   }
 
   return (
-    <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
-      <p className="min-w-0 truncate text-sm font-semibold text-slate-950">{initialTitle}</p>
+    <div
+      className={
+        mobileStacked
+          ? "flex min-w-0 flex-1 flex-col items-start gap-2 md:flex-row md:items-center md:justify-between md:gap-3"
+          : "flex flex-1 items-center justify-between gap-3"
+      }
+    >
+      <p className="min-w-0 text-sm font-semibold text-slate-950">
+        {initialTitle}
+      </p>
 
       <button
         type="button"
         onClick={() => setIsEditing(true)}
-        className="shrink-0 text-sm font-medium text-violet-600"
+        className="text-sm font-medium text-violet-600"
       >
         Edit
       </button>

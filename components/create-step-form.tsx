@@ -39,7 +39,7 @@ export function CreateStepForm({
   return (
     <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-3 sm:flex-row">
       <input
-        className="min-w-0 flex-1 rounded-xl border border-slate-200 p-3 text-sm"
+        className="flex-1 rounded-xl border border-slate-200 p-3 text-sm"
         placeholder="Add journey step"
         value={title}
         onChange={(e) => setTitle(e.target.value)}

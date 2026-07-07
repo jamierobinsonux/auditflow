@@ -49,11 +49,11 @@ export default async function JourneyDetailPage({
     .order("created_at", { ascending: false });
 
   if (!project || !journey || !user) {
-    return <main className="p-5 sm:p-10">Journey not found.</main>;
+    return <main className="p-10">Journey not found.</main>;
   }
 
   return (
-    <main className="p-5 sm:p-10">
+    <main className="p-10">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-[24px] font-semibold text-slate-950">
@@ -65,7 +65,7 @@ export default async function JourneyDetailPage({
           </p>
         </div>
 
-        <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+        <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
           <EditJourneyButton
             journeyId={journeyId}
             projectId={id}
@@ -85,7 +85,7 @@ export default async function JourneyDetailPage({
 
       <ProjectTabs projectId={id} />
 
-      <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
+      <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-6">
         <h2 className="text-[18px] font-semibold text-slate-950">Steps</h2>
 
         <div className="mt-4 space-y-3">
@@ -99,33 +99,68 @@ export default async function JourneyDetailPage({
                 key={step.id}
                 className="rounded-xl border border-slate-200 p-4"
               >
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex min-w-0 flex-1 items-center gap-3">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600">
+                <div className="md:hidden">
+                  <div className="flex items-start gap-3">
+                    <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-semibold text-slate-600">
                       {index + 1}
                     </span>
 
-                    <EditStepInline
-                      stepId={step.id}
-                      initialTitle={step.title}
-                    />
+                    <div className="min-w-0 flex-1">
+                      <EditStepInline
+                        stepId={step.id}
+                        initialTitle={step.title}
+                        mobileStacked
+                      />
+
+                      <p className="mt-2 text-sm text-slate-500">
+                        {stepFindings.length} findings
+                      </p>
+                    </div>
                   </div>
 
-                  <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3">
-                    <DeleteStepButton stepId={step.id} />
-
+                  <div className="mt-4 space-y-3">
                     <Link
                       href={`/projects/${id}/findings/new?journeyId=${journeyId}&stepId=${step.id}`}
-                      className="inline-flex h-10 w-full items-center justify-center rounded-xl border border-violet-200 bg-violet-50 px-3 text-sm font-medium text-violet-700 hover:bg-violet-100 sm:w-auto sm:border-0 sm:bg-transparent sm:p-0 sm:text-violet-600 sm:hover:bg-transparent"
+                      className="inline-flex h-10 w-full items-center justify-center rounded-xl bg-violet-50 px-4 py-2 text-sm font-semibold text-violet-600 hover:bg-violet-100"
                     >
-                      Add finding
+                      + Add finding
                     </Link>
+
+                    <div className="flex items-center gap-4">
+                      <DeleteStepButton stepId={step.id} />
+                    </div>
                   </div>
                 </div>
 
-                <p className="mt-2 text-xs text-slate-500">
-                  {stepFindings.length} findings
-                </p>
+                <div className="hidden md:block">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex flex-1 items-center gap-3">
+                      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600">
+                        {index + 1}
+                      </span>
+
+                      <EditStepInline
+                        stepId={step.id}
+                        initialTitle={step.title}
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <DeleteStepButton stepId={step.id} />
+
+                      <Link
+                        href={`/projects/${id}/findings/new?journeyId=${journeyId}&stepId=${step.id}`}
+                        className="text-sm font-medium text-violet-600"
+                      >
+                        Add finding
+                      </Link>
+                    </div>
+                  </div>
+
+                  <p className="mt-2 text-xs text-slate-500">
+                    {stepFindings.length} findings
+                  </p>
+                </div>
 
                 {stepFindings.length > 0 && (
                   <div className="mt-3 space-y-2">
@@ -133,10 +168,10 @@ export default async function JourneyDetailPage({
                       <Link
                         key={finding.id}
                         href={`/projects/${id}/findings/${finding.id}`}
-                        className="block min-w-0 rounded-lg bg-slate-50 p-3 text-sm hover:bg-slate-100"
+                        className="block rounded-lg bg-slate-50 p-3 text-sm hover:bg-slate-100"
                       >
-                        <span className="block truncate font-medium" title={finding.title}>{finding.title}</span>
-                        <span className="mt-1 block text-xs text-slate-500">
+                        <span className="font-medium">{finding.title}</span>
+                        <span className="ml-2 text-xs text-slate-500">
                           {finding.severity}
                         </span>
                       </Link>
@@ -162,7 +197,7 @@ export default async function JourneyDetailPage({
       </section>
 
       {(findings ?? []).some((finding) => !finding.journey_step_id) && (
-        <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
+        <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-6">
           <h2 className="text-[18px] font-semibold text-slate-950">
             Findings not assigned to a step
           </h2>
@@ -177,10 +212,10 @@ export default async function JourneyDetailPage({
                 <Link
                   key={finding.id}
                   href={`/projects/${id}/findings/${finding.id}`}
-                  className="block min-w-0 rounded-lg border border-slate-200 p-3 text-sm hover:bg-slate-50"
+                  className="block rounded-lg border border-slate-200 p-3 text-sm hover:bg-slate-50"
                 >
-                  <span className="block truncate font-medium" title={finding.title}>{finding.title}</span>
-                  <span className="mt-1 block text-xs text-slate-500">
+                  <span className="font-medium">{finding.title}</span>
+                  <span className="ml-2 text-xs text-slate-500">
                     {finding.severity}
                   </span>
                 </Link>

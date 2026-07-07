@@ -64,7 +64,7 @@ export function ConfirmDialog({
 
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => !loading && setOpen(nextOpen)}>
-      <span onClick={(event) => { event.stopPropagation(); setOpen(true); }}>{trigger}</span>
+      <span onClick={() => setOpen(true)}>{trigger}</span>
 
       <DialogContent className="max-w-md p-0" showCloseButton={!loading}>
         <div className="p-6">
