@@ -37,16 +37,16 @@ export function CreateStepForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mt-4 flex gap-3">
+    <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-3 sm:flex-row">
       <input
-        className="flex-1 rounded-xl border border-slate-200 p-3 text-sm"
+        className="min-w-0 flex-1 rounded-xl border border-slate-200 p-3 text-sm"
         placeholder="Add journey step"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         required
       />
 
-      <button className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-700">
+      <button className="h-11 rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-700 sm:h-auto">
         Add Step
       </button>
     </form>

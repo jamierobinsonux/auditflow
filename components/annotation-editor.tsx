@@ -334,7 +334,6 @@ export function AnnotationEditor({
                               trigger={
                                 <button
                                   type="button"
-                                  onClick={(e) => e.stopPropagation()}
                                   className="inline-flex h-5 items-center text-xs font-medium leading-none text-red-600 hover:text-red-700"
                                 >
                                   Delete

@@ -42,7 +42,7 @@ export function DeleteStepButton({ stepId }: { stepId: string }) {
       destructive
       onConfirm={handleDelete}
       trigger={
-        <button type="button" className="text-sm font-medium text-red-600">
+        <button type="button" className="inline-flex h-10 w-full items-center justify-center rounded-xl border border-red-200 bg-red-50 px-3 text-sm font-medium text-red-700 hover:bg-red-100 sm:h-auto sm:w-auto sm:border-0 sm:bg-transparent sm:p-0 sm:text-red-600 sm:hover:bg-transparent">
           Delete
         </button>
       }

@@ -34,9 +34,9 @@ export function EditStepInline({
 
   if (isEditing) {
     return (
-      <div className="flex flex-1 items-center gap-2">
+      <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center">
         <input
-          className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm"
+          className="min-w-0 flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           autoFocus
@@ -65,13 +65,13 @@ export function EditStepInline({
   }
 
   return (
-    <div className="flex flex-1 items-center justify-between gap-3">
-      <p className="text-sm font-semibold text-slate-950">{initialTitle}</p>
+    <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
+      <p className="min-w-0 truncate text-sm font-semibold text-slate-950">{initialTitle}</p>
 
       <button
         type="button"
         onClick={() => setIsEditing(true)}
-        className="text-sm font-medium text-violet-600"
+        className="shrink-0 text-sm font-medium text-violet-600"
       >
         Edit
       </button>
