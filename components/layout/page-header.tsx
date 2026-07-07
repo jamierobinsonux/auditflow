@@ -21,7 +21,7 @@ export function PageHeader({
         )}
       </div>
 
-      {action && <div className="shrink-0 sm:pt-0.5">{action}</div>}
+      {action && <div className="w-full shrink-0 sm:w-auto sm:pt-0.5 [&_[data-slot=button]]:w-full sm:[&_[data-slot=button]]:w-auto">{action}</div>}
     </header>
   );
 }

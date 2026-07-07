@@ -279,7 +279,7 @@ const frameworkRecommendationById = new Map<string, LinkedRecommendation>(
           />
         ) : (
           <Card className="overflow-hidden">
-            <div className="grid grid-cols-[minmax(260px,1.5fr)_120px_140px_minmax(220px,1.2fr)] items-center gap-8 bg-slate-100 px-6 py-4 text-xs font-semibold uppercase tracking-wide text-slate-600">
+            <div className="hidden grid-cols-[minmax(260px,1.5fr)_120px_140px_minmax(220px,1.2fr)] items-center gap-8 bg-slate-100 px-6 py-4 text-xs font-semibold uppercase tracking-wide text-slate-600 md:grid">
               <span className="min-w-0">Finding</span>
               <span>Severity</span>
               <span>Status</span>
@@ -290,16 +290,21 @@ const frameworkRecommendationById = new Map<string, LinkedRecommendation>(
               <Link
                 key={finding.id}
                 href={`/projects/${id}/findings/${finding.id}`}
-                className="grid grid-cols-[minmax(260px,1.5fr)_120px_140px_minmax(220px,1.2fr)] items-center gap-8 border-t border-slate-100 px-6 py-4 text-sm hover:bg-slate-50"
+                className="block border-t border-slate-100 px-5 py-4 text-sm hover:bg-slate-50 md:grid md:grid-cols-[minmax(260px,1.5fr)_120px_140px_minmax(220px,1.2fr)] md:items-center md:gap-8 md:px-6"
               >
                 <span className="min-w-0 truncate font-medium text-slate-950" title={finding.title}>
                   {finding.title}
                 </span>
 
-                <SeverityBadge severity={finding.severity} />
-                <StatusBadge status={finding.status} />
+                <div className="mt-3 flex flex-wrap items-center gap-2 md:mt-0 md:block">
+                  <SeverityBadge severity={finding.severity} />
+                </div>
+                <div className="mt-2 flex flex-wrap items-center gap-2 md:mt-0 md:block">
+                  <StatusBadge status={finding.status} />
+                </div>
 
-                <span className="min-w-0 truncate text-slate-600" title={finding.recommendation || "—"}>
+                <span className="mt-3 block min-w-0 truncate text-slate-600 md:mt-0" title={finding.recommendation || "—"}>
+                  <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-400 md:hidden">Recommendation</span>
                   {finding.recommendation || "—"}
                 </span>
               </Link>

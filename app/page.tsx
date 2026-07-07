@@ -57,7 +57,7 @@ const features = [
 export default function LandingPage() {
   return (
     <main className="min-h-screen overflow-hidden bg-white">
-      <header className="mx-auto flex max-w-7xl items-center justify-between px-6 py-6 sm:px-8">
+      <header className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-5 sm:px-8">
         <BrandLogo />
 
         <nav className="hidden items-center gap-8 text-sm font-medium text-slate-600 md:flex">
@@ -72,35 +72,35 @@ export default function LandingPage() {
           </a>
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
           <Link
             href="/login"
-            className="rounded-xl px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+            className="whitespace-nowrap rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 sm:px-4"
           >
             Sign in
           </Link>
 
           <Link
             href="/signup"
-            className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-violet-200 hover:bg-violet-700"
+            className="whitespace-nowrap rounded-xl bg-violet-600 px-3 py-2 text-sm font-semibold text-white shadow-sm shadow-violet-200 hover:bg-violet-700 sm:px-4"
           >
             Start free
           </Link>
         </div>
       </header>
 
-      <section className="relative mx-auto flex max-w-7xl justify-center px-6 pb-14 pt-16 text-center sm:px-8 lg:pb-16 lg:pt-20">
+      <section className="relative mx-auto flex max-w-7xl justify-center px-4 pb-12 pt-12 text-center sm:px-8 lg:pb-16 lg:pt-20">
         <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 mx-auto h-[520px] max-w-5xl rounded-full bg-violet-100/40 blur-3xl" />
         <div className="mx-auto max-w-4xl">
           <p className="mx-auto inline-flex rounded-full border border-violet-100 bg-violet-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-violet-600">
             UX audit platform
           </p>
 
-          <h1 className="mx-auto mt-6 max-w-4xl text-5xl font-semibold leading-[1.02] tracking-[-0.055em] text-slate-950 sm:text-6xl lg:text-[64px]">
+          <h1 className="mx-auto mt-6 max-w-4xl text-4xl font-semibold leading-[1.04] tracking-[-0.055em] text-slate-950 sm:text-6xl lg:text-[64px]">
             Organize UX audits from insight to action.
           </h1>
 
-          <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-slate-600">
+          <p className="mx-auto mt-6 max-w-3xl text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">
             Capture findings, connect evidence, map journeys, prioritize issues, and create stakeholder-ready reports from one focused workspace.
           </p>
 
@@ -114,7 +114,7 @@ export default function LandingPage() {
 
             <a
               href="#tour"
-              className="rounded-xl border border-slate-200 bg-white px-6 py-3 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              className="hidden rounded-xl border border-slate-200 bg-white px-6 py-3 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:inline-flex"
             >
               See the workflow
             </a>
@@ -123,7 +123,9 @@ export default function LandingPage() {
 
       </section>
 
-      <LandingProductTour />
+      <div className="hidden md:block">
+        <LandingProductTour />
+      </div>
 
       <section className="mx-auto max-w-7xl px-6 py-12 sm:px-8 lg:py-14">
         <div className="mx-auto max-w-4xl text-center">

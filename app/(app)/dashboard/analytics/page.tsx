@@ -77,8 +77,8 @@ const findings = ((findingsData ?? []) as Finding[]).filter((finding) =>
     .slice(0, 5);
 
   return (
-    <main className="p-10">
-      <div className="flex items-start justify-between">
+    <main className="px-4 py-6 sm:px-6 sm:py-8 lg:p-10">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-[24px] font-semibold text-slate-950">
             Analytics
@@ -90,7 +90,7 @@ const findings = ((findingsData ?? []) as Finding[]).filter((finding) =>
 
         <Link
           href="/dashboard"
-          className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium hover:bg-slate-50"
+          className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium hover:bg-slate-50 sm:self-start"
         >
           Dashboard
         </Link>
@@ -105,7 +105,7 @@ const findings = ((findingsData ?? []) as Finding[]).filter((finding) =>
             description="Project-level health across your audit portfolio."
           />
 
-          <section className="mt-4 grid gap-4 md:grid-cols-4">
+          <section className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <StatCard label="Total projects" value={projects.length} helper="All audit projects" />
             <StatCard label="Total findings" value={findings.length} helper="Across all projects" />
             <StatCard label="Avg. findings / project" value={avgFindings} helper="Audit size indicator" />
@@ -131,7 +131,7 @@ const findings = ((findingsData ?? []) as Finding[]).filter((finding) =>
             description="Finding-level severity, workflow, and prioritization insights."
           />
 
-          <section className="mt-4 grid gap-4 md:grid-cols-4">
+          <section className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <StatCard label="High impact findings" value={highImpact} helper="Impact = High" />
             <StatCard label="Quick wins" value={quickWins} helper="High impact / low effort" />
             <StatCard
@@ -160,7 +160,7 @@ const findings = ((findingsData ?? []) as Finding[]).filter((finding) =>
             <Card
               title="Prioritization matrix"
               description="Impact and effort breakdown for scoped findings."
-              className="h-[420px]"
+              className="md:h-[420px]"
             >
               <div className="grid grid-cols-2 gap-3">
                 <MatrixCell title="Quick Wins" subtitle="High impact / Low effort" count={quickWins} />
@@ -185,7 +185,7 @@ const findings = ((findingsData ?? []) as Finding[]).filter((finding) =>
             <Card
               title="Highest priority findings"
               description="P0 and P1 findings that need attention first."
-              className="h-[420px]"
+              className="md:h-[420px]"
               bodyClassName="max-h-[292px] overflow-y-auto pr-2"
             >
               <PriorityList findings={findings} />
@@ -208,7 +208,7 @@ function AnalyticsEmptyState() {
         actionHref="/projects/new"
       />
 
-      <section className="grid gap-4 md:grid-cols-4 opacity-60">
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 opacity-60">
         <PreviewStat label="Projects" />
         <PreviewStat label="Findings" />
         <PreviewStat label="High Severity" />
@@ -225,7 +225,7 @@ function AnalyticsEmptyState() {
 
 function PreviewStat({ label }: { label: string }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
       <p className="text-[24px] font-semibold text-slate-300">--</p>
       <p className="mt-1 text-sm font-medium text-slate-500">{label}</p>
       <p className="mt-1 text-xs text-slate-400">Waiting for audit data</p>
@@ -241,7 +241,7 @@ function PreviewCard({ title }: { title: string }) {
         Charts will appear once projects and findings are added.
       </p>
 
-      <div className="mt-6 flex items-center gap-8">
+      <div className="mt-6 flex flex-col items-center gap-6 sm:flex-row sm:gap-8">
         <div className="h-36 w-36 rounded-full bg-slate-100" />
         <div className="flex-1 space-y-3">
           <div className="h-3 rounded-full bg-slate-100" />
@@ -267,7 +267,7 @@ function SectionHeading({
   return (
     <div className="mt-10">
       <h2 className="text-[20px] font-semibold text-slate-950">{title}</h2>
-      <p className="mt-1 text-sm text-slate-500">{description}</p>
+      <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-500">{description}</p>
     </div>
   );
 }
@@ -282,7 +282,7 @@ function StatCard({
   helper: string;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
       <p className="text-[24px] font-semibold text-slate-950">{value}</p>
       <p className="mt-1 text-sm font-medium text-slate-700">{label}</p>
       <p className="mt-1 text-xs text-slate-500">{helper}</p>
@@ -305,11 +305,11 @@ function Card({
 }) {
   return (
     <div
-      className={`rounded-2xl border border-slate-200 bg-white p-6 shadow-sm ${className}`}
+      className={`rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6 ${className}`}
     >
       <h2 className="text-[18px] font-semibold text-slate-950">{title}</h2>
       <p className="mt-1 text-sm text-slate-500">{description}</p>
-      <div className={`mt-6 ${bodyClassName}`}>{children}</div>
+      <div className={`mt-5 sm:mt-6 ${bodyClassName}`}>{children}</div>
     </div>
   );
 }
@@ -341,37 +341,37 @@ function DonutChart({
           .join(", ");
 
   return (
-    <div className="flex items-center gap-8">
+    <div className="flex flex-col items-center gap-6 sm:flex-row sm:gap-8">
       <div
-        className="relative flex h-44 w-44 shrink-0 items-center justify-center rounded-full"
+        className="relative flex h-40 w-40 shrink-0 items-center justify-center rounded-full sm:h-44 sm:w-44"
         style={{ background: `conic-gradient(${gradient})` }}
       >
-        <div className="absolute h-28 w-28 rounded-full bg-white" />
+        <div className="absolute h-24 w-24 rounded-full bg-white sm:h-28 sm:w-28" />
         <div className="relative text-center">
           <p className="text-[28px] font-semibold text-slate-950">{total}</p>
           <p className="text-xs text-slate-500">{totalLabel}</p>
         </div>
       </div>
 
-      <div className="flex-1 space-y-4">
+      <div className="w-full flex-1 space-y-4">
         {items.map((item) => {
           const percent =
             total > 0 ? Math.round((item.value / total) * 100) : 0;
 
           return (
             <div key={item.label}>
-              <div className="mb-1 flex items-center justify-between text-sm">
-                <div className="flex items-center gap-2">
+              <div className="mb-1 flex items-center justify-between gap-3 text-sm">
+                <div className="flex min-w-0 items-center gap-2">
                   <span
                     className="h-2.5 w-2.5 rounded-full"
                     style={{ backgroundColor: item.color }}
                   />
-                  <span className="font-medium text-slate-700">
+                  <span className="min-w-0 font-medium text-slate-700">
                     {item.label}
                   </span>
                 </div>
 
-                <span className="text-slate-500">
+                <span className="shrink-0 text-slate-500">
                   {item.value} / {percent}%
                 </span>
               </div>
@@ -411,14 +411,14 @@ function ProjectFindingList({
 
         return (
           <div key={project.id}>
-            <div className="mb-2 flex items-center justify-between text-sm">
-              <div>
-                <p className="font-medium text-slate-700">{project.name}</p>
+            <div className="mb-2 flex items-start justify-between gap-4 text-sm">
+              <div className="min-w-0">
+                <p className="truncate font-medium text-slate-700">{project.name}</p>
                 <p className="text-xs text-slate-500">
                   {project.openCount} open findings
                 </p>
               </div>
-              <span className="text-slate-500">
+              <span className="shrink-0 text-slate-500">
                 {project.findingCount} findings
               </span>
             </div>

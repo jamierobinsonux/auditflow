@@ -203,7 +203,7 @@ export default async function DashboardPage() {
             <SectionHeader title="Recent projects" />
 
             <Card className="mt-5 overflow-hidden">
-              <div className="grid grid-cols-[minmax(240px,1.5fr)_minmax(120px,0.8fr)_120px_100px_130px] items-center gap-8 bg-slate-100 px-6 py-4 text-xs font-semibold uppercase tracking-wide text-slate-600">
+              <div className="hidden grid-cols-[minmax(240px,1.5fr)_minmax(120px,0.8fr)_120px_100px_130px] items-center gap-8 bg-slate-100 px-6 py-4 text-xs font-semibold uppercase tracking-wide text-slate-600 md:grid">
                 <span>Project</span>
                 <span>Type</span>
                 <span>Updated</span>
@@ -220,7 +220,7 @@ export default async function DashboardPage() {
                   <Link
                     key={project.id}
                     href={`/projects/${project.id}`}
-                    className="grid grid-cols-[minmax(240px,1.5fr)_minmax(120px,0.8fr)_120px_100px_130px] items-center gap-8 border-t border-slate-100 px-6 py-4 text-sm transition hover:bg-slate-50"
+                    className="block border-t border-slate-100 px-5 py-4 text-sm transition hover:bg-slate-50 md:grid md:grid-cols-[minmax(240px,1.5fr)_minmax(120px,0.8fr)_120px_100px_130px] md:items-center md:gap-8 md:px-6"
                   >
                     <div className="min-w-0">
                       <p className="truncate font-semibold text-slate-950">
@@ -231,17 +231,25 @@ export default async function DashboardPage() {
                       </p>
                     </div>
 
-                    <AuditTypeBadge type={project.audit_type} />
+                    <div className="mt-3 flex flex-wrap items-center gap-2 md:mt-0 md:block">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-slate-400 md:hidden">Type</span>
+                      <AuditTypeBadge type={project.audit_type} />
+                    </div>
 
-                    <span className="font-medium text-slate-600">
+                    <span className="mt-3 flex items-center justify-between gap-4 font-medium text-slate-600 md:mt-0 md:block">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-slate-400 md:hidden">Updated</span>
                       {formatDate(project.updated_at || project.created_at)}
                     </span>
 
-                    <span className="font-medium text-slate-600">
+                    <span className="mt-3 flex items-center justify-between gap-4 font-medium text-slate-600 md:mt-0 md:block">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-slate-400 md:hidden">Findings</span>
                       {projectFindings.length}
                     </span>
 
-                    <StatusBadge status={project.status} />
+                    <div className="mt-3 flex items-center justify-between gap-4 md:mt-0 md:block">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-slate-400 md:hidden">Status</span>
+                      <StatusBadge status={project.status} />
+                    </div>
                   </Link>
                 );
               })}
@@ -290,12 +298,12 @@ function StatCard({
   meta: string;
 }) {
   return (
-    <Card className="px-6 py-5">
+    <Card className="px-5 py-4 sm:px-6 sm:py-5">
       <p className="text-[26px] font-semibold leading-none tracking-[-0.03em] text-slate-950">
         {value}
       </p>
       <p className="mt-2 text-sm font-semibold text-slate-900">{label}</p>
-      <p className="mt-3 text-xs text-slate-500">{meta}</p>
+      <p className="mt-2 text-xs text-slate-500 sm:mt-3">{meta}</p>
     </Card>
   );
 }

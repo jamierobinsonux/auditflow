@@ -8,7 +8,7 @@ export function SectionHeader({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="mb-5 flex items-start justify-between gap-6">
+    <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
       <div>
         <h2 className="text-[18px] font-semibold tracking-[-0.01em] text-slate-950">
           {title}
@@ -21,7 +21,7 @@ export function SectionHeader({
         )}
       </div>
 
-      {action && <div className="shrink-0">{action}</div>}
+      {action && <div className="w-full shrink-0 sm:w-auto [&_[data-slot=button]]:w-full sm:[&_[data-slot=button]]:w-auto">{action}</div>}
     </div>
   );
 }
