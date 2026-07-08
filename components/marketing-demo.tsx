@@ -42,7 +42,7 @@ const scenes: Scene[] = [
     id: "landing",
     eyebrow: "0:00 — Hook",
     title: "UX audits deserve a better workflow.",
-    description: "Start with the promise, not a feature tour.",
+    description: "Professional UX audits, simplified.",
     duration: 5200,
     targetKey: "landing-primary-cta",
     zoom: "scale-[1.01]",
@@ -53,7 +53,7 @@ const scenes: Scene[] = [
     id: "dashboard",
     eyebrow: "0:05 — Workspace",
     title: "One place for the full audit lifecycle.",
-    description: "Show the dashboard as the operating system for audit work.",
+    description: "Manage every audit in one place.",
     duration: 6200,
     targetKey: "dashboard-new-project",
     zoom: "scale-[1.015]",
@@ -64,7 +64,7 @@ const scenes: Scene[] = [
     id: "createProject",
     eyebrow: "0:11 — Project setup",
     title: "Create a project in seconds.",
-    description: "Use clean fictional demo data and a focused setup screen.",
+    description: "Start every engagement with a clear project workspace.",
     duration: 6500,
     targetKey: "create-project-submit",
     zoom: "scale-[1.02]",
@@ -75,7 +75,7 @@ const scenes: Scene[] = [
     id: "findings",
     eyebrow: "0:18 — Findings",
     title: "Capture, search, sort, and prioritize.",
-    description: "Highlight the improved search and sorting behavior.",
+    description: "Capture, prioritize, and organize issues.",
     duration: 7800,
     targetKey: "finding-sort",
     zoom: "scale-[1.02]",
@@ -86,7 +86,7 @@ const scenes: Scene[] = [
     id: "journeys",
     eyebrow: "0:26 — Journeys",
     title: "Connect findings to the user journey.",
-    description: "Make the audit feel connected instead of scattered.",
+    description: "Connect each finding to the user experience.",
     duration: 6400,
     targetKey: "journey-step-checkout",
     zoom: "scale-[1.015]",
@@ -97,7 +97,7 @@ const scenes: Scene[] = [
     id: "recommendations",
     eyebrow: "0:32 — Recommendations",
     title: "Reuse your best advice.",
-    description: "Show saved recommendations as a repeatable system.",
+    description: "Reuse your best recommendations.",
     duration: 5600,
     targetKey: "recommendation-search",
     zoom: "scale-[1.015]",
@@ -108,7 +108,7 @@ const scenes: Scene[] = [
     id: "reports",
     eyebrow: "0:38 — Reports",
     title: "Generate client-ready reports.",
-    description: "Use the project Reports tab, then preview and export.",
+    description: "Generate professional reports in minutes.",
     duration: 7000,
     targetKey: "export-pdf",
     zoom: "scale-[1.02]",
@@ -119,7 +119,7 @@ const scenes: Scene[] = [
     id: "portal",
     eyebrow: "0:45 — Client Portal",
     title: "Collaborate without losing context.",
-    description: "Show client comments, auditor replies, and portal notifications.",
+    description: "Collaborate directly with clients.",
     duration: 6800,
     targetKey: "portal-notification",
     zoom: "scale-[1.015]",
@@ -130,7 +130,7 @@ const scenes: Scene[] = [
     id: "ending",
     eyebrow: "0:53 — Close",
     title: "AuditFlow. From insight to action.",
-    description: "End cleanly on the brand and tagline.",
+    description: "Everything you need to deliver professional UX audits.",
     duration: 5200,
     targetKey: "ending-logo",
     zoom: "scale-100",
@@ -304,14 +304,17 @@ export function MarketingDemo() {
               visible={pointerPosition.visible}
               isClicking={isClicking}
             />
-            <div className="absolute bottom-6 left-6 right-6 rounded-3xl border border-white/60 bg-white/90 p-5 shadow-xl shadow-slate-900/10 backdrop-blur">
+            <div
+              key={`caption-${scene.id}`}
+              className="absolute bottom-6 left-6 right-6 rounded-3xl border border-white/60 bg-white/90 p-5 shadow-xl shadow-slate-900/10 backdrop-blur transition-all duration-500 md:left-auto md:max-w-[460px]"
+            >
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-violet-600">
                 {scene.eyebrow}
               </p>
               <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-slate-950">
                 {scene.title}
               </h2>
-              <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+              <p className="mt-2 text-sm leading-6 text-slate-600">
                 {scene.description}
               </p>
             </div>
