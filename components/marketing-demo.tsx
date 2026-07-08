@@ -217,6 +217,19 @@ export function MarketingDemo() {
 
   useEffect(() => clearTimers, []);
 
+  useEffect(() => {
+    if (!isRecordingMode) return;
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsRecordingMode(false);
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isRecordingMode]);
+
   const script = useMemo(() => scenes.map((item) => item.script).join("\n\n"), []);
 
   return (
@@ -303,15 +316,6 @@ export function MarketingDemo() {
               </p>
             </div>
 
-            {isRecordingMode ? (
-              <button
-                type="button"
-                onClick={() => setIsRecordingMode(false)}
-                className="absolute right-5 top-5 rounded-full border border-white/20 bg-slate-950/70 px-4 py-2 text-xs font-semibold text-white opacity-20 backdrop-blur transition hover:opacity-100"
-              >
-                Exit recording mode
-              </button>
-            ) : null}
           </div>
         </div>
 
