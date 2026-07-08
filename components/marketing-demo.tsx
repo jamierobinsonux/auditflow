@@ -108,7 +108,7 @@ const scenes: Scene[] = [
     id: "reports",
     eyebrow: "0:38 — Generate Professional Reports",
     title: "Generate client-ready reports.",
-    description: "Generate professional reports in minutes.",
+    description: "Generate professional reports with a click.",
     duration: 7000,
     targetKey: "export-pdf",
     zoom: "scale-[1.02]",
