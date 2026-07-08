@@ -552,7 +552,14 @@ export default function EditFindingPage() {
                     />
                   </FormField>
 
-                  <DeleteEvidenceButton imageId={image.id} />
+                  <DeleteEvidenceButton
+                    imageId={image.id}
+                    onDeleted={(deletedImageId) =>
+                      setExistingImages((current) =>
+                        current.filter((existingImage) => existingImage.id !== deletedImageId)
+                      )
+                    }
+                  />
                 </div>
               ))}
             </div>

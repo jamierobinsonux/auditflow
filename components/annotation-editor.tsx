@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
@@ -31,6 +31,7 @@ export function AnnotationEditor({
   const supabase = createClient();
   const router = useRouter();
 
+  const [localAnnotations, setLocalAnnotations] = useState(annotations);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editNote, setEditNote] = useState("");
@@ -38,6 +39,10 @@ export function AnnotationEditor({
     null
   );
   const [note, setNote] = useState("");
+
+  useEffect(() => {
+    setLocalAnnotations(annotations);
+  }, [annotations]);
 
   function handleImageClick(e: React.MouseEvent<HTMLDivElement>) {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -62,9 +67,9 @@ export function AnnotationEditor({
       return;
     }
 
-    const nextLabel = String(annotations.length + 1);
+    const nextLabel = String(localAnnotations.length + 1);
 
-    const { error } = await supabase.from("image_annotations").insert({
+    const { data: savedAnnotation, error } = await supabase.from("image_annotations").insert({
       image_id: image.id,
       finding_id: findingId,
       user_id: user.id,
@@ -72,11 +77,15 @@ export function AnnotationEditor({
       y_position: draftPoint.y,
       label: nextLabel,
       note,
-    });
+    }).select("id,image_id,x_position,y_position,label,note").single();
 
     if (error) {
       toast.error(error.message);
       return;
+    }
+
+    if (savedAnnotation) {
+      setLocalAnnotations((current) => [...current, savedAnnotation as Annotation]);
     }
 
     toast.success("Annotation added.");
@@ -103,6 +112,12 @@ export function AnnotationEditor({
       return;
     }
 
+    setLocalAnnotations((current) =>
+      current.map((annotation) =>
+        annotation.id === annotationId ? { ...annotation, note: editNote } : annotation
+      )
+    );
+
     toast.success("Annotation updated.");
     setEditingId(null);
     setEditNote("");
@@ -119,6 +134,10 @@ export function AnnotationEditor({
       toast.error(error.message);
       return;
     }
+
+    setLocalAnnotations((current) =>
+      current.filter((annotation) => annotation.id !== annotationId)
+    );
 
     toast.success("Annotation deleted.");
 
@@ -144,7 +163,7 @@ export function AnnotationEditor({
                 className="mx-auto block max-h-[620px] w-auto max-w-full object-contain"
               />
 
-              {annotations.map((annotation) => {
+              {localAnnotations.map((annotation) => {
                 const isActive = activeId === annotation.id;
 
                 return (
@@ -236,13 +255,13 @@ export function AnnotationEditor({
           )}
 
           <div className="mt-4 space-y-3">
-            {annotations.length === 0 && !draftPoint && (
+            {localAnnotations.length === 0 && !draftPoint && (
               <p className="rounded-xl bg-white p-4 text-sm leading-6 text-slate-500">
                 No annotations yet. Click the image to add the first callout.
               </p>
             )}
 
-            {annotations.map((annotation) => {
+            {localAnnotations.map((annotation) => {
               const isActive = activeId === annotation.id;
               const isEditing = editingId === annotation.id;
 

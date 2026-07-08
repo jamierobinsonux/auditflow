@@ -32,10 +32,10 @@ export function RecommendationPicker({
   return (
     <div className="rounded-xl border border-violet-100 bg-violet-50 p-4">
       <div className="flex flex-col gap-3 md:flex-row md:items-end">
-        <label className="flex-1">
+        <label className="min-w-0 flex-1">
           <span className="text-sm font-semibold text-violet-900">Use saved recommendation</span>
           <SelectInput
-            className="mt-2 bg-white"
+            className="mt-2 bg-white pr-14"
             value={selectedKey}
             onChange={(e) => setSelectedKey(e.target.value)}
           >
@@ -51,6 +51,7 @@ export function RecommendationPicker({
         <Button
           type="button"
           variant="outline"
+          className="w-full shrink-0 md:w-auto"
           disabled={!selected}
           onClick={() => selected && onApply(selected)}
         >

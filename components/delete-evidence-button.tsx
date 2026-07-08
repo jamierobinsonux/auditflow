@@ -7,8 +7,10 @@ import { ConfirmDialog } from "@/components/confirm-dialog";
 
 export function DeleteEvidenceButton({
   imageId,
+  onDeleted,
 }: {
   imageId: string;
+  onDeleted?: (imageId: string) => void;
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -24,6 +26,7 @@ export function DeleteEvidenceButton({
       return;
     }
 
+    onDeleted?.(imageId);
     toast.success("Evidence deleted.");
     router.refresh();
   }
