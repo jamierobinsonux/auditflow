@@ -40,7 +40,7 @@ type Scene = {
 const scenes: Scene[] = [
   {
     id: "landing",
-    eyebrow: "0:00 — Hook",
+    eyebrow: "0:00 — Welcome to AuditFlow",
     title: "UX audits deserve a better workflow.",
     description: "Professional UX audits, simplified.",
     duration: 5200,
@@ -51,7 +51,7 @@ const scenes: Scene[] = [
   },
   {
     id: "dashboard",
-    eyebrow: "0:05 — Workspace",
+    eyebrow: "0:05 — Your Audit Workspace",
     title: "One place for the full audit lifecycle.",
     description: "Manage every audit in one place.",
     duration: 6200,
@@ -62,7 +62,7 @@ const scenes: Scene[] = [
   },
   {
     id: "createProject",
-    eyebrow: "0:11 — Project setup",
+    eyebrow: "0:11 — Create Your Project",
     title: "Create a project in seconds.",
     description: "Start every engagement with a clear project workspace.",
     duration: 6500,
@@ -73,7 +73,7 @@ const scenes: Scene[] = [
   },
   {
     id: "findings",
-    eyebrow: "0:18 — Findings",
+    eyebrow: "0:18 — Capture Findings",
     title: "Capture, search, sort, and prioritize.",
     description: "Capture, prioritize, and organize issues.",
     duration: 7800,
@@ -84,7 +84,7 @@ const scenes: Scene[] = [
   },
   {
     id: "journeys",
-    eyebrow: "0:26 — Journeys",
+    eyebrow: "0:26 — Map the User Journey",
     title: "Connect findings to the user journey.",
     description: "Connect each finding to the user experience.",
     duration: 6400,
@@ -95,7 +95,7 @@ const scenes: Scene[] = [
   },
   {
     id: "recommendations",
-    eyebrow: "0:32 — Recommendations",
+    eyebrow: "0:32 — Build Better Recommendations",
     title: "Reuse your best advice.",
     description: "Reuse your best recommendations.",
     duration: 5600,
@@ -106,7 +106,7 @@ const scenes: Scene[] = [
   },
   {
     id: "reports",
-    eyebrow: "0:38 — Reports",
+    eyebrow: "0:38 — Generate Professional Reports",
     title: "Generate client-ready reports.",
     description: "Generate professional reports in minutes.",
     duration: 7000,
@@ -117,7 +117,7 @@ const scenes: Scene[] = [
   },
   {
     id: "portal",
-    eyebrow: "0:45 — Client Portal",
+    eyebrow: "0:45 — Collaborate with Clients",
     title: "Collaborate without losing context.",
     description: "Collaborate directly with clients.",
     duration: 6800,
@@ -128,14 +128,14 @@ const scenes: Scene[] = [
   },
   {
     id: "ending",
-    eyebrow: "0:53 — Close",
-    title: "AuditFlow. From insight to action.",
-    description: "Everything you need to deliver professional UX audits.",
+    eyebrow: "0:53 — From Insight to Action",
+    title: "Professional UX audits, simplified.",
+    description: "From insight to action.",
     duration: 5200,
     targetKey: "ending-logo",
     zoom: "scale-100",
     script:
-      "Spend less time managing audits and more time improving products. AuditFlow. From insight to action.",
+      "Spend less time managing audits and more time improving products. AuditFlow. Professional UX audits, simplified. From insight to action.",
   },
 ];
 
