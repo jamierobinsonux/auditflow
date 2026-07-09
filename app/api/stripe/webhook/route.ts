@@ -97,7 +97,7 @@ export async function POST(request: Request) {
         const cancellationJustScheduled =
           isPaidPlan(syncedPlan) &&
           !previousSubscriptionState.cancelAtPeriodEnd &&
-          Boolean(subscription.cancel_at_period_end);
+          isCancellationScheduled(subscription);
 
         if (
           isPaidPlan(previousSubscriptionState.plan) &&
@@ -117,7 +117,7 @@ export async function POST(request: Request) {
             request,
             userId,
             plan: syncedPlan,
-            periodEnd: getCurrentPeriodEnd(subscription),
+            periodEnd: getCancellationEffectiveAt(subscription),
           });
         }
 
@@ -247,7 +247,7 @@ async function syncSubscription({
       current_period_end: periodEnd
         ? new Date(periodEnd * 1000).toISOString()
         : null,
-      cancel_at_period_end: subscription.cancel_at_period_end ?? false,
+      cancel_at_period_end: isCancellationScheduled(subscription),
       updated_at: new Date().toISOString(),
     },
     { onConflict: "user_id" }
@@ -517,6 +517,27 @@ function renderSubscriptionEmail({
       </div>
     </div>
   `;
+}
+
+
+function isCancellationScheduled(subscription: Stripe.Subscription) {
+  const subscriptionWithCancellation = subscription as Stripe.Subscription & {
+    cancel_at?: number | null;
+    cancel_at_period_end?: boolean | null;
+  };
+
+  return Boolean(
+    subscriptionWithCancellation.cancel_at_period_end ||
+      subscriptionWithCancellation.cancel_at
+  );
+}
+
+function getCancellationEffectiveAt(subscription: Stripe.Subscription) {
+  const subscriptionWithCancellation = subscription as Stripe.Subscription & {
+    cancel_at?: number | null;
+  };
+
+  return subscriptionWithCancellation.cancel_at ?? getCurrentPeriodEnd(subscription);
 }
 
 function formatBillingDate(periodEnd: number | null) {
