@@ -69,6 +69,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const userId = user.id;
+    const userEmail = user.email ?? null;
+    const userDisplayName =
+      user.user_metadata?.full_name ||
+      user.user_metadata?.name ||
+      user.email?.split("@")[0] ||
+      "there";
+
     const plan = normalizePlanId(requestedPlan);
     const expectedPriceId = getStripePriceIdForPlan(requestedPlan);
 
@@ -89,7 +97,7 @@ export async function POST(request: Request) {
     const { data: subscriptionRecord } = await supabase
       .from("subscriptions")
       .select("*")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .maybeSingle();
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
@@ -124,7 +132,7 @@ export async function POST(request: Request) {
             scheduled_change_date: null,
             updated_at: new Date().toISOString(),
           })
-          .eq("user_id", user.id);
+          .eq("user_id", userId);
 
         return NextResponse.json({
           url: `${appUrl}/settings/billing?success=true`,
@@ -159,7 +167,7 @@ export async function POST(request: Request) {
           ],
           metadata: {
             ...existingSubscription.metadata,
-            user_id: user.id,
+            user_id: userId,
             plan,
           },
           proration_behavior: "create_prorations",
@@ -172,7 +180,7 @@ export async function POST(request: Request) {
             scheduled_change_date: null,
             updated_at: new Date().toISOString(),
           })
-          .eq("user_id", user.id);
+          .eq("user_id", userId);
 
         return NextResponse.json({
           url: `${appUrl}/settings/billing?success=true`,
@@ -202,7 +210,7 @@ export async function POST(request: Request) {
         await stripe.subscriptionSchedules.update(schedule.id, {
           end_behavior: "release",
           metadata: {
-            user_id: user.id,
+            user_id: userId,
             scheduled_plan: plan,
           },
           phases: [
@@ -216,7 +224,7 @@ export async function POST(request: Request) {
                 },
               ],
               metadata: {
-                user_id: user.id,
+                user_id: userId,
                 plan: currentPlan,
               },
             },
@@ -229,7 +237,7 @@ export async function POST(request: Request) {
                 },
               ],
               metadata: {
-                user_id: user.id,
+                user_id: userId,
                 plan,
               },
             },
@@ -243,27 +251,20 @@ export async function POST(request: Request) {
             scheduled_change_date: new Date(periodEnd * 1000).toISOString(),
             updated_at: new Date().toISOString(),
           })
-          .eq("user_id", user.id);
+          .eq("user_id", userId);
+
+        if (userEmail && currentPlan === "Studio" && plan === "Pro") {
+          await sendStudioToProDowngradeEmail({
+            email: userEmail,
+            displayName: userDisplayName,
+            effectiveDate: periodEnd,
+            appUrl,
+          });
+        }
 
         return NextResponse.json({
           url: `${appUrl}/settings/billing?success=true`,
         });
-
-         const userEmail = user?.email ?? null;
-const userDisplayName =
-  user?.user_metadata?.full_name ||
-  user?.user_metadata?.name ||
-  user?.email?.split("@")[0] ||
-  "there";
-
-if (userEmail && currentPlan === "Studio" && plan === "Pro") {
-  await sendStudioToProDowngradeEmail({
-    email: userEmail,
-    displayName: userDisplayName,
-    effectiveDate: periodEnd,
-    appUrl,
-  });
-}
       }
 
       return NextResponse.json({
@@ -276,15 +277,15 @@ if (userEmail && currentPlan === "Studio" && plan === "Pro") {
       customer: subscriptionRecord?.stripe_customer_id || undefined,
       customer_email: subscriptionRecord?.stripe_customer_id
         ? undefined
-        : user.email ?? undefined,
+        : userEmail ?? undefined,
       line_items: [{ price: expectedPriceId, quantity: 1 }],
       metadata: {
-        user_id: user.id,
+        user_id: userId,
         plan,
       },
       subscription_data: {
         metadata: {
-          user_id: user.id,
+          user_id: userId,
           plan,
         },
       },
@@ -313,19 +314,19 @@ if (userEmail && currentPlan === "Studio" && plan === "Pro") {
       { status: 500 }
     );
   }
-  async function sendStudioToProDowngradeEmail({
+}
+
+async function sendStudioToProDowngradeEmail({
   email,
   displayName,
   effectiveDate,
   appUrl,
 }: {
-  email?: string | null;
+  email: string;
   displayName: string;
   effectiveDate: number;
   appUrl: string;
 }) {
-  if (!email) return;
-
   const formattedDate = new Intl.DateTimeFormat("en", {
     month: "long",
     day: "numeric",
@@ -365,5 +366,4 @@ if (userEmail && currentPlan === "Studio" && plan === "Pro") {
       </div>
     `,
   });
-}
 }
