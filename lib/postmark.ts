@@ -14,10 +14,10 @@ export async function sendPostmarkEmail({
   textBody,
 }: SendPostmarkEmailInput) {
   const token = process.env.POSTMARK_SERVER_TOKEN;
-  const from = process.env.POSTMARK_FROM_EMAIL;
+  const from = process.env.POSTMARK_FROM;
 
   if (!token || !from) {
-    console.warn("Postmark email skipped: POSTMARK_SERVER_TOKEN or POSTMARK_FROM_EMAIL is not configured.");
+    console.warn("Postmark email skipped: POSTMARK_SERVER_TOKEN or POSTMARK_FROM is not configured.");
     return { skipped: true };
   }
 
