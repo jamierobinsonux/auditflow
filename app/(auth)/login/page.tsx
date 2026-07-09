@@ -2,9 +2,34 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { BrandLogo } from "@/components/brand-logo";
 import { createClient } from "@/lib/supabase/client";
+
+
+function PasswordVisibilityButton({
+  isVisible,
+  onClick,
+  label,
+}: {
+  isVisible: boolean;
+  onClick: () => void;
+  label: string;
+}) {
+  const Icon = isVisible ? EyeOff : Eye;
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2"
+      aria-label={label}
+    >
+      <Icon className="h-4 w-4" aria-hidden="true" />
+    </button>
+  );
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -12,6 +37,7 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -98,17 +124,25 @@ export default function LoginPage() {
             required
           />
 
-          <input
-            type="password"
-            className="w-full rounded-xl border border-slate-200 p-3 text-sm"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => {
-              setPassword(e.target.value);
-              setErrorMessage(null);
-            }}
-            required
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              className="w-full rounded-xl border border-slate-200 p-3 pr-11 text-sm"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setErrorMessage(null);
+              }}
+              required
+              autoComplete="current-password"
+            />
+            <PasswordVisibilityButton
+              isVisible={showPassword}
+              onClick={() => setShowPassword((current) => !current)}
+              label={showPassword ? "Hide password" : "Show password"}
+            />
+          </div>
 
           {errorMessage ? (
             <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-5 text-red-700" role="alert">
