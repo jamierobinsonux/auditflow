@@ -108,8 +108,8 @@ export default async function ProjectsPage({
             className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-white py-2 pl-3 pr-14 text-sm text-slate-700 outline-none transition focus:border-violet-300 focus:ring-4 focus:ring-violet-100"
           >
             <option value="all">All Statuses</option>
-            <option value="draft">Draft</option>
             <option value="in progress">In Progress</option>
+            <option value="in review">In Review</option>
             <option value="completed">Completed</option>
           </select>
           <ChevronDown
