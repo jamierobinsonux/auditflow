@@ -57,11 +57,23 @@ export default async function BillingPage({
         />
       ) : null}
 
+      {!subscription?.cancel_at_period_end && subscription?.scheduled_plan ? (
+        <PlanChangeScheduledNotice
+          currentPlan={currentPlan}
+          scheduledPlan={subscription.scheduled_plan}
+          scheduledChangeDate={subscription.scheduled_change_date}
+        />
+      ) : null}
+
       <section className="mt-8 grid gap-4 md:grid-cols-3">
         <UsageCard
           label="Current plan"
           value={currentPlan}
-          helper={subscription?.status || "active"}
+          helper={getCurrentPlanHelper({
+            status: subscription?.status,
+            scheduledPlan: subscription?.scheduled_plan,
+            scheduledChangeDate: subscription?.scheduled_change_date,
+          })}
         />
         <UsageCard
           label="Projects used"
@@ -122,7 +134,7 @@ function BillingNotice({
       <Notice
         tone="success"
         title="Subscription updated"
-        description="Your payment was successful. Your plan will update once Stripe confirms the subscription."
+        description="Your billing settings have been updated. Scheduled downgrades keep your current plan active until the end of the billing period."
       />
     );
   }
@@ -192,6 +204,54 @@ function CancellationScheduledNotice({
       </p>
     </section>
   );
+}
+
+function PlanChangeScheduledNotice({
+  currentPlan,
+  scheduledPlan,
+  scheduledChangeDate,
+}: {
+  currentPlan: string;
+  scheduledPlan?: string | null;
+  scheduledChangeDate?: string | null;
+}) {
+  const changeDate = formatBillingDate(scheduledChangeDate);
+
+  if (!scheduledPlan) return null;
+
+  return (
+    <section className="mt-8 rounded-2xl border border-violet-200 bg-violet-50 p-5 text-violet-800 shadow-sm">
+      <p className="text-sm font-semibold">Plan change scheduled</p>
+      <p className="mt-2 text-sm leading-6">
+        Your {currentPlan} plan will remain active
+        {changeDate ? ` until ${changeDate}` : " until the end of your current billing period"}.
+        {" "}After that, your plan will change to {scheduledPlan}.
+      </p>
+      <p className="mt-2 text-xs leading-5 text-violet-700">
+        You’ll keep your current paid features until the scheduled change takes effect.
+      </p>
+    </section>
+  );
+}
+
+function getCurrentPlanHelper({
+  status,
+  scheduledPlan,
+  scheduledChangeDate,
+}: {
+  status?: string | null;
+  scheduledPlan?: string | null;
+  scheduledChangeDate?: string | null;
+}) {
+  const changeDate = formatBillingDate(scheduledChangeDate);
+
+  if (scheduledPlan) {
+    return changeDate
+      ? `Changes to ${scheduledPlan} on ${changeDate}`
+      : `Changes to ${scheduledPlan} at period end`;
+  }
+
+  return status || "active";
 }
 
 function formatBillingDate(value?: string | null) {

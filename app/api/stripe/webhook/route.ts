@@ -165,7 +165,6 @@ export async function POST(request: Request) {
   }
 }
 
-
 async function resolveSubscriptionUserId(
   subscription: Stripe.Subscription,
   fallback?: {
@@ -219,7 +218,6 @@ async function resolveSubscriptionUserId(
   return null;
 }
 
-
 async function syncSubscription({
   userId,
   customerId,
@@ -229,6 +227,16 @@ async function syncSubscription({
   customerId: string;
   subscription: Stripe.Subscription;
 }) {
+  const { data: existingSubscription, error } = await supabaseAdmin
+    .from("subscriptions")
+    .select("scheduled_plan, scheduled_change_date")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) {
+    console.warn("Unable to read stored scheduled subscription state.", error.message);
+  }
+
   const periodEnd = getCurrentPeriodEnd(subscription);
   const priceId = subscription.items?.data?.[0]?.price?.id;
   const planFromPrice = getPlanFromStripePriceId(priceId);
@@ -236,6 +244,16 @@ async function syncSubscription({
     subscription.status
   );
   const plan = active ? planFromPrice : "Free";
+
+  const scheduledPlan = normalizePlanName(existingSubscription?.scheduled_plan);
+  const scheduledChangeDate = parseDate(existingSubscription?.scheduled_change_date);
+  const scheduledChangeReached = Boolean(
+    scheduledChangeDate && scheduledChangeDate.getTime() <= Date.now()
+  );
+  const shouldClearScheduledChange =
+    !active ||
+    plan === scheduledPlan ||
+    (scheduledChangeReached && plan !== "Free");
 
   await supabaseAdmin.from("subscriptions").upsert(
     {
@@ -248,6 +266,12 @@ async function syncSubscription({
         ? new Date(periodEnd * 1000).toISOString()
         : null,
       cancel_at_period_end: isCancellationScheduled(subscription),
+      scheduled_plan: shouldClearScheduledChange
+        ? null
+        : existingSubscription?.scheduled_plan ?? null,
+      scheduled_change_date: shouldClearScheduledChange
+        ? null
+        : existingSubscription?.scheduled_change_date ?? null,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "user_id" }
@@ -285,6 +309,16 @@ function normalizePlanName(plan: unknown) {
 
 function isPaidPlan(plan: string) {
   return plan === "Pro" || plan === "Studio";
+}
+
+function parseDate(value: unknown) {
+  if (!value || typeof value !== "string") return null;
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return null;
+
+  return date;
 }
 
 async function getAccountEmail(userId: string) {
@@ -518,7 +552,6 @@ function renderSubscriptionEmail({
     </div>
   `;
 }
-
 
 function isCancellationScheduled(subscription: Stripe.Subscription) {
   const subscriptionWithCancellation = subscription as Stripe.Subscription & {
