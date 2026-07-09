@@ -50,6 +50,13 @@ export default async function BillingPage({
         canceled={params.canceled}
       />
 
+      {subscription?.cancel_at_period_end ? (
+        <CancellationScheduledNotice
+          plan={currentPlan}
+          currentPeriodEnd={subscription.current_period_end}
+        />
+      ) : null}
+
       <section className="mt-8 grid gap-4 md:grid-cols-3">
         <UsageCard
           label="Current plan"
@@ -161,6 +168,44 @@ function BillingNotice({
   }
 
   return null;
+}
+
+function CancellationScheduledNotice({
+  plan,
+  currentPeriodEnd,
+}: {
+  plan: string;
+  currentPeriodEnd?: string | null;
+}) {
+  const expirationDate = formatBillingDate(currentPeriodEnd);
+
+  return (
+    <section className="mt-8 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-amber-800 shadow-sm">
+      <p className="text-sm font-semibold">Subscription cancellation scheduled</p>
+      <p className="mt-2 text-sm leading-6">
+        Your {plan} plan will remain active
+        {expirationDate ? ` until ${expirationDate}` : " until the end of your current billing period"}.
+        {" "}You won’t be billed again for this subscription.
+      </p>
+      <p className="mt-2 text-xs leading-5 text-amber-700">
+        Need to keep AuditFlow? Use Manage subscription to reactivate before access expires.
+      </p>
+    </section>
+  );
+}
+
+function formatBillingDate(value?: string | null) {
+  if (!value) return null;
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return null;
+
+  return new Intl.DateTimeFormat("en", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
 }
 
 function Notice({

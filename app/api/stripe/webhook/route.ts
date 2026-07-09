@@ -87,19 +87,37 @@ export async function POST(request: Request) {
           break;
         }
 
-        const previousPlan = await getStoredPlan(userId);
+        const previousSubscriptionState = await getStoredSubscriptionState(userId);
         const syncedPlan = await syncSubscription({
           userId,
           customerId: subscription.customer as string,
           subscription,
         });
 
-        if (isPaidPlan(previousPlan) && isPaidPlan(syncedPlan) && previousPlan !== syncedPlan) {
+        const cancellationJustScheduled =
+          isPaidPlan(syncedPlan) &&
+          !previousSubscriptionState.cancelAtPeriodEnd &&
+          Boolean(subscription.cancel_at_period_end);
+
+        if (
+          isPaidPlan(previousSubscriptionState.plan) &&
+          isPaidPlan(syncedPlan) &&
+          previousSubscriptionState.plan !== syncedPlan
+        ) {
           await sendSubscriptionUpdatedEmail({
             request,
             userId,
-            previousPlan,
+            previousPlan: previousSubscriptionState.plan,
             newPlan: syncedPlan,
+          });
+        }
+
+        if (cancellationJustScheduled) {
+          await sendSubscriptionCancellationScheduledEmail({
+            request,
+            userId,
+            plan: syncedPlan,
+            periodEnd: getCurrentPeriodEnd(subscription),
           });
         }
 
@@ -238,18 +256,26 @@ async function syncSubscription({
   return plan;
 }
 
-async function getStoredPlan(userId: string) {
+async function getStoredSubscriptionState(userId: string) {
   const { data, error } = await supabaseAdmin
     .from("subscriptions")
-    .select("plan")
+    .select("plan, cancel_at_period_end")
     .eq("user_id", userId)
     .maybeSingle();
 
   if (error) {
-    console.warn("Unable to read stored subscription plan before Stripe sync.", error.message);
+    console.warn("Unable to read stored subscription state before Stripe sync.", error.message);
   }
 
-  return normalizePlanName(data?.plan);
+  return {
+    plan: normalizePlanName(data?.plan),
+    cancelAtPeriodEnd: Boolean(data?.cancel_at_period_end),
+  };
+}
+
+async function getStoredPlan(userId: string) {
+  const state = await getStoredSubscriptionState(userId);
+  return state.plan;
 }
 
 function normalizePlanName(plan: unknown) {
@@ -377,6 +403,51 @@ async function sendSubscriptionUpdatedEmail({
   });
 }
 
+async function sendSubscriptionCancellationScheduledEmail({
+  request,
+  userId,
+  plan,
+  periodEnd,
+}: {
+  request: Request;
+  userId: string;
+  plan: string;
+  periodEnd: number | null;
+}) {
+  const account = await getAccountEmail(userId);
+
+  if (!account) return;
+
+  const appUrl = getAppUrl(request);
+  const expirationDate = formatBillingDate(periodEnd);
+
+  await sendPostmarkEmail({
+    to: account.email,
+    subject: "Your AuditFlow subscription cancellation is scheduled",
+    textBody: [
+      `Hi ${account.displayName},`,
+      "",
+      `Your AuditFlow ${plan} subscription is scheduled to cancel${expirationDate ? ` on ${expirationDate}` : " at the end of your current billing period"}.`,
+      "You’ll keep access to your paid features until then, and you won’t be billed again for this subscription.",
+      "",
+      `Manage AuditFlow: ${appUrl}/settings/billing`,
+      "",
+      "— The AuditFlow Team",
+    ].join("\n"),
+    htmlBody: renderSubscriptionEmail({
+      eyebrow: "Cancellation scheduled",
+      title: "Your cancellation is scheduled",
+      displayName: account.displayName,
+      paragraphs: [
+        `Your AuditFlow ${plan} subscription is scheduled to cancel${expirationDate ? ` on ${expirationDate}` : " at the end of your current billing period"}.`,
+        "You’ll keep access to your paid features until then, and you won’t be billed again for this subscription.",
+      ],
+      buttonLabel: "Manage subscription",
+      buttonHref: `${appUrl}/settings/billing`,
+    }),
+  });
+}
+
 async function sendSubscriptionCancelledEmail({
   userId,
   previousPlan,
@@ -446,6 +517,16 @@ function renderSubscriptionEmail({
       </div>
     </div>
   `;
+}
+
+function formatBillingDate(periodEnd: number | null) {
+  if (!periodEnd) return null;
+
+  return new Intl.DateTimeFormat("en", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  }).format(new Date(periodEnd * 1000));
 }
 
 function getCurrentPeriodEnd(subscription: Stripe.Subscription) {
