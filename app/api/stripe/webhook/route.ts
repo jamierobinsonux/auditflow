@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { stripe } from "@/lib/stripe";
+import { getPlanFromStripePriceId, stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
 export async function POST(request: Request) {
@@ -32,9 +32,8 @@ export async function POST(request: Request) {
         const session = event.data.object as Stripe.Checkout.Session;
 
         const userId = session.metadata?.user_id;
-        const plan = session.metadata?.plan;
 
-        if (!userId || !plan || !session.subscription || !session.customer) {
+        if (!userId || !session.subscription || !session.customer) {
           break;
         }
 
@@ -47,7 +46,6 @@ export async function POST(request: Request) {
 
         await syncSubscription({
           userId,
-          plan,
           customerId,
           subscription,
         });
@@ -60,13 +58,11 @@ export async function POST(request: Request) {
         const subscription = event.data.object as Stripe.Subscription;
 
         const userId = subscription.metadata?.user_id;
-        const plan = subscription.metadata?.plan || "Free";
 
         if (!userId) break;
 
         await syncSubscription({
           userId,
-          plan: subscription.status === "active" ? plan : "Free",
           customerId: subscription.customer as string,
           subscription,
         });
@@ -86,16 +82,20 @@ export async function POST(request: Request) {
 
 async function syncSubscription({
   userId,
-  plan,
   customerId,
   subscription,
 }: {
   userId: string;
-  plan: string;
   customerId: string;
   subscription: Stripe.Subscription;
 }) {
   const periodEnd = getCurrentPeriodEnd(subscription);
+  const priceId = subscription.items?.data?.[0]?.price?.id;
+  const planFromPrice = getPlanFromStripePriceId(priceId);
+  const active = ["active", "trialing", "past_due", "unpaid"].includes(
+    subscription.status
+  );
+  const plan = active ? planFromPrice : "Free";
 
   await supabaseAdmin.from("subscriptions").upsert(
     {

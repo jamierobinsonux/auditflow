@@ -64,6 +64,7 @@ export function PlanCard({ plan, currentPlan }: PlanCardProps) {
       ) : (
         <UpgradeButton
           plan={plan.id}
+          currentPlan={currentPlan}
           priceId={priceId}
           disabled={isCurrent}
           label={upgradeLabel}
