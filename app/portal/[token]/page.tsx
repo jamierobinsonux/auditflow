@@ -174,10 +174,21 @@ export default async function ClientPortalPage({
           </Card>
 
           <div className="grid gap-6 lg:grid-cols-2">
-            <Card className="flex h-[540px] flex-col p-6">
+            <Card className="flex h-[420px] flex-col p-6">
               <SectionHeader title="Notifications" description="Recent replies from your consultant." />
               {auditorNotifications.length === 0 ? (
-                <EmptyPortalState icon={Bell} title="No consultant replies yet" />
+                <div className="flex flex-1 items-center justify-center">
+                  <div className="max-w-xs text-center">
+                    <Bell className="mx-auto h-12 w-12 text-slate-300" />
+                    <h3 className="mt-4 text-lg font-semibold text-slate-900">
+                      You're all caught up
+                    </h3>
+                    <p className="mt-2 text-sm leading-6 text-slate-500">
+                      When your consultant replies to a finding or shares new feedback,
+                      you'll see those updates here.
+                    </p>
+                  </div>
+                </div>
               ) : (
                 <ClientPortalNotifications
                   notifications={auditorNotifications.map((notification: any) => ({
@@ -193,10 +204,21 @@ export default async function ClientPortalPage({
               )}
             </Card>
 
-            <Card className="flex h-[540px] flex-col p-6">
+            <Card className="flex h-[420px] flex-col p-6">
               <SectionHeader title="Reports" description="Download exported reports anytime." />
               {clientReports.length === 0 ? (
-                <EmptyPortalState icon={FileText} title="No reports shared yet" />
+                <div className="flex flex-1 items-center justify-center">
+                  <div className="max-w-xs text-center">
+                    <FileText className="mx-auto h-12 w-12 text-slate-300" />
+                    <h3 className="mt-4 text-lg font-semibold text-slate-900">
+                      No reports available
+                    </h3>
+                    <p className="mt-2 text-sm leading-6 text-slate-500">
+                      Exported audit reports will appear here once your consultant
+                      shares them with you.
+                    </p>
+                  </div>
+                </div>
               ) : (
                 <div className="mt-5 flex-1 space-y-3 overflow-y-auto pr-2">
                   {clientReports.map((report: any) => {
