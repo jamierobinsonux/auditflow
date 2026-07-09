@@ -22,21 +22,21 @@ export function UpgradeRequiredCard({
           {description}
         </p>
 
-        <div className="mt-6 flex gap-3">
-          <Link
-            href="/settings/billing"
-            className="flex-1 rounded-xl bg-violet-600 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-violet-700"
-          >
-            View Plans
-          </Link>
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+  <Link
+    href="/settings/billing"
+    className="w-full rounded-xl bg-violet-600 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-violet-700 sm:flex-1"
+  >
+    View Plans
+  </Link>
 
-          <Link
-            href="/dashboard"
-            className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50"
-          >
-            Back to Dashboard
-          </Link>
-        </div>
+  <Link
+    href="/dashboard"
+    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:flex-1"
+  >
+    Back to Dashboard
+  </Link>
+</div>
       </div>
     </main>
   );
