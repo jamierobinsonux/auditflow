@@ -108,7 +108,7 @@ export default function SignupPage() {
 
     setIsSubmitting(true);
 
-    const existingEmailResponse = await fetch("/api/auth/check-email", {
+    /*const existingEmailResponse = await fetch("/api/auth/check-email", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -126,7 +126,7 @@ export default function SignupPage() {
         setErrorMessage("An account with this email already exists. Sign in instead, or reset your password if you need help getting back in.");
         return;
       }
-    }
+    }*/
 
     const { data, error } = await supabase.auth.signUp({
       email: trimmedEmail,
