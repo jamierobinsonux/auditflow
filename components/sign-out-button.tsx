@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import posthog from "posthog-js";
 
 export function SignOutButton({
   className = "text-xs font-medium text-slate-500 hover:text-slate-900",
@@ -17,6 +18,7 @@ export function SignOutButton({
 
   async function handleSignOut() {
     await supabase.auth.signOut();
+    posthog.reset();
     router.push("/login");
     router.refresh();
   }

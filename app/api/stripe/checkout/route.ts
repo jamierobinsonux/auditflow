@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getStripePriceIdForPlan, normalizePlanId, stripe } from "@/lib/stripe";
 import { sendPostmarkEmail, escapeHtml } from "@/lib/postmark";
 import type Stripe from "stripe";
+import { captureServerEvent } from "@/lib/posthog-server";
 
 const ACTIVE_SUBSCRIPTION_STATUSES = new Set([
   "active",
@@ -261,6 +262,16 @@ export async function POST(request: Request) {
             appUrl,
           });
         }
+
+        await captureServerEvent({
+  distinctId: userId,
+  event: "subscription_downgrade_scheduled",
+  properties: {
+    previous_plan: currentPlan,
+    new_plan: plan,
+    effective_at: new Date(periodEnd * 1000).toISOString(),
+  },
+});
 
         return NextResponse.json({
           url: `${appUrl}/settings/billing?success=true`,

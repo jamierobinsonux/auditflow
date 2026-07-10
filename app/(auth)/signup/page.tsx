@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
 import { createClient } from "@/lib/supabase/client";
+import posthog from "posthog-js";
 
 const MIN_PASSWORD_LENGTH = 12;
 
@@ -153,6 +154,12 @@ export default function SignupPage() {
       return;
     }
 
+    if (data.user) {
+  posthog.capture("account_created", {
+    signup_method: "email",
+  });
+}
+
     router.push(`/check-email?email=${encodeURIComponent(trimmedEmail)}`);
   }
 
@@ -164,6 +171,8 @@ export default function SignupPage() {
       return;
     }
 
+    posthog.capture("google_signup_started");
+    
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {

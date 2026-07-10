@@ -4,6 +4,7 @@ import { getUserSubscription } from "@/lib/subscription";
 import { NotificationBell } from "@/components/notification-bell";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { sendPostmarkEmail, escapeHtml } from "@/lib/postmark";
+import { PostHogIdentity } from "@/components/posthog-identity";
 
 export default async function AppLayout({
   children,
@@ -31,7 +32,14 @@ export default async function AppLayout({
 }
 
   return (
-    <div className="min-h-screen bg-[#F1F5F9]">
+  <div className="min-h-screen bg-[#F1F5F9]">
+    {user ? (
+      <PostHogIdentity
+        userId={user.id}
+        email={user.email}
+        plan={subscription?.planId || "Free"}
+      />
+    ) : null}
       <Sidebar user={user} isStudio={Boolean(subscription?.isStudio)} />
 
       <main className="min-h-screen lg:ml-72">

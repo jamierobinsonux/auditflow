@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { normalizeRecommendationId } from "@/lib/recommendations";
+import { captureServerEvent } from "@/lib/posthog-server";
 import {
   canCreateFinding,
   getUsage,
@@ -108,8 +109,8 @@ export async function POST(request: Request) {
       journey_id: body.journey_id || null,
       journey_step_id: body.journey_step_id || null,
     })
-    .select("id")
-    .single();
+    .select("id, project_id, severity, category, status")
+.single();
 
   if (error || !finding) {
     return NextResponse.json(
@@ -124,5 +125,17 @@ export async function POST(request: Request) {
     .eq("id", projectId)
     .eq("user_id", user.id);
 
-  return NextResponse.json({ finding });
+  await captureServerEvent({
+  distinctId: user.id,
+  event: "finding_created",
+  properties: {
+    finding_id: finding.id,
+    project_id: finding.project_id,
+    severity: finding.severity || null,
+    category: finding.category || null,
+    status: finding.status || null,
+  },
+});
+
+return NextResponse.json({ finding });
 }
