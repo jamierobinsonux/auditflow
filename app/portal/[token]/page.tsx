@@ -178,13 +178,17 @@ export default async function ClientPortalPage({
               <SectionHeader title="Notifications" description="Recent replies from your consultant." />
               {auditorNotifications.length === 0 ? (
                 <div className="flex flex-1 items-center justify-center">
-                  <div className="max-w-xs text-center">
-                    <Bell className="mx-auto h-12 w-12 text-slate-300" />
-                    <h3 className="mt-4 text-lg font-semibold text-slate-900">
+                  <div className="max-w-sm text-center">
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-50">
+                      <Bell className="h-8 w-8 text-violet-500" />
+                    </div>
+
+                    <h3 className="mt-5 text-lg font-semibold text-slate-900">
                       You're all caught up
                     </h3>
+
                     <p className="mt-2 text-sm leading-6 text-slate-500">
-                      When your consultant replies to a finding or shares new feedback,
+                      When your consultant replies to a finding or leaves feedback,
                       you'll see those updates here.
                     </p>
                   </div>
@@ -208,14 +212,17 @@ export default async function ClientPortalPage({
               <SectionHeader title="Reports" description="Download exported reports anytime." />
               {clientReports.length === 0 ? (
                 <div className="flex flex-1 items-center justify-center">
-                  <div className="max-w-xs text-center">
-                    <FileText className="mx-auto h-12 w-12 text-slate-300" />
-                    <h3 className="mt-4 text-lg font-semibold text-slate-900">
-                      No reports available
+                  <div className="max-w-sm text-center">
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100">
+                      <FileText className="h-8 w-8 text-slate-500" />
+                    </div>
+
+                    <h3 className="mt-5 text-lg font-semibold text-slate-900">
+                      No reports yet
                     </h3>
+
                     <p className="mt-2 text-sm leading-6 text-slate-500">
-                      Exported audit reports will appear here once your consultant
-                      shares them with you.
+                      Exported audit reports shared by your consultant will appear here.
                     </p>
                   </div>
                 </div>
