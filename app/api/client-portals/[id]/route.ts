@@ -1,6 +1,7 @@
 import { randomUUID } from "crypto";
 import { createClient } from "@/lib/supabase/server";
 import { getUserSubscription } from "@/lib/subscription";
+import { captureServerEvent } from "@/lib/posthog-server";
 
 export async function PATCH(
   request: Request,
@@ -45,6 +46,17 @@ export async function PATCH(
     .single();
 
   if (error) return Response.json({ error: error.message }, { status: 500 });
+
+  if (body.portal_enabled === true || body.action === "regenerate") {
+    await captureServerEvent({
+      distinctId: user.id,
+      event: "client_portal_enabled",
+      properties: {
+        client_id: id,
+        regenerated: body.action === "regenerate",
+      },
+    });
+  }
 
   return Response.json({ client: data });
 }

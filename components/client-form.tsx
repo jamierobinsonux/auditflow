@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
+import posthog from "posthog-js";
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/ui/form-field";
 import { TextInput } from "@/components/ui/text-input";
@@ -80,6 +81,12 @@ export function ClientForm({ client }: ClientFormProps) {
       return;
     }
 
+    if (!isEditing) {
+      posthog.capture("client_created", {
+        client_id: data.id,
+        industry: industry || null,
+      });
+    }
     toast.success(isEditing ? "Client updated." : "Client created.");
     router.push(`/clients/${data.id}`);
     router.refresh();

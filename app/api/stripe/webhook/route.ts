@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { getPlanFromStripePriceId, stripe } from "@/lib/stripe";
 import { sendPostmarkEmail, escapeHtml } from "@/lib/postmark";
-import { supabaseAdmin } from "@/lib/supabase/admin";import { captureServerEvent } from "@/lib/posthog-server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
+import { captureServerEvent } from "@/lib/posthog-server";
 
 export async function POST(request: Request) {
   const body = await request.text();
@@ -64,22 +65,20 @@ export async function POST(request: Request) {
         });
 
         if (syncedPlan !== "Free") {
-  await sendSubscriptionStartedEmail({
-    request,
-    userId,
-    plan: syncedPlan,
-  });
+          await sendSubscriptionStartedEmail({
+            request,
+            userId,
+            plan: syncedPlan,
+          });
 
-  await captureServerEvent({
-    distinctId: userId,
-    event: "subscription_started",
-    properties: {
-      plan: syncedPlan,
-      stripe_customer_id: customerId,
-      stripe_subscription_id: subscriptionId,
-    },
-  });
-}
+          await captureServerEvent({
+            distinctId: userId,
+            event: "subscription_started",
+            properties: {
+              plan: syncedPlan,
+            },
+          });
+        }
 
         break;
       }
@@ -110,32 +109,32 @@ export async function POST(request: Request) {
           isCancellationScheduled(subscription);
 
         if (
-  isPaidPlan(previousSubscriptionState.plan) &&
-  isPaidPlan(syncedPlan) &&
-  previousSubscriptionState.plan !== syncedPlan
-) {
-  await sendSubscriptionUpdatedEmail({
-    request,
-    userId,
-    previousPlan: previousSubscriptionState.plan,
-    newPlan: syncedPlan,
-  });
+          isPaidPlan(previousSubscriptionState.plan) &&
+          isPaidPlan(syncedPlan) &&
+          previousSubscriptionState.plan !== syncedPlan
+        ) {
+          await sendSubscriptionUpdatedEmail({
+            request,
+            userId,
+            previousPlan: previousSubscriptionState.plan,
+            newPlan: syncedPlan,
+          });
 
-  const isUpgrade =
-    previousSubscriptionState.plan === "Pro" &&
-    syncedPlan === "Studio";
+          const isUpgrade =
+            previousSubscriptionState.plan === "Pro" &&
+            syncedPlan === "Studio";
 
-  await captureServerEvent({
-    distinctId: userId,
-    event: isUpgrade
-      ? "subscription_upgraded"
-      : "subscription_downgrade_completed",
-    properties: {
-      previous_plan: previousSubscriptionState.plan,
-      new_plan: syncedPlan,
-    },
-  });
-}
+          await captureServerEvent({
+            distinctId: userId,
+            event: isUpgrade
+              ? "subscription_upgraded"
+              : "subscription_downgrade_completed",
+            properties: {
+              previous_plan: previousSubscriptionState.plan,
+              new_plan: syncedPlan,
+            },
+          });
+        }
 
         if (cancellationJustScheduled) {
           await sendSubscriptionCancellationScheduledEmail({
@@ -171,19 +170,19 @@ export async function POST(request: Request) {
         });
 
         if (isPaidPlan(previousPlan)) {
-  await sendSubscriptionCancelledEmail({
-    userId,
-    previousPlan,
-  });
+          await sendSubscriptionCancelledEmail({
+            userId,
+            previousPlan,
+          });
 
-  await captureServerEvent({
-    distinctId: userId,
-    event: "subscription_cancelled",
-    properties: {
-      previous_plan: previousPlan,
-    },
-  });
-}
+          await captureServerEvent({
+            distinctId: userId,
+            event: "subscription_cancelled",
+            properties: {
+              previous_plan: previousPlan,
+            },
+          });
+        }
 
         break;
       }

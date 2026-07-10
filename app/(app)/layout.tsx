@@ -20,26 +20,27 @@ export default async function AppLayout({
   const subscription = user ? await getUserSubscription(user.id) : null;
 
   if (user) {
-  await ensureWelcomeEmailSent({
-    userId: user.id,
-    email: user.email,
-    displayName:
-      user.user_metadata?.full_name ||
-      user.user_metadata?.name ||
-      user.email?.split("@")[0] ||
-      "there",
-  });
-}
+    await ensureWelcomeEmailSent({
+      userId: user.id,
+      email: user.email,
+      displayName:
+        user.user_metadata?.full_name ||
+        user.user_metadata?.name ||
+        user.email?.split("@")[0] ||
+        "there",
+    });
+  }
 
   return (
-  <div className="min-h-screen bg-[#F1F5F9]">
-    {user ? (
-      <PostHogIdentity
-        userId={user.id}
-        email={user.email}
-        plan={subscription?.planId || "Free"}
-      />
-    ) : null}
+    <div className="min-h-screen bg-[#F1F5F9]">
+      {user ? (
+        <PostHogIdentity
+          userId={user.id}
+          email={user.email}
+          plan={subscription?.planId || "Free"}
+        />
+      ) : null}
+
       <Sidebar user={user} isStudio={Boolean(subscription?.isStudio)} />
 
       <main className="min-h-screen lg:ml-72">
@@ -51,6 +52,7 @@ export default async function AppLayout({
     </div>
   );
 }
+
 async function ensureWelcomeEmailSent({
   userId,
   email,

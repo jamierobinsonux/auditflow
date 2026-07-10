@@ -3,6 +3,7 @@ import { stripe } from "@/lib/stripe";
 import { sendPostmarkEmail, escapeHtml } from "@/lib/postmark";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { captureServerEvent } from "@/lib/posthog-server";
 
 const DELETE_CONFIRMATION = "DELETE AUDITFLOW";
 
@@ -105,6 +106,15 @@ export async function POST(request: Request) {
         { status: 500 }
       );
     }
+
+    await captureServerEvent({
+      distinctId: user.id,
+      event: "account_deleted",
+      properties: {
+        subscription_cancelled: activeSubscription,
+        had_paid_plan: Boolean(paidPlan),
+      },
+    });
 
     return NextResponse.json({
       ok: true,

@@ -109,8 +109,8 @@ export async function POST(request: Request) {
       journey_id: body.journey_id || null,
       journey_step_id: body.journey_step_id || null,
     })
-    .select("id, project_id, severity, category, status")
-.single();
+    .select("id,project_id,severity,category,status")
+    .single();
 
   if (error || !finding) {
     return NextResponse.json(
@@ -126,16 +126,16 @@ export async function POST(request: Request) {
     .eq("user_id", user.id);
 
   await captureServerEvent({
-  distinctId: user.id,
-  event: "finding_created",
-  properties: {
-    finding_id: finding.id,
-    project_id: finding.project_id,
-    severity: finding.severity || null,
-    category: finding.category || null,
-    status: finding.status || null,
-  },
-});
+    distinctId: user.id,
+    event: "finding_created",
+    properties: {
+      finding_id: finding.id,
+      project_id: finding.project_id,
+      severity: finding.severity || null,
+      category: finding.category || null,
+      status: finding.status || null,
+    },
+  });
 
-return NextResponse.json({ finding });
+  return NextResponse.json({ finding });
 }

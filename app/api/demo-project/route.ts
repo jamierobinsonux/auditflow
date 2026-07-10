@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { DEMO_PROJECT_CLIENT_NAME, DEMO_PROJECT_NAME, DEMO_PROJECT_URL } from "@/lib/subscription";
+import { captureServerEvent } from "@/lib/posthog-server";
 
 const demoFindings = [
   {
@@ -137,6 +138,14 @@ export async function POST() {
       { status: 500 }
     );
   }
+
+  await captureServerEvent({
+    distinctId: user.id,
+    event: "demo_project_created",
+    properties: {
+      project_id: project.id,
+    },
+  });
 
   return NextResponse.json({ projectId: project.id });
 }

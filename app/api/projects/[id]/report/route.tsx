@@ -4,6 +4,7 @@ import { AuditReport } from "@/components/pdf/AuditReport";
 import { getUserSubscription } from "@/lib/subscription";
 import { getEffectiveReportBranding } from "@/lib/report-branding";
 import { createNotification } from "@/lib/notifications";
+import { captureServerEvent } from "@/lib/posthog-server";
 import type {
   ReportOptions,
   ReportSectionId,
@@ -221,6 +222,19 @@ export async function GET(
         project_id: project.id,
         report_export_id: reportExport?.id ?? null,
         template: options.template,
+      },
+    });
+
+    await captureServerEvent({
+      distinctId: user.id,
+      event: "report_generated",
+      properties: {
+        project_id: project.id,
+        report_export_id: reportExport?.id ?? null,
+        template: options.template,
+        section_count: options.sections?.length ?? 0,
+        branding_mode: brandingMode,
+        finding_count: hydratedFindings.length,
       },
     });
   }

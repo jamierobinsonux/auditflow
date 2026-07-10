@@ -264,14 +264,14 @@ export async function POST(request: Request) {
         }
 
         await captureServerEvent({
-  distinctId: userId,
-  event: "subscription_downgrade_scheduled",
-  properties: {
-    previous_plan: currentPlan,
-    new_plan: plan,
-    effective_at: new Date(periodEnd * 1000).toISOString(),
-  },
-});
+          distinctId: userId,
+          event: "subscription_downgrade_scheduled",
+          properties: {
+            previous_plan: currentPlan,
+            new_plan: plan,
+            effective_at: new Date(periodEnd * 1000).toISOString(),
+          },
+        });
 
         return NextResponse.json({
           url: `${appUrl}/settings/billing?success=true`,
@@ -310,6 +310,14 @@ export async function POST(request: Request) {
         { status: 500 }
       );
     }
+
+    await captureServerEvent({
+      distinctId: userId,
+      event: "checkout_session_started",
+      properties: {
+        plan,
+      },
+    });
 
     return NextResponse.json({ url: session.url });
   } catch (error) {

@@ -212,16 +212,16 @@ export async function POST(request: Request) {
   }
 
   await captureServerEvent({
-  distinctId: user.id,
-  event: "project_created",
-  properties: {
-    project_id: project.id,
-    audit_type: auditType,
-    framework_source: body.frameworkSource || "none",
-    has_client: Boolean(body.clientId),
-    plan: subscription.planId,
-  },
-});
+    distinctId: user.id,
+    event: "project_created",
+    properties: {
+      project_id: project.id,
+      audit_type: auditType,
+      framework_source: body.frameworkSource || "none",
+      has_client: Boolean(body.clientId),
+      plan: subscription.planId,
+    },
+  });
 
   return NextResponse.json({ projectId: project.id });
 }
