@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { X } from "lucide-react";
+import { Bell, X } from "lucide-react";
 
 type Notification = {
   id: string;
@@ -36,11 +36,28 @@ export function ClientPortalNotifications({
   }
 
   if (visibleNotifications.length === 0) {
-    return null;
+    return (
+      <div className="flex flex-1 items-center justify-center">
+        <div className="max-w-sm text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-50">
+            <Bell className="h-8 w-8 text-violet-500" />
+          </div>
+
+          <h3 className="mt-5 text-lg font-semibold text-slate-900">
+            You&apos;re all caught up
+          </h3>
+
+          <p className="mt-2 text-sm leading-6 text-slate-500">
+            When your consultant replies to a finding or leaves feedback,
+            you&apos;ll see those updates here.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="mt-5 max-h-[420px] space-y-3 overflow-y-auto pr-2">
+    <div className="mt-5 flex-1 space-y-3 overflow-y-auto pr-2">
       {visibleNotifications.map((notification) => (
         <div
           key={notification.id}
