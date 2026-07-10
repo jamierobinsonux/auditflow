@@ -5,6 +5,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { Card } from "@/components/layout/card";
 import { SectionHeader } from "@/components/layout/section-header";
 import { Button } from "@/components/ui/button";
+import { ReadOnlyEvidenceGallery } from "@/components/read-only-evidence-gallery";
 import { PortalFindingComments } from "@/components/portal-finding-comments";
 import { SeverityBadge } from "@/components/ui/severity-badge";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -231,97 +232,6 @@ function Meta({ label, value }: { label: string; value: string }) {
         {label}
       </p>
       <p className="mt-1 text-sm font-semibold text-slate-950">{value}</p>
-    </div>
-  );
-}
-
-function ReadOnlyEvidenceGallery({
-  images,
-  annotations,
-}: {
-  images: any[];
-  annotations: any[];
-}) {
-  return (
-    <div className="mt-5 space-y-5">
-      {images.map((image, imageIndex) => {
-        const imageAnnotations = annotations.filter(
-          (annotation) =>
-            annotation.image_id === image.id ||
-            annotation.evidence_image_id === image.id
-        );
-
-        return (
-          <div
-            key={image.id || imageIndex}
-            className="overflow-hidden rounded-2xl border border-slate-200 bg-white"
-          >
-            <div className="border-b border-slate-100 bg-slate-50 px-5 py-4">
-              <p className="text-sm font-semibold text-slate-950">
-                {image.evidence_name || image.caption || `Evidence ${imageIndex + 1}`}
-              </p>
-              {image.caption && image.evidence_name && (
-                <p className="mt-1 text-xs text-slate-500">{image.caption}</p>
-              )}
-            </div>
-
-            <div className="p-5">
-              <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
-                <img
-                  src={image.image_url || image.url || image.public_url}
-                  alt=""
-                  className="w-full object-contain"
-                />
-
-                {imageAnnotations.map((annotation, annotationIndex) => {
-                  const label = annotation.label || String(annotationIndex + 1);
-
-                  return (
-                    <span
-                      key={annotation.id || `${image.id}-${annotationIndex}`}
-                      className="absolute flex h-7 w-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white bg-violet-600 text-xs font-bold text-white shadow-md"
-                      style={{
-                        left: `${annotation.x_position ?? 0}%`,
-                        top: `${annotation.y_position ?? 0}%`,
-                      }}
-                    >
-                      {label}
-                    </span>
-                  );
-                })}
-              </div>
-
-              {imageAnnotations.length > 0 && (
-                <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    Annotation notes
-                  </p>
-                  <div className="mt-3 space-y-2">
-                    {imageAnnotations.map((annotation, annotationIndex) => {
-                      const label = annotation.label || String(annotationIndex + 1);
-                      const note = annotation.note || annotation.text;
-
-                      if (!note) return null;
-
-                      return (
-                        <p
-                          key={annotation.id || `note-${annotationIndex}`}
-                          className="text-sm leading-6 text-slate-600"
-                        >
-                          <span className="font-semibold text-slate-950">
-                            {label}.
-                          </span>{" "}
-                          {note}
-                        </p>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        );
-      })}
     </div>
   );
 }
