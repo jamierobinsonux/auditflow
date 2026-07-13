@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { BrandLogo } from "@/components/brand-logo";
 
-const updatedDate = "July 2026";
+const updatedDate = "July 13, 2026";
 
 const sections = [
   {
@@ -17,7 +17,7 @@ const sections = [
       "Account information: name, email address, login details, authentication events, account settings, subscription status, and related account metadata.",
       "Workspace content: clients, projects, websites, audit types, findings, journeys, steps, recommendations, framework items, evidence files, image annotations, report settings, exported report content, and client portal comments.",
       "Billing information: subscription plan, billing status, payment method details, invoices, receipts, and tax-related billing details. Payments are processed by Stripe. AuditFlow does not store full credit card numbers on its own servers.",
-      "Technical information: device and browser details, IP address, pages or features used, error logs, security events, and performance data needed to operate and protect the service.",
+      "Technical information: device and browser details, IP address, pages visited, features used, product interaction events, session diagnostics, error logs, security events, and performance information used to operate, secure, troubleshoot, and improve AuditFlow.",
     ],
   },
   {
@@ -31,7 +31,7 @@ const sections = [
     title: "4. Service providers",
     body: [
       "AuditFlow relies on third-party service providers to operate the product. Supabase provides authentication, database services, and file storage. Vercel provides hosting and deployment infrastructure. Stripe provides payment processing, subscriptions, invoices, and billing-related services. Postmark provides transactional email delivery for account emails, password resets, billing-related messages, and client portal notifications.",
-      "These providers may process information only as needed to provide their services to AuditFlow and are subject to their own security, privacy, and compliance practices. Postmark may process email addresses, message content, delivery status, and limited email metadata so that AuditFlow can send transactional and notification emails.",
+      "These providers may process information only as needed to provide their services to AuditFlow and are subject to their own security, privacy, and compliance practices. Postmark may process email addresses, message content, delivery status, and limited email metadata so that AuditFlow can send transactional and notification emails. PostHog provides product analytics and session replay to help us understand how AuditFlow is used, diagnose issues, and improve the product. PostHog may collect information such as pages visited, feature usage, browser and device information, and session diagnostics. Where enabled, session replay recordings are used to improve usability and troubleshoot technical issues. We configure PostHog to avoid capturing sensitive information such as passwords and take reasonable steps to limit the collection of confidential customer data.",
     ],
   },
   {
