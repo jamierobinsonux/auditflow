@@ -171,7 +171,8 @@ export async function POST(request: Request) {
             user_id: userId,
             plan,
           },
-          proration_behavior: "create_prorations",
+          billing_cycle_anchor: "unchanged",
+          proration_behavior: "always_invoice",
         });
 
         await supabase
