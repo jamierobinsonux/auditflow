@@ -63,13 +63,19 @@ export async function getUserSubscription(userId: string) {
     .eq("user_id", userId)
     .maybeSingle();
 
-  const planId = (subscription?.plan || "Free") as PlanId;
+  const isAdmin = Boolean(subscription?.is_admin);
+
+  const actualPlanId = (subscription?.plan || "Free") as PlanId;
+  const planId: PlanId = isAdmin ? "Studio" : actualPlanId;
+
   const plan = subscriptionPlans.find((item) => item.id === planId);
 
   return {
     subscription,
     plan,
     planId,
+    actualPlanId,
+    isAdmin,
     isFree: planId === "Free",
     isPro: planId === "Pro",
     isStudio: planId === "Studio",
