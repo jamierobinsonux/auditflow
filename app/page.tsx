@@ -2,6 +2,7 @@ import Link from "next/link";
 import { BrandLogo } from "@/components/brand-logo";
 import { BarChart3, ClipboardCheck, FileText, GitBranch } from "lucide-react";
 import { LandingProductTour } from "@/components/landing-product-tour";
+import { LandingFAQ } from "@/components/landing-faq";
 import { subscriptionPlans } from "@/lib/subscription-plans";
 
 const workflow = [
@@ -295,6 +296,8 @@ export default function LandingPage() {
           })}
         </div>
       </section>
+
+      <LandingFAQ />
 
       <section className="mx-auto max-w-7xl px-6 py-12 sm:px-8">
         <div className="rounded-[2rem] bg-slate-950 px-8 py-12 text-center text-white">
