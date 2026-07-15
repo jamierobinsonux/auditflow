@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { BrandLogo } from "@/components/brand-logo";
 import { BarChart3, ClipboardCheck, FileText, GitBranch } from "lucide-react";
 import { LandingProductTour } from "@/components/landing-product-tour";
@@ -106,20 +107,39 @@ export default function LandingPage() {
           </p>
 
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-            <Link
-              href="/signup"
-              className="rounded-xl bg-violet-600 px-6 py-3 text-center text-sm font-semibold text-white shadow-lg shadow-violet-200 hover:bg-violet-700"
-            >
-              Start free
-            </Link>
+  <Link
+    href="/signup"
+    className="rounded-xl bg-violet-600 px-6 py-3 text-center text-sm font-semibold text-white shadow-lg shadow-violet-200 hover:bg-violet-700"
+  >
+    Start free
+  </Link>
 
-            <a
-              href="#tour"
-              className="hidden rounded-xl border border-slate-200 bg-white px-6 py-3 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:inline-flex"
-            >
-              See the workflow
-            </a>
-          </div>
+  <a
+    href="#tour"
+    className="hidden rounded-xl border border-slate-200 bg-white px-6 py-3 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:inline-flex"
+  >
+    See the workflow
+  </a>
+</div>
+
+<div className="mt-10 flex flex-col items-center gap-3">
+  <p className="text-sm font-medium text-slate-500">
+    Featured on Product Hunt
+  </p>
+
+  <a
+    href="https://www.producthunt.com/products/auditflow-2?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-auditflow-2"
+    target="_blank"
+    rel="noopener noreferrer"
+  >
+    <img
+      src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1196640&theme=light"
+      alt="AuditFlow featured on Product Hunt"
+      width="250"
+      height="54"
+    />
+  </a>
+</div>
         </div>
 
       </section>
