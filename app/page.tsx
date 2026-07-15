@@ -91,8 +91,7 @@ export default function LandingPage() {
         </div>
       </header>
 
-      <section className="relative mx-auto flex max-w-7xl justify-center px-4 pb-12 pt-12 text-center sm:px-8 lg:pb-16 lg:pt-20">
-        <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 mx-auto h-[520px] max-w-5xl rounded-full bg-violet-100/40 blur-3xl" />
+<section className="relative mx-auto flex max-w-7xl justify-center px-4 pb-0 pt-12 text-center sm:px-8 lg:pb-2 lg:pt-20">        <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 mx-auto h-[520px] max-w-5xl rounded-full bg-violet-100/40 blur-3xl" />
         <div className="mx-auto max-w-4xl">
           <p className="mx-auto inline-flex rounded-full border border-violet-100 bg-violet-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-violet-600">
             UX audit platform
