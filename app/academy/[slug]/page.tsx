@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, Download, ExternalLink, FileText } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
 
 type Section = {
@@ -9,6 +9,7 @@ type Section = {
   paragraphs?: string[];
   bullets?: string[];
   callout?: string;
+  exampleReport?: boolean;
 };
 
 type Guide = {
@@ -52,6 +53,14 @@ const guides: Record<string, Guide> = {
           "The final report should help a team decide what to fix next. Every finding should identify where the issue appears, what is wrong, why it matters, how to improve it, and how urgently it should be addressed.",
         ],
         callout: "A useful audit does not say “improve the UX.” It gives the team a clear, implementable next step.",
+      },
+      {
+        heading: "See a Real UX Audit Report",
+        paragraphs: [
+          "Reading about UX audits is helpful—but seeing a real report makes everything click.",
+          "This example was created for a fictional ecommerce checkout experience. It shows how findings, evidence, journey analysis, prioritization, and recommendations can be organized into a polished stakeholder-ready report.",
+        ],
+        exampleReport: true,
       },
       {
         heading: "Common UX audit mistakes",
@@ -227,6 +236,69 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
                 )}
                 {section.callout && (
                   <div className="mt-6 rounded-2xl border border-violet-100 bg-violet-50 p-6 text-base leading-7 text-slate-700">{section.callout}</div>
+                )}
+                {section.exampleReport && (
+                  <div className="mt-8 space-y-8">
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                      {[
+                        ["Executive Summary", "A concise overview of findings, severity, and priority actions."],
+                        ["Scope & Methodology", "What was reviewed and the evaluation lens used during the audit."],
+                        ["Findings", "Clear observations, impact, recommendations, priority, and supporting evidence."],
+                        ["Journey Analysis", "A view of where usability issues cluster across important user flows."],
+                        ["Prioritization", "A practical ranking based on user impact and implementation effort."],
+                        ["Recommendations", "Concrete product actions that teams can move into planning and delivery."],
+                      ].map(([title, description]) => (
+                        <div key={title} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                          <FileText className="h-5 w-5 text-violet-600" aria-hidden="true" />
+                          <h3 className="mt-4 text-base font-semibold text-slate-950">{title}</h3>
+                          <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div>
+                      <h3 className="text-xl font-semibold tracking-[-0.02em] text-slate-950">Preview the report</h3>
+                      <p className="mt-2 text-sm leading-6 text-slate-600">
+                        Review the complete example directly on the page, or open and download the PDF below.
+                      </p>
+
+                      <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-sm">
+                        <iframe
+                          src="/academy/examples/nova-commerce-checkout-audit.pdf#view=FitH"
+                          title="Nova Commerce checkout UX audit example"
+                          className="h-[620px] w-full"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-3">
+                      <Link
+                        href="/academy/examples/nova-commerce-checkout-audit.pdf"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white hover:bg-violet-700"
+                      >
+                        View full report <ExternalLink className="h-4 w-4" aria-hidden="true" />
+                      </Link>
+                      <a
+                        href="/academy/examples/nova-commerce-checkout-audit.pdf"
+                        download
+                        className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                      >
+                        Download example <Download className="h-4 w-4" aria-hidden="true" />
+                      </a>
+                    </div>
+
+                    <div className="rounded-2xl border border-violet-100 bg-violet-50 p-6 sm:p-7">
+                      <h3 className="text-xl font-semibold tracking-[-0.02em] text-slate-950">This report was generated using AuditFlow.</h3>
+                      <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
+                        Capture evidence, organize findings, prioritize usability issues, and generate polished reports without spending hours formatting documents.
+                      </p>
+                      <Link href="/signup" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-violet-700 hover:text-violet-800">
+                        Try AuditFlow free <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                      </Link>
+                    </div>
+                  </div>
                 )}
               </section>
             ))}
