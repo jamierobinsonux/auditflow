@@ -72,6 +72,9 @@ export default function LandingPage() {
           <a href="#pricing" className="hover:text-slate-950">
             Pricing
           </a>
+          <Link href="/academy" className="hover:text-slate-950">
+            UX Audit Academy
+          </Link>
         </nav>
 
         <div className="flex shrink-0 items-center gap-2 sm:gap-3">
@@ -91,7 +94,7 @@ export default function LandingPage() {
         </div>
       </header>
 
-<section className="relative mx-auto flex max-w-7xl justify-center px-4 pb-0 pt-12 text-center sm:px-8 lg:pb-2 lg:pt-20">        <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 mx-auto h-[520px] max-w-5xl rounded-full bg-violet-100/40 blur-3xl" />
+<section className="relative mx-auto flex max-w-7xl justify-center px-4 pb-0 pt-10 text-center sm:px-8 lg:pb-2 lg:pt-14">        <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 mx-auto h-[520px] max-w-5xl rounded-full bg-violet-100/40 blur-3xl" />
         <div className="mx-auto max-w-4xl">
           <p className="mx-auto inline-flex rounded-full border border-violet-100 bg-violet-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-violet-600">
             UX audit platform
@@ -147,7 +150,7 @@ export default function LandingPage() {
         <LandingProductTour />
       </div>
 
-      <section className="mx-auto max-w-7xl px-6 py-12 sm:px-8 lg:py-14">
+      <section className="mx-auto max-w-7xl px-6 py-8 sm:px-8 lg:py-10">
         <div className="mx-auto max-w-4xl text-center">
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-violet-600">
             One connected workflow
@@ -194,7 +197,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="features" className="mx-auto max-w-7xl px-6 py-10 sm:px-8">
+      <section id="features" className="mx-auto max-w-7xl px-6 py-8 sm:px-8">
         <div className="mx-auto max-w-3xl text-center">
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-violet-600">
             Features
@@ -215,7 +218,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-6 py-10 sm:px-8">
+      <section className="mx-auto max-w-7xl px-6 py-8 sm:px-8">
         <div className="grid gap-6 lg:grid-cols-2">
           <div className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-red-500">
@@ -249,7 +252,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="pricing" className="mx-auto max-w-7xl px-6 py-10 sm:px-8">
+      <section id="pricing" className="mx-auto max-w-7xl px-6 py-8 sm:px-8">
         <div className="text-center">
           <h2 className="text-3xl font-semibold tracking-[-0.04em] text-slate-950 sm:text-5xl">
             Pricing that scales from solo audits to studio work
@@ -318,7 +321,7 @@ export default function LandingPage() {
 
       <LandingFAQ />
 
-      <section className="mx-auto max-w-7xl px-6 py-12 sm:px-8">
+      <section className="mx-auto max-w-7xl px-6 py-8 sm:px-8">
         <div className="rounded-[2rem] bg-slate-950 px-8 py-12 text-center text-white">
           <h2 className="text-3xl font-semibold tracking-[-0.04em] sm:text-5xl">
             Run cleaner audits from the first finding to the final report.

@@ -7,6 +7,34 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1,
     },
     {
+      url: "https://auditflowapp.co/academy",
+      priority: 0.8,
+    },
+    {
+      url: "https://auditflowapp.co/academy/what-is-a-ux-audit",
+      priority: 0.7,
+    },
+    {
+      url: "https://auditflowapp.co/academy/ux-audit-process",
+      priority: 0.7,
+    },
+    {
+      url: "https://auditflowapp.co/academy/ux-audit-checklist",
+      priority: 0.7,
+    },
+    {
+      url: "https://auditflowapp.co/academy/write-better-ux-findings",
+      priority: 0.7,
+    },
+    {
+      url: "https://auditflowapp.co/academy/prioritize-ux-issues",
+      priority: 0.7,
+    },
+    {
+      url: "https://auditflowapp.co/academy/heuristic-evaluation",
+      priority: 0.7,
+    },
+    {
       url: "https://auditflowapp.co/privacy",
     },
     {

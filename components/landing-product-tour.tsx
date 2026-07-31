@@ -347,7 +347,7 @@ export function LandingProductTour() {
   useEffect(() => clearTimers, []);
 
   return (
-    <section id="tour" className="mx-auto max-w-7xl px-6 py-12 sm:px-8">
+    <section id="tour" className="mx-auto max-w-7xl px-6 py-8 sm:px-8">
       <div className="mx-auto mb-8 max-w-3xl text-center">
         <p className="text-sm font-semibold uppercase tracking-[0.18em] text-violet-600">
           Product tour
