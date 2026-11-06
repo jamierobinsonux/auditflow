@@ -1,4 +1,6 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { MockClient } from "@/lib/mockdb/client";
+
+type SupabaseClient = MockClient;
 import type { NotificationSeverity } from "@/types/notification";
 
 type NotificationPayload = {

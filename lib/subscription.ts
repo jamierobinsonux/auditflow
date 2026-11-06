@@ -54,31 +54,26 @@ export function countBillableFindings({
   }).length;
 }
 
-export async function getUserSubscription(userId: string) {
-  const supabase = await createClient();
-
-  const { data: subscription } = await supabase
-    .from("subscriptions")
-    .select("*")
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  const isAdmin = Boolean(subscription?.is_admin);
-
-  const actualPlanId = (subscription?.plan || "Free") as PlanId;
-  const planId: PlanId = isAdmin ? "Studio" : actualPlanId;
-
+/**
+ * Personal (self-hosted) mode: there is no billing, so everyone gets the top
+ * plan with every feature unlocked and no usage limits.
+ *
+ * All plan checks in the app (canCreateProject, isStudio, ...) read from here,
+ * so this one function is the switch. `userId` is kept so callers don't change.
+ */
+export async function getUserSubscription(_userId: string) {
+  const planId: PlanId = "Studio";
   const plan = subscriptionPlans.find((item) => item.id === planId);
 
   return {
-    subscription,
+    subscription: null as null | Record<string, any>,
     plan,
     planId,
-    actualPlanId,
-    isAdmin,
-    isFree: planId === "Free",
-    isPro: planId === "Pro",
-    isStudio: planId === "Studio",
+    actualPlanId: planId,
+    isAdmin: true,
+    isFree: false,
+    isPro: false,
+    isStudio: true,
   };
 }
 

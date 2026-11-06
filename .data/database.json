@@ -1,0 +1,249 @@
+{
+  "tables": {
+    "studio_recommendations": [],
+    "projects": [
+      {
+        "id": "f51cb6f0-2384-4070-acbc-29b665604a01",
+        "created_at": "2026-11-06T02:50:20.480Z",
+        "updated_at": "2026-11-06T02:50:20.480Z",
+        "archived": false,
+        "status": "Completed",
+        "user_id": "00000000-0000-4000-8000-000000000001",
+        "name": "Demo Mobile App Audit",
+        "client_name": "Demo Client",
+        "website_url": "https://example.com",
+        "audit_type": "Mobile App"
+      }
+    ],
+    "findings": [
+      {
+        "id": "9d5b4ca5-3e12-4a2a-9d16-bc831c00b160",
+        "created_at": "2026-11-06T02:50:20.483Z",
+        "updated_at": "2026-11-06T02:50:20.483Z",
+        "title": "Primary CTA is difficult to notice",
+        "description": "The main action blends into the surrounding layout, making it harder for users to know what to do next.",
+        "recommendation": "Increase CTA contrast, simplify nearby competing actions, and use clearer action-oriented copy.",
+        "severity": "P1",
+        "status": "Open",
+        "impact": "High",
+        "effort": "Low",
+        "project_id": "f51cb6f0-2384-4070-acbc-29b665604a01",
+        "user_id": "00000000-0000-4000-8000-000000000001",
+        "journey_id": "3ee23d17-67e8-44e4-b84a-40bfb697adb4"
+      },
+      {
+        "id": "73e4f240-1de6-4de0-a4b3-356d0f50c693",
+        "created_at": "2026-11-06T02:50:20.483Z",
+        "updated_at": "2026-11-06T02:50:20.483Z",
+        "title": "Search results lack useful filtering",
+        "description": "Users may need to scan too many results manually because key filters are not surfaced early enough.",
+        "recommendation": "Add prominent filters for category, relevance, and recency near the top of the results view.",
+        "severity": "P2",
+        "status": "In Progress",
+        "impact": "High",
+        "effort": "Medium",
+        "project_id": "f51cb6f0-2384-4070-acbc-29b665604a01",
+        "user_id": "00000000-0000-4000-8000-000000000001",
+        "journey_id": "3ee23d17-67e8-44e4-b84a-40bfb697adb4"
+      },
+      {
+        "id": "dd926752-342a-4a15-b96b-901dc84d56dd",
+        "created_at": "2026-11-06T02:50:20.483Z",
+        "updated_at": "2026-11-06T02:50:20.483Z",
+        "title": "Empty state does not explain next steps",
+        "description": "The empty state tells users there is no content, but does not explain how to move forward.",
+        "recommendation": "Add a short explanation and a primary action that guides users to create or import content.",
+        "severity": "P2",
+        "status": "Open",
+        "impact": "Medium",
+        "effort": "Low",
+        "project_id": "f51cb6f0-2384-4070-acbc-29b665604a01",
+        "user_id": "00000000-0000-4000-8000-000000000001",
+        "journey_id": "3ee23d17-67e8-44e4-b84a-40bfb697adb4"
+      },
+      {
+        "id": "06075b2c-3719-43fe-a49d-01c92069b271",
+        "created_at": "2026-11-06T02:50:20.483Z",
+        "updated_at": "2026-11-06T02:50:20.483Z",
+        "title": "Confirmation feedback is easy to miss",
+        "description": "After completing an action, the success feedback appears too subtly and may be overlooked.",
+        "recommendation": "Use a clearer success message with stronger visual feedback and a direct link to the completed item.",
+        "severity": "P3",
+        "status": "Resolved",
+        "impact": "Medium",
+        "effort": "Low",
+        "project_id": "f51cb6f0-2384-4070-acbc-29b665604a01",
+        "user_id": "00000000-0000-4000-8000-000000000001",
+        "journey_id": "3ee23d17-67e8-44e4-b84a-40bfb697adb4"
+      }
+    ],
+    "finding_images": [],
+    "report_exports": [],
+    "notifications": [
+      {
+        "id": "bc5cd42d-85cc-40f7-bfa6-ebeb1ffc55ca",
+        "created_at": "2026-11-06T02:50:38.862Z",
+        "updated_at": "2026-11-06T02:50:38.862Z",
+        "user_id": "00000000-0000-4000-8000-000000000001",
+        "type": "attention_project_missing_report",
+        "title": "Project has no report yet",
+        "message": "Demo Mobile App Audit has findings but no exported report.",
+        "href": "/projects/f51cb6f0-2384-4070-acbc-29b665604a01/report",
+        "severity": "warning",
+        "dedupe_key": "attention:project-missing-report:f51cb6f0-2384-4070-acbc-29b665604a01",
+        "metadata": {
+          "project_id": "f51cb6f0-2384-4070-acbc-29b665604a01"
+        }
+      },
+      {
+        "id": "f26638fa-a1aa-4b5e-9275-763db175fd23",
+        "created_at": "2026-11-06T02:50:38.862Z",
+        "updated_at": "2026-11-06T02:50:38.862Z",
+        "user_id": "00000000-0000-4000-8000-000000000001",
+        "type": "attention_high_priority_findings",
+        "title": "High-priority findings open",
+        "message": "Demo Mobile App Audit has 1 high-priority finding still open.",
+        "href": "/projects/f51cb6f0-2384-4070-acbc-29b665604a01",
+        "severity": "danger",
+        "dedupe_key": "attention:high-priority-open:f51cb6f0-2384-4070-acbc-29b665604a01",
+        "metadata": {
+          "project_id": "f51cb6f0-2384-4070-acbc-29b665604a01",
+          "count": 1
+        }
+      },
+      {
+        "id": "fbfda6fd-52c6-4825-9516-384eb9a778cf",
+        "created_at": "2026-11-06T02:50:38.862Z",
+        "updated_at": "2026-11-06T02:50:38.862Z",
+        "user_id": "00000000-0000-4000-8000-000000000001",
+        "type": "attention_project_missing_client",
+        "title": "Project is not assigned to a client",
+        "message": "Demo Mobile App Audit is not assigned to a client workspace.",
+        "href": "/projects/f51cb6f0-2384-4070-acbc-29b665604a01",
+        "severity": "info",
+        "dedupe_key": "attention:project-missing-client:f51cb6f0-2384-4070-acbc-29b665604a01",
+        "metadata": {
+          "project_id": "f51cb6f0-2384-4070-acbc-29b665604a01"
+        }
+      },
+      {
+        "id": "fcda42b9-3da7-41cf-9ede-5fc7a0e9f05b",
+        "created_at": "2026-11-06T02:50:38.862Z",
+        "updated_at": "2026-11-06T02:50:38.862Z",
+        "user_id": "00000000-0000-4000-8000-000000000001",
+        "type": "attention_finding_missing_evidence",
+        "title": "Finding is missing evidence",
+        "message": "Primary CTA is difficult to notice in Demo Mobile App Audit does not have supporting screenshots yet.",
+        "href": "/projects/f51cb6f0-2384-4070-acbc-29b665604a01/findings/9d5b4ca5-3e12-4a2a-9d16-bc831c00b160/edit",
+        "severity": "warning",
+        "dedupe_key": "attention:finding-missing-evidence:9d5b4ca5-3e12-4a2a-9d16-bc831c00b160",
+        "metadata": {
+          "finding_id": "9d5b4ca5-3e12-4a2a-9d16-bc831c00b160",
+          "project_id": "f51cb6f0-2384-4070-acbc-29b665604a01"
+        }
+      },
+      {
+        "id": "5bbc4453-f60d-4077-80c1-227e0478b0ad",
+        "created_at": "2026-11-06T02:50:38.862Z",
+        "updated_at": "2026-11-06T02:50:38.862Z",
+        "user_id": "00000000-0000-4000-8000-000000000001",
+        "type": "attention_finding_missing_evidence",
+        "title": "Finding is missing evidence",
+        "message": "Search results lack useful filtering in Demo Mobile App Audit does not have supporting screenshots yet.",
+        "href": "/projects/f51cb6f0-2384-4070-acbc-29b665604a01/findings/73e4f240-1de6-4de0-a4b3-356d0f50c693/edit",
+        "severity": "warning",
+        "dedupe_key": "attention:finding-missing-evidence:73e4f240-1de6-4de0-a4b3-356d0f50c693",
+        "metadata": {
+          "finding_id": "73e4f240-1de6-4de0-a4b3-356d0f50c693",
+          "project_id": "f51cb6f0-2384-4070-acbc-29b665604a01"
+        }
+      },
+      {
+        "id": "df72fd4c-bdec-48bd-b3a3-a45d60a5ffec",
+        "created_at": "2026-11-06T02:50:38.862Z",
+        "updated_at": "2026-11-06T02:50:38.862Z",
+        "user_id": "00000000-0000-4000-8000-000000000001",
+        "type": "attention_finding_missing_evidence",
+        "title": "Finding is missing evidence",
+        "message": "Empty state does not explain next steps in Demo Mobile App Audit does not have supporting screenshots yet.",
+        "href": "/projects/f51cb6f0-2384-4070-acbc-29b665604a01/findings/dd926752-342a-4a15-b96b-901dc84d56dd/edit",
+        "severity": "warning",
+        "dedupe_key": "attention:finding-missing-evidence:dd926752-342a-4a15-b96b-901dc84d56dd",
+        "metadata": {
+          "finding_id": "dd926752-342a-4a15-b96b-901dc84d56dd",
+          "project_id": "f51cb6f0-2384-4070-acbc-29b665604a01"
+        }
+      },
+      {
+        "id": "e7c78258-6c02-49cb-bb0b-236a43f50c55",
+        "created_at": "2026-11-06T02:50:38.862Z",
+        "updated_at": "2026-11-06T02:50:38.862Z",
+        "user_id": "00000000-0000-4000-8000-000000000001",
+        "type": "attention_finding_missing_evidence",
+        "title": "Finding is missing evidence",
+        "message": "Confirmation feedback is easy to miss in Demo Mobile App Audit does not have supporting screenshots yet.",
+        "href": "/projects/f51cb6f0-2384-4070-acbc-29b665604a01/findings/06075b2c-3719-43fe-a49d-01c92069b271/edit",
+        "severity": "warning",
+        "dedupe_key": "attention:finding-missing-evidence:06075b2c-3719-43fe-a49d-01c92069b271",
+        "metadata": {
+          "finding_id": "06075b2c-3719-43fe-a49d-01c92069b271",
+          "project_id": "f51cb6f0-2384-4070-acbc-29b665604a01"
+        }
+      }
+    ],
+    "clients": [],
+    "journeys": [
+      {
+        "id": "3ee23d17-67e8-44e4-b84a-40bfb697adb4",
+        "created_at": "2026-11-06T02:50:20.483Z",
+        "updated_at": "2026-11-06T02:50:20.483Z",
+        "project_id": "f51cb6f0-2384-4070-acbc-29b665604a01",
+        "user_id": "00000000-0000-4000-8000-000000000001",
+        "name": "Core User Flow",
+        "description": "A sample journey showing how users move through the app."
+      }
+    ],
+    "journey_steps": [
+      {
+        "id": "7e37645f-345e-48e3-82a3-a5d6c92bac54",
+        "created_at": "2026-11-06T02:50:20.483Z",
+        "updated_at": "2026-11-06T02:50:20.483Z",
+        "journey_id": "3ee23d17-67e8-44e4-b84a-40bfb697adb4",
+        "user_id": "00000000-0000-4000-8000-000000000001",
+        "title": "Discover",
+        "sort_order": 1
+      },
+      {
+        "id": "bc68ff51-c480-40c7-b87f-2485501c7600",
+        "created_at": "2026-11-06T02:50:20.483Z",
+        "updated_at": "2026-11-06T02:50:20.483Z",
+        "journey_id": "3ee23d17-67e8-44e4-b84a-40bfb697adb4",
+        "user_id": "00000000-0000-4000-8000-000000000001",
+        "title": "Evaluate",
+        "sort_order": 2
+      },
+      {
+        "id": "ba08909d-1579-4ea2-91ec-35ad124acb6f",
+        "created_at": "2026-11-06T02:50:20.483Z",
+        "updated_at": "2026-11-06T02:50:20.483Z",
+        "journey_id": "3ee23d17-67e8-44e4-b84a-40bfb697adb4",
+        "user_id": "00000000-0000-4000-8000-000000000001",
+        "title": "Take action",
+        "sort_order": 3
+      },
+      {
+        "id": "879af6d5-7c53-4e6d-ad50-bbf992f8bbd2",
+        "created_at": "2026-11-06T02:50:20.483Z",
+        "updated_at": "2026-11-06T02:50:20.483Z",
+        "journey_id": "3ee23d17-67e8-44e4-b84a-40bfb697adb4",
+        "user_id": "00000000-0000-4000-8000-000000000001",
+        "title": "Confirm",
+        "sort_order": 4
+      }
+    ]
+  },
+  "userMetadata": {
+    "full_name": "Local User",
+    "workspace_name": "AuditFlow Workspace"
+  }
+}

@@ -1,6 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
+import { createServerMockClient } from "@/lib/mockdb/server-transport";
 
-export const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Prototype: there are no row-level rules, so the admin client is the same
+// in-memory client as everything else.
+export const supabaseAdmin = createServerMockClient();
