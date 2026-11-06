@@ -203,6 +203,7 @@ function EvidenceUploadItem({
         </FormField>
 
         <textarea
+          aria-label={`Caption for image ${index + 1}`}
           className="min-h-24 w-full rounded-xl border border-slate-200 bg-white p-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-violet-300 focus:ring-4 focus:ring-violet-100"
           placeholder="Image caption, e.g. Checkout screen showing unclear payment error"
           value={imageItem.caption}

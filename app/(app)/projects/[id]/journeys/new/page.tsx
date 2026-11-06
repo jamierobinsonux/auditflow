@@ -3,7 +3,12 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
+import { FormField } from "@/components/ui/form-field";
+import { TextInput } from "@/components/ui/text-input";
+import { TextArea } from "@/components/ui/text-area";
+import { Button } from "@/components/ui/button";
 
 export default function NewJourneyPage() {
   const params = useParams();
@@ -14,9 +19,15 @@ export default function NewJourneyPage() {
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    const trimmedName = name.trim();
+    if (!trimmedName || isSaving) return;
+
+    setIsSaving(true);
 
     const {
       data: { user },
@@ -32,17 +43,21 @@ export default function NewJourneyPage() {
       .insert({
         project_id: projectId,
         user_id: user.id,
-        name,
+        name: trimmedName,
         description,
       })
       .select()
       .single();
 
     if (error) {
-      alert(error.message);
+      toast.error("Couldn't create the journey. Try again.", {
+        description: error.message,
+      });
+      setIsSaving(false);
       return;
     }
 
+    toast.success("Journey created.");
     router.push(`/projects/${projectId}/journeys/${data.id}`);
     router.refresh();
   }
@@ -58,33 +73,32 @@ export default function NewJourneyPage() {
           Create a user journey or flow for this audit.
         </p>
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-          <input
-            className="w-full rounded-xl border border-slate-200 p-3 text-sm"
-            placeholder="Journey name, e.g. Signup Flow"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
+        <form onSubmit={handleSubmit} className="mt-6 space-y-5">
+          <FormField label="Journey name">
+            <TextInput
+              placeholder="e.g. Signup Flow"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </FormField>
 
-          <textarea
-            className="min-h-28 w-full rounded-xl border border-slate-200 p-3 text-sm"
-            placeholder="Optional description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
+          <FormField label="Description" description="Optional">
+            <TextArea
+              placeholder="What part of the product does this journey cover?"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </FormField>
 
           <div className="flex gap-3 pt-2">
-            <Link
-              href={`/projects/${projectId}/journeys`}
-              className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50"
-            >
-              Cancel
-            </Link>
+            <Button asChild variant="outline" size="lg" className="flex-1">
+              <Link href={`/projects/${projectId}/journeys`}>Cancel</Link>
+            </Button>
 
-            <button className="flex-1 rounded-xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white hover:bg-violet-700">
-              Create Journey
-            </button>
+            <Button type="submit" size="lg" className="flex-1" disabled={isSaving}>
+              {isSaving ? "Creating..." : "Create Journey"}
+            </Button>
           </div>
         </form>
       </div>

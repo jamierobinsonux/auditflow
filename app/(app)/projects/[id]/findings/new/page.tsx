@@ -1,438 +1,167 @@
-"use client";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import {
+  canCreateFinding,
+  getUsage,
+  getUserSubscription,
+  isDemoProject,
+} from "@/lib/subscription";
+import { NewFindingForm } from "@/components/new-finding-form";
+import type { RecommendationOption } from "@/components/recommendation-picker";
 
-import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { toast } from "sonner";
-import { createClient } from "@/lib/supabase/client";
-import { EvidenceUploader, type EvidenceUpload } from "@/components/evidence-uploader";
-import { createSafeStoragePath } from "@/lib/storage";
-import { PageShell } from "@/components/layout/page-shell";
-import { PageHeader } from "@/components/layout/page-header";
-import { Card } from "@/components/layout/card";
-import { FormField } from "@/components/ui/form-field";
-import { TextInput } from "@/components/ui/text-input";
-import { TextArea } from "@/components/ui/text-area";
-import { SelectInput } from "@/components/ui/select-input";
-import { Button } from "@/components/ui/button";
-import { RecommendationPicker, type RecommendationOption } from "@/components/recommendation-picker";
-import { normalizeRecommendationId } from "@/lib/recommendations";
+type RecommendationRow = Omit<RecommendationOption, "source">;
 
-type Journey = { id: string; name: string };
-type JourneyStep = { id: string; journey_id: string; title: string };
-
-type ProjectContext = {
-  id: string;
-  framework_id: string | null;
-  name?: string | null;
-  client_name?: string | null;
-  website_url?: string | null;
-};
-
-const DEMO_PROJECT_NAME = "Demo Mobile App Audit";
-const DEMO_PROJECT_CLIENT_NAME = "Demo Client";
-const DEMO_PROJECT_URL = "https://example.com";
-
-function isDemoProject(project: ProjectContext | null) {
-  return (
-    project?.name === DEMO_PROJECT_NAME &&
-    project?.client_name === DEMO_PROJECT_CLIENT_NAME &&
-    project?.website_url === DEMO_PROJECT_URL
-  );
+function firstValue(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
 }
 
-export default function NewFindingPage() {
-  const router = useRouter();
-  const params = useParams();
-  const searchParams = useSearchParams();
-  const supabase = createClient();
-  const projectId = params.id as string;
+export default async function NewFindingPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const { id: projectId } = await params;
+  const query = await searchParams;
 
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [severity, setSeverity] = useState("P2");
-  const [status, setStatus] = useState("Open");
-  const [category, setCategory] = useState("");
-  const [recommendation, setRecommendation] = useState("");
-  const [selectedRecommendation, setSelectedRecommendation] = useState<RecommendationOption | null>(null);
-  const [impact, setImpact] = useState("");
-  const [effort, setEffort] = useState("");
-  const [journeyId, setJourneyId] = useState("");
-  const [journeyStepId, setJourneyStepId] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
-  const [isCheckingAccess, setIsCheckingAccess] = useState(true);
-  const [project, setProject] = useState<ProjectContext | null>(null);
-  const [journeys, setJourneys] = useState<Journey[]>([]);
-  const [steps, setSteps] = useState<JourneyStep[]>([]);
-  const [recommendations, setRecommendations] = useState<RecommendationOption[]>([]);
-  const [frameworkCategories, setFrameworkCategories] = useState<string[]>([]);
-  const [images, setImages] = useState<EvidenceUpload[]>([{ file: null, evidenceName: "", caption: "" }]);
+  const supabase = await createClient();
 
-  const availableSteps = useMemo(
-    () => steps.filter((step) => step.journey_id === journeyId),
-    [steps, journeyId]
-  );
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  useEffect(() => {
-    async function loadData() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
 
-      if (!user) {
-        router.push("/login");
-        return;
-      }
+  // Everything that doesn't depend on the project row loads in one round trip.
+  const [
+    { data: project },
+    subscription,
+    usage,
+    { data: journeyData },
+    { data: libraryData },
+  ] = await Promise.all([
+    supabase
+      .from("projects")
+      .select("id,framework_id,name,client_name,website_url")
+      .eq("id", projectId)
+      .eq("user_id", user.id)
+      .maybeSingle(),
+    getUserSubscription(user.id),
+    getUsage(user.id),
+    supabase
+      .from("journeys")
+      .select("id,name")
+      .eq("project_id", projectId)
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("studio_recommendations")
+      .select("id,title,category,recommendation,impact")
+      .eq("user_id", user.id)
+      .order("updated_at", { ascending: false }),
+  ]);
 
-      const [{ data: projectData }, { data: journeyData }, { data: stepData }] = await Promise.all([
-        supabase
-          .from("projects")
-          .select("id,framework_id,name,client_name,website_url")
-          .eq("id", projectId)
-          .eq("user_id", user.id)
-          .maybeSingle(),
-        supabase
-          .from("journeys")
-          .select("id,name")
-          .eq("project_id", projectId)
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: true }),
-        supabase
+  if (!project) redirect("/projects");
+
+  // Same rule the API enforces, checked before the person starts typing.
+  if (
+    !isDemoProject(project) &&
+    !canCreateFinding({
+      planId: subscription.planId,
+      findingsUsed: usage.findingsUsed,
+    })
+  ) {
+    redirect("/settings/billing?limit=findings");
+  }
+
+  const journeys = (journeyData ?? []) as { id: string; name: string }[];
+  const journeyIds = journeys.map((journey) => journey.id);
+
+  // These need the project's framework and the journey ids.
+  const [
+    { data: stepData },
+    { data: frameworkData },
+    { data: categoryData },
+  ] = await Promise.all([
+    journeyIds.length > 0
+      ? supabase
           .from("journey_steps")
           .select("id,journey_id,title")
           .eq("user_id", user.id)
-          .order("sort_order", { ascending: true }),
-      ]);
-
-      if (!projectData) {
-        toast.error("Project not found.");
-        router.push("/projects");
-        return;
-      }
-
-      const [{ data: allProjects }, { data: allFindings }, { data: subscription }] = await Promise.all([
-        supabase
-          .from("projects")
-          .select("id,name,client_name,website_url")
-          .eq("user_id", user.id),
-        supabase
-          .from("findings")
-          .select("id,project_id")
-          .eq("user_id", user.id),
-        supabase
-          .from("subscriptions")
-          .select("plan")
+          .in("journey_id", journeyIds)
+          .order("sort_order", { ascending: true })
+      : Promise.resolve({ data: [] }),
+    project.framework_id
+      ? supabase
+          .from("studio_framework_recommendations")
+          .select("id,title,category,recommendation,impact")
           .eq("user_id", user.id)
-          .maybeSingle(),
-      ]);
+          .eq("framework_id", project.framework_id)
+          .order("sort_order", { ascending: true })
+      : Promise.resolve({ data: [] }),
+    project.framework_id
+      ? supabase
+          .from("studio_framework_categories")
+          .select("name")
+          .eq("user_id", user.id)
+          .eq("framework_id", project.framework_id)
+          .order("sort_order", { ascending: true })
+      : Promise.resolve({ data: [] }),
+  ]);
 
-      const currentPlan = subscription?.plan || "Free";
-      const demoProjectIds = new Set(
-        (allProjects ?? [])
-          .filter((project) =>
-            project.name === DEMO_PROJECT_NAME &&
-            project.client_name === DEMO_PROJECT_CLIENT_NAME &&
-            project.website_url === DEMO_PROJECT_URL
-          )
-          .map((project) => project.id)
-      );
-      const realFindingCount = (allFindings ?? []).filter(
-        (finding) => !demoProjectIds.has(finding.project_id)
-      ).length;
+  const steps = (stepData ?? []) as {
+    id: string;
+    journey_id: string;
+    title: string;
+  }[];
 
-      if (currentPlan === "Free" && !isDemoProject(projectData as ProjectContext) && realFindingCount >= 5) {
-        router.replace("/settings/billing?limit=findings");
-        return;
-      }
+  const recommendations: RecommendationOption[] = [
+    ...((frameworkData ?? []) as RecommendationRow[]).map((item) => ({
+      ...item,
+      source: "framework" as const,
+    })),
+    ...((libraryData ?? []) as RecommendationRow[]).map((item) => ({
+      ...item,
+      source: "library" as const,
+    })),
+  ];
 
-      const loadedJourneys = (journeyData ?? []) as Journey[];
-      const loadedSteps = (stepData ?? []) as JourneyStep[];
+  const frameworkCategories = ((categoryData ?? []) as { name: string | null }[])
+    .map((item) => item.name)
+    .filter((name): name is string => Boolean(name));
 
-      const requestedJourneyId = searchParams.get("journeyId") || "";
-      const requestedStepId =
-        searchParams.get("stepId") || searchParams.get("journeyStepId") || "";
+  // Prefill from links like ?journeyId=...&stepId=... (used by the journey pages).
+  const requestedJourneyId = firstValue(query.journeyId) ?? "";
+  const requestedStepId =
+    firstValue(query.stepId) ?? firstValue(query.journeyStepId) ?? "";
 
-      const matchingStep = requestedStepId
-        ? loadedSteps.find((step) => step.id === requestedStepId)
-        : null;
+  const matchingStep = requestedStepId
+    ? steps.find((step) => step.id === requestedStepId)
+    : null;
 
-      const validJourneyId = loadedJourneys.some(
-        (journey) => journey.id === requestedJourneyId
-      )
-        ? requestedJourneyId
-        : matchingStep?.journey_id ?? "";
+  const initialJourneyId = journeys.some(
+    (journey) => journey.id === requestedJourneyId
+  )
+    ? requestedJourneyId
+    : (matchingStep?.journey_id ?? "");
 
-      const validStepId =
-        matchingStep && (!validJourneyId || matchingStep.journey_id === validJourneyId)
-          ? matchingStep.id
-          : "";
-
-      setIsCheckingAccess(false);
-      setProject(projectData as ProjectContext);
-      setJourneys(loadedJourneys);
-      setSteps(loadedSteps);
-      setJourneyId(validJourneyId);
-      setJourneyStepId(validStepId);
-
-      const libraryQuery = supabase
-        .from("studio_recommendations")
-        .select("id,title,category,recommendation,impact")
-        .eq("user_id", user.id)
-        .order("updated_at", { ascending: false });
-
-      const frameworkQuery = projectData.framework_id
-        ? supabase
-            .from("studio_framework_recommendations")
-            .select("id,title,category,recommendation,impact")
-            .eq("user_id", user.id)
-            .eq("framework_id", projectData.framework_id)
-            .order("sort_order", { ascending: true })
-        : Promise.resolve({ data: [], error: null } as any);
-
-      const frameworkCategoriesQuery = projectData.framework_id
-        ? supabase
-            .from("studio_framework_categories")
-            .select("name")
-            .eq("user_id", user.id)
-            .eq("framework_id", projectData.framework_id)
-            .order("sort_order", { ascending: true })
-        : Promise.resolve({ data: [], error: null } as any);
-
-      const [{ data: libraryData }, { data: frameworkData }, { data: categoryData }] = await Promise.all([
-        libraryQuery,
-        frameworkQuery,
-        frameworkCategoriesQuery,
-      ]);
-
-      const libraryOptions = (libraryData ?? []).map((item: any) => ({ ...item, source: "library" as const }));
-      const frameworkOptions = (frameworkData ?? []).map((item: any) => ({ ...item, source: "framework" as const }));
-      setRecommendations([...frameworkOptions, ...libraryOptions]);
-      setFrameworkCategories((categoryData ?? []).map((item: any) => item.name).filter(Boolean));
-    }
-
-    loadData();
-  }, [projectId, router, searchParams, supabase]);
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setIsSaving(true);
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      router.push("/login");
-      return;
-    }
-
-    const response = await fetch("/api/findings", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        project_id: projectId,
-        title,
-        description,
-        severity,
-        status,
-        category: category || null,
-        recommendation,
-        recommendation_source: selectedRecommendation?.source ?? null,
-        saved_recommendation_id:
-          selectedRecommendation?.source === "library" ? normalizeRecommendationId(selectedRecommendation.id) : null,
-        framework_recommendation_id:
-          selectedRecommendation?.source === "framework" ? normalizeRecommendationId(selectedRecommendation.id) : null,
-        impact,
-        effort,
-        journey_id: journeyId || null,
-        journey_step_id: journeyStepId || null,
-      }),
-    });
-
-    const result = await response.json().catch(() => null);
-
-    if (!response.ok || !result?.finding) {
-      if (response.status === 403 && result?.redirectTo) {
-        router.push(result.redirectTo);
-        return;
-      }
-
-      toast.error(result?.error || "Unable to create finding.");
-      setIsSaving(false);
-      return;
-    }
-
-    const finding = result.finding as { id: string };
-
-    for (const image of images) {
-      if (!image.file) continue;
-
-      const filePath = createSafeStoragePath(finding.id, image.file);
-      const { error: uploadError } = await supabase.storage.from("finding-images").upload(filePath, image.file);
-
-      if (uploadError) {
-        toast.error(uploadError.message);
-        setIsSaving(false);
-        return;
-      }
-
-      const { data: publicUrlData } = supabase.storage.from("finding-images").getPublicUrl(filePath);
-      const { error: imageInsertError } = await supabase.from("finding_images").insert({
-        finding_id: finding.id,
-        user_id: user.id,
-        image_url: publicUrlData.publicUrl,
-        evidence_name: image.evidenceName || image.file.name.replace(/\.[^/.]+$/, ""),
-        caption: image.caption,
-      });
-
-      if (imageInsertError) {
-        toast.error(imageInsertError.message);
-        setIsSaving(false);
-        return;
-      }
-    }
-
-    await supabase
-      .from("projects")
-      .update({ updated_at: new Date().toISOString() })
-      .eq("id", projectId)
-      .eq("user_id", user.id);
-
-    toast.success("Finding added.");
-    router.push(`/projects/${projectId}/findings/${finding.id}`);
-    router.refresh();
-  }
-
-  function applyRecommendation(item: RecommendationOption) {
-    setRecommendation(item.recommendation);
-    setImpact(item.impact ?? impact);
-    setCategory(item.category ?? category);
-    setSelectedRecommendation(item);
-  }
-
-  if (isCheckingAccess) {
-    return (
-      <PageShell>
-        <PageHeader
-          title="New Finding"
-          description="Checking your plan access before opening the finding form."
-        />
-        <Card className="mx-auto mt-8 max-w-2xl p-8">
-          <div className="space-y-4">
-            <div className="h-5 w-1/3 rounded-full bg-slate-200" />
-            <div className="h-10 rounded-xl bg-slate-100" />
-            <div className="h-24 rounded-xl bg-slate-100" />
-            <div className="h-10 rounded-xl bg-slate-100" />
-          </div>
-        </Card>
-      </PageShell>
-    );
-  }
+  const initialStepId =
+    matchingStep &&
+    (!initialJourneyId || matchingStep.journey_id === initialJourneyId)
+      ? matchingStep.id
+      : "";
 
   return (
-    <PageShell>
-      <PageHeader title="New Finding" description="Document a usability issue, connect it to the journey, and add supporting evidence." />
-
-      <Card className="mx-auto mt-8 max-w-2xl p-8">
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <FormField label="Finding title">
-            <TextInput value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Users cannot recover after payment validation fails" required />
-          </FormField>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <FormField label="Journey" description="Optional">
-              <SelectInput value={journeyId} onChange={(e) => { setJourneyId(e.target.value); setJourneyStepId(""); }}>
-                <option value="">No journey</option>
-                {journeys.map((journey) => <option key={journey.id} value={journey.id}>{journey.name}</option>)}
-              </SelectInput>
-            </FormField>
-
-            <FormField label="Journey step" description="Optional">
-              <SelectInput value={journeyStepId} onChange={(e) => setJourneyStepId(e.target.value)} disabled={!journeyId}>
-                <option value="">No step</option>
-                {availableSteps.map((step) => <option key={step.id} value={step.id}>{step.title}</option>)}
-              </SelectInput>
-            </FormField>
-          </div>
-
-          <FormField label="Description">
-            <TextArea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="What did you observe?" />
-          </FormField>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <FormField label="Severity">
-              <SelectInput value={severity} onChange={(e) => setSeverity(e.target.value)}>
-                <option value="P0">P0 - Critical</option>
-                <option value="P1">P1 - High</option>
-                <option value="P2">P2 - Medium</option>
-                <option value="P3">P3 - Low</option>
-              </SelectInput>
-            </FormField>
-
-            <FormField label="Status">
-              <SelectInput value={status} onChange={(e) => setStatus(e.target.value)}>
-                <option>Open</option>
-                <option>In Progress</option>
-                <option>In Review</option>
-                <option>Resolved</option>
-              </SelectInput>
-            </FormField>
-          </div>
-
-          <FormField label="Category" description="Optional">
-            {frameworkCategories.length > 0 ? (
-              <SelectInput value={category} onChange={(e) => setCategory(e.target.value)}>
-                <option value="">Select category</option>
-                {frameworkCategories.map((frameworkCategory) => (
-                  <option key={frameworkCategory} value={frameworkCategory}>
-                    {frameworkCategory}
-                  </option>
-                ))}
-                <option value="Other">Other</option>
-              </SelectInput>
-            ) : (
-              <TextInput value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Forms, Navigation, Accessibility..." />
-            )}
-          </FormField>
-
-          <RecommendationPicker recommendations={recommendations} onApply={applyRecommendation} />
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <FormField label="Impact" description="Optional">
-              <SelectInput value={impact} onChange={(e) => setImpact(e.target.value)}>
-                <option value="">Select impact</option>
-                <option>High</option>
-                <option>Medium</option>
-                <option>Low</option>
-              </SelectInput>
-            </FormField>
-
-            <FormField label="Effort" description="Optional">
-              <SelectInput value={effort} onChange={(e) => setEffort(e.target.value)}>
-                <option value="">Select effort</option>
-                <option>High</option>
-                <option>Medium</option>
-                <option>Low</option>
-              </SelectInput>
-            </FormField>
-          </div>
-
-          <FormField label="Recommendation">
-            <TextArea value={recommendation} onChange={(e) => setRecommendation(e.target.value)} placeholder="Recommended change and expected outcome." />
-          </FormField>
-
-          <EvidenceUploader images={images} setImages={setImages} />
-
-          <div className="flex gap-3 pt-2">
-            <Button asChild variant="outline" className="flex-1">
-              <Link href={`/projects/${projectId}`}>Cancel</Link>
-            </Button>
-            <Button disabled={isSaving} className="flex-1">{isSaving ? "Saving..." : "Add Finding"}</Button>
-          </div>
-        </form>
-      </Card>
-    </PageShell>
+    <NewFindingForm
+      projectId={projectId}
+      userId={user.id}
+      journeys={journeys}
+      steps={steps}
+      recommendations={recommendations}
+      frameworkCategories={frameworkCategories}
+      initialJourneyId={initialJourneyId}
+      initialStepId={initialStepId}
+    />
   );
 }

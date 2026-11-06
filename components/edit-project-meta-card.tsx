@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { SelectInput } from "@/components/ui/select-input";
+import { Button } from "@/components/ui/button";
 
 export function EditProjectMetaCard({
   projectId,
@@ -24,9 +26,13 @@ export function EditProjectMetaCard({
   const supabase = createClient();
 
   const [editing, setEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [draftValue, setDraftValue] = useState(value || "");
 
   async function save() {
+    if (isSaving) return;
+    setIsSaving(true);
+
     const { error } = await supabase
       .from("projects")
       .update({
@@ -35,8 +41,12 @@ export function EditProjectMetaCard({
       })
       .eq("id", projectId);
 
+    setIsSaving(false);
+
     if (error) {
-      alert(error.message);
+      toast.error(`Couldn't update ${label.toLowerCase()}. Try again.`, {
+        description: error.message,
+      });
       return;
     }
 
@@ -55,6 +65,7 @@ export function EditProjectMetaCard({
         <div className="mt-3 space-y-3" onClick={(e) => e.stopPropagation()}>
           {type === "select" ? (
             <SelectInput
+              aria-label={label}
               value={draftValue}
               onChange={(e) => setDraftValue(e.target.value)}
             >
@@ -64,7 +75,8 @@ export function EditProjectMetaCard({
             </SelectInput>
           ) : (
             <input
-              className="w-full rounded-xl border border-slate-200 bg-white p-3 text-sm"
+              className="w-full rounded-xl border border-slate-200 bg-white p-3 text-sm outline-none focus:border-violet-300 focus:ring-4 focus:ring-violet-100"
+              aria-label={label}
               value={draftValue}
               onChange={(e) => setDraftValue(e.target.value)}
               autoFocus
@@ -72,22 +84,22 @@ export function EditProjectMetaCard({
           )}
 
           <div className="flex gap-2">
-            <button
-              onClick={save}
-              className="rounded-lg bg-violet-600 px-3 py-2 text-xs font-semibold text-white"
-            >
-              Save
-            </button>
+            <Button type="button" size="sm" onClick={save} disabled={isSaving}>
+              {isSaving ? "Saving..." : "Save"}
+            </Button>
 
-            <button
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={isSaving}
               onClick={() => {
                 setDraftValue(value || "");
                 setEditing(false);
               }}
-              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700"
             >
               Cancel
-            </button>
+            </Button>
           </div>
         </div>
       ) : (
